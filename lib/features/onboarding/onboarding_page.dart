@@ -15,20 +15,24 @@ import '../map/map_page.dart';
 /// Aucun compte n'est demandé ici : l'invitation viendra après le premier
 /// tampon, au pic émotionnel.
 class OnboardingPage extends StatefulWidget {
-  const OnboardingPage({super.key});
+  const OnboardingPage({this.content, super.key});
+
+  /// Injectable pour les tests : un dépôt déjà chargé sert son contenu de
+  /// façon synchrone, ce qui rend l'écran pilotable sans lecture disque.
+  final ContentRepository? content;
 
   @override
   State<OnboardingPage> createState() => _OnboardingPageState();
 }
 
 class _OnboardingPageState extends State<OnboardingPage> {
-  final ContentRepository _content = ContentRepository();
+  late final ContentRepository _content = widget.content ?? ContentRepository();
   int _step = 0;
   List<Country> _destinations = const <Country>[];
   bool _loading = false;
 
   static const List<({String code, String label, String flag, String note})>
-  _languages = <({String code, String label, String flag, String note})>[
+      _languages = <({String code, String label, String flag, String note})>[
     (
       code: 'es',
       label: 'Espagnol',
@@ -92,16 +96,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
           child: _loading
               ? const Center(child: CircularProgressIndicator())
               : switch (_step) {
-                  0 => _LanguageStep(languages: _languages, onPick: _pickLanguage),
+                  0 =>
+                    _LanguageStep(languages: _languages, onPick: _pickLanguage),
                   1 => _DestinationStep(
-                    destinations: _destinations,
-                    onPick: _pickDestination,
-                    onBack: () => setState(() => _step = 0),
-                  ),
+                      destinations: _destinations,
+                      onPick: _pickDestination,
+                      onBack: () => setState(() => _step = 0),
+                    ),
                   _ => _StartStep(
-                    onStart: _start,
-                    onBack: () => setState(() => _step = 1),
-                  ),
+                      onStart: _start,
+                      onBack: () => setState(() => _step = 1),
+                    ),
                 },
         ),
       ),

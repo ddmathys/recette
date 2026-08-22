@@ -57,7 +57,11 @@ Lexicon syntheticLexicon({int count = 600, double maxDifficulty = 90}) {
 /// Lit un fichier de `/content` depuis les tests, quel que soit le dossier
 /// depuis lequel `dart test` a été lancé.
 String loadContentFile(String relative) {
-  for (final String prefix in <String>['../../content', 'content', '../../../content']) {
+  for (final String prefix in <String>[
+    '../../content',
+    'content',
+    '../../../content'
+  ]) {
     final File f = File('$prefix/$relative');
     if (f.existsSync()) return f.readAsStringSync();
   }

@@ -25,9 +25,9 @@ class KButton extends StatefulWidget {
     required this.onPressed,
     this.enabled = true,
     super.key,
-  }) : color = KColors.trait,
-       shadow = KColors.creuse,
-       ghost = true;
+  })  : color = KColors.trait,
+        shadow = KColors.creuse,
+        ghost = true;
 
   /// La variante d'action positive (valider, continuer le voyage).
   const KButton.go({
@@ -35,9 +35,9 @@ class KButton extends StatefulWidget {
     required this.onPressed,
     this.enabled = true,
     super.key,
-  }) : color = KColors.lagon,
-       shadow = KColors.lagonOmbre,
-       ghost = false;
+  })  : color = KColors.lagon,
+        shadow = KColors.lagonOmbre,
+        ghost = false;
 
   final String label;
   final VoidCallback? onPressed;
@@ -72,7 +72,8 @@ class _KButtonState extends State<KButton> {
             : null,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 90),
-          transform: Matrix4.translationValues(0, _down && !widget.ghost ? 3 : 0, 0),
+          transform:
+              Matrix4.translationValues(0, _down && !widget.ghost ? 3 : 0, 0),
           padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 18),
           decoration: BoxDecoration(
             color: active ? widget.color : KColors.trait,
@@ -87,7 +88,9 @@ class _KButtonState extends State<KButton> {
           child: Center(
             child: Text(
               widget.label,
-              style: Theme.of(context).textTheme.titleMedium
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
                   ?.copyWith(color: Colors.white),
             ),
           ),

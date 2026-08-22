@@ -39,16 +39,19 @@ class MapPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text('TON VOYAGE', style: text.labelSmall),
-                      Text(
-                        '${country.shortName} · Tour ${session.currentTour}',
-                        style: text.headlineMedium,
-                      ),
-                    ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text('TON VOYAGE', style: text.labelSmall),
+                        Text(
+                          '${country.shortName} · Tour ${session.currentTour}',
+                          style: text.headlineMedium,
+                        ),
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: KSpace.sm),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -174,8 +177,8 @@ class _CityPin extends StatelessWidget {
     final Color fill = done
         ? KColors.lagon
         : current
-        ? KColors.corail
-        : KColors.traitFort;
+            ? KColors.corail
+            : KColors.traitFort;
     final bool labelAbove = city.labelOffset < 0;
 
     return Positioned(
@@ -210,8 +213,8 @@ class _CityPin extends StatelessWidget {
                 child: done
                     ? const Icon(Icons.check, size: 13, color: Colors.white)
                     : locked
-                    ? const Icon(Icons.lock, size: 11, color: Colors.white)
-                    : null,
+                        ? const Icon(Icons.lock, size: 11, color: Colors.white)
+                        : null,
               ),
             ),
           ),
@@ -222,16 +225,16 @@ class _CityPin extends StatelessWidget {
   }
 
   Widget _label(BuildContext context) => Padding(
-    padding: EdgeInsets.only(bottom: city.labelOffset < 0 ? 3 : 0, top: 3),
-    child: Text(
-      city.name,
-      textAlign: TextAlign.center,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-        fontSize: 12,
-        color: locked ? KColors.encreDouce : KColors.encre,
-      ),
-    ),
-  );
+        padding: EdgeInsets.only(bottom: city.labelOffset < 0 ? 3 : 0, top: 3),
+        child: Text(
+          city.name,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: 12,
+                color: locked ? KColors.encreDouce : KColors.encre,
+              ),
+        ),
+      );
 }
 
 class _PassportStrip extends StatelessWidget {
@@ -270,9 +273,8 @@ class _PassportStrip extends StatelessWidget {
                       ? KColors.soleil.withValues(alpha: 0.28)
                       : null,
                   border: Border.all(
-                    color: session.isDone(c)
-                        ? KColors.soleil
-                        : KColors.traitFort,
+                    color:
+                        session.isDone(c) ? KColors.soleil : KColors.traitFort,
                     width: session.isDone(c) ? 2 : 1.2,
                   ),
                 ),

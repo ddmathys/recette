@@ -23,12 +23,12 @@ class _KameoAppState extends State<KameoApp> {
 
   @override
   Widget build(BuildContext context) => KameoScope(
-    notifier: _session,
-    child: MaterialApp(
-      title: 'Kameo',
-      debugShowCheckedModeBanner: false,
-      theme: KameoTheme.light(),
-      home: const OnboardingPage(),
-    ),
-  );
+        notifier: _session,
+        child: MaterialApp(
+          title: 'Kameo',
+          debugShowCheckedModeBanner: false,
+          theme: KameoTheme.light(),
+          home: const OnboardingPage(),
+        ),
+      );
 }

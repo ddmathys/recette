@@ -10,7 +10,6 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_tts: ^4.2.0
-  google_fonts: ^6.2.1
   kameo_engine:
     path: packages/kameo_engine
 
@@ -31,3 +30,12 @@ flutter:
     - content/en/lexicon-seed.json
     - content/en/countries/uk.json
     - content/en/countries/usa.json
+  fonts:
+    # Polices variables : un seul fichier par famille couvre toutes les
+    # graisses, pilotées par FontVariation('wght', …) dans le thème.
+    - family: Fredoka
+      fonts:
+        - asset: assets/fonts/Fredoka.ttf
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/Nunito.ttf

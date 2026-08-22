@@ -246,7 +246,8 @@ class Item {
 
   /// Ce qu'il faut prononcer : le texte d'audio s'il existe, sinon la réponse
   /// attendue (cas des exercices de répétition).
-  String? get spokenText => audioText ?? (kind == ItemKind.speak ? answer : null);
+  String? get spokenText =>
+      audioText ?? (kind == ItemKind.speak ? answer : null);
 
   /// Comparaison indulgente : on ignore la casse, les accents, la ponctuation
   /// et les espaces multiples. Un apprenant ne doit pas perdre un cœur sur un

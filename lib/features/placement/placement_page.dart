@@ -115,9 +115,9 @@ class _PlacementPageState extends State<PlacementPage> {
   }
 
   Future<void> _speak(PlacementQuestion q) => Speech.instance.say(
-    q.lemma.term,
-    locale: _session.country?.ttsLocale ?? 'es-ES',
-  );
+        q.lemma.term,
+        locale: _session.country?.ttsLocale ?? 'es-ES',
+      );
 
   void _answer(String option) {
     if (_revealed) return;
@@ -205,10 +205,10 @@ class _PlacementPageState extends State<PlacementPage> {
                           state: !_revealed
                               ? _OptionState.idle
                               : option == q.expected
-                              ? _OptionState.good
-                              : option == _chosen
-                              ? _OptionState.bad
-                              : _OptionState.idle,
+                                  ? _OptionState.good
+                                  : option == _chosen
+                                      ? _OptionState.bad
+                                      : _OptionState.idle,
                           onTap: () => _answer(option),
                         ),
                       ),
@@ -270,9 +270,9 @@ class _OptionTile extends StatelessWidget {
           child: Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              fontSize: 15.5,
-            ),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15.5,
+                ),
           ),
         ),
       ),

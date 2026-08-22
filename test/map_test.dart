@@ -7,22 +7,43 @@ import 'package:kameo/core/theme/kameo_theme.dart';
 import 'package:kameo/features/map/map_page.dart';
 import 'package:kameo_engine/kameo_engine.dart';
 
-Future<KameoSession> sessionFor(String lang, String countryId) async {
+/// Charge le contenu depuis les assets.
+///
+/// `runAsync` est indispensable : hors de lui, l'attente d'un canal de
+/// plateforme se fait dans la zone de faux temps du test et ne se résout
+/// jamais. C'est ce qui faisait expirer ces tests au bout de dix minutes.
+Future<KameoSession> sessionFor(
+  WidgetTester tester,
+  String lang,
+  String countryId,
+) async {
   final ContentRepository content = ContentRepository();
-  final List<Country> countries = await content.countries(lang);
-  final Lexicon lex = await content.lexicon(lang);
+  final (List<Country>, Lexicon) loaded = (await tester.runAsync(() async {
+    return (await content.countries(lang), await content.lexicon(lang));
+  }))!;
   return KameoSession()
     ..chooseLanguage(lang)
     ..chooseDestination(
-      countries.firstWhere((Country c) => c.id == countryId),
-      lex,
+      loaded.$1.firstWhere((Country c) => c.id == countryId),
+      loaded.$2,
     );
 }
 
 Widget wrap(KameoSession session) => KameoScope(
-  notifier: session,
-  child: MaterialApp(theme: KameoTheme.light(), home: const MapPage()),
-);
+      notifier: session,
+      child: MaterialApp(theme: KameoTheme.light(), home: const MapPage()),
+    );
+
+/// Rend à la taille d'un téléphone plutôt qu'au 800×600 par défaut.
+///
+/// La cible du produit est un écran de téléphone : tester à une autre taille
+/// laisse passer des boutons hors de portée du pouce — ou hors de l'écran.
+void usePhoneScreen(WidgetTester tester) {
+  tester.view.physicalSize = const Size(1170, 2532); // iPhone 13, en pixels
+  tester.view.devicePixelRatio = 3;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -30,7 +51,8 @@ void main() {
   testWidgets('la carte d Espagne affiche ses six villes', (
     WidgetTester tester,
   ) async {
-    final KameoSession session = await sessionFor('es', 'espana');
+    usePhoneScreen(tester);
+    final KameoSession session = await sessionFor(tester, 'es', 'espana');
     await tester.pumpWidget(wrap(session));
     await tester.pumpAndSettle();
 
@@ -51,7 +73,8 @@ void main() {
   testWidgets('la carte des États-Unis affiche ses propres villes', (
     WidgetTester tester,
   ) async {
-    final KameoSession session = await sessionFor('en', 'usa');
+    usePhoneScreen(tester);
+    final KameoSession session = await sessionFor(tester, 'en', 'usa');
     await tester.pumpWidget(wrap(session));
     await tester.pumpAndSettle();
     expect(find.text('New York'), findsWidgets);
@@ -62,7 +85,8 @@ void main() {
   testWidgets('toucher une ville ouvre sa fiche et son expression locale', (
     WidgetTester tester,
   ) async {
-    final KameoSession session = await sessionFor('en', 'uk');
+    usePhoneScreen(tester);
+    final KameoSession session = await sessionFor(tester, 'en', 'uk');
     await tester.pumpWidget(wrap(session));
     await tester.pumpAndSettle();
 
@@ -76,7 +100,8 @@ void main() {
   testWidgets('les villes suivantes sont verrouillées', (
     WidgetTester tester,
   ) async {
-    final KameoSession session = await sessionFor('es', 'espana');
+    usePhoneScreen(tester);
+    final KameoSession session = await sessionFor(tester, 'es', 'espana');
     await tester.pumpWidget(wrap(session));
     await tester.pumpAndSettle();
     // Rien n'est tamponné : la première ville est en cours, les cinq autres
@@ -88,7 +113,8 @@ void main() {
   testWidgets('un tampon obtenu déverrouille la ville suivante', (
     WidgetTester tester,
   ) async {
-    final KameoSession session = await sessionFor('es', 'espana');
+    usePhoneScreen(tester);
+    final KameoSession session = await sessionFor(tester, 'es', 'espana');
     session.stamps.add('barcelona');
     await tester.pumpWidget(wrap(session));
     await tester.pumpAndSettle();

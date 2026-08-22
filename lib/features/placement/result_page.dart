@@ -39,7 +39,8 @@ class ResultPage extends StatelessWidget {
       if (fromScratch) session.startFromScratch();
       Navigator.of(
         context,
-      ).pushReplacement(MaterialPageRoute<void>(builder: (_) => const MapPage()));
+      ).pushReplacement(
+          MaterialPageRoute<void>(builder: (_) => const MapPage()));
     }
 
     return Scaffold(
@@ -70,12 +71,12 @@ class ResultPage extends StatelessWidget {
                     Text(
                       result.isBankLimited
                           ? 'Tu dépasses ce que ce répertoire sait mesurer. On te '
-                                'propose le tour ${result.startTour}, mais '
-                                'l\'estimation est incertaine — le contenu avancé arrive.'
+                              'propose le tour ${result.startTour}, mais '
+                              'l\'estimation est incertaine — le contenu avancé arrive.'
                           : 'Tu démarres au tour ${result.startTour}. Estimé en '
-                                '${result.itemsAsked} questions, à '
-                                '±${result.standardError.round()} points près — '
-                                'et tu peux le refaire dans un mois.',
+                              '${result.itemsAsked} questions, à '
+                              '±${result.standardError.round()} points près — '
+                              'et tu peux le refaire dans un mois.',
                       style: text.bodyMedium,
                     ),
                   ],
@@ -154,15 +155,15 @@ class _Card extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(KSpace.md),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(KSpace.radiusCard),
-      border: Border.all(color: KColors.trait),
-    ),
-    child: child,
-  );
+        width: double.infinity,
+        padding: const EdgeInsets.all(KSpace.md),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(KSpace.radiusCard),
+          border: Border.all(color: KColors.trait),
+        ),
+        child: child,
+      );
 }
 
 class _Pill extends StatelessWidget {
@@ -173,20 +174,20 @@ class _Pill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-    decoration: BoxDecoration(
-      color: highlight
-          ? KColors.lagon.withValues(alpha: 0.22)
-          : KColors.creuse,
-      borderRadius: BorderRadius.circular(99),
-    ),
-    child: Text(
-      label,
-      style: Theme.of(
-        context,
-      ).textTheme.labelSmall?.copyWith(color: KColors.encre),
-    ),
-  );
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: highlight
+              ? KColors.lagon.withValues(alpha: 0.22)
+              : KColors.creuse,
+          borderRadius: BorderRadius.circular(99),
+        ),
+        child: Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: KColors.encre),
+        ),
+      );
 }
 
 class _SkillBar extends StatelessWidget {
@@ -204,40 +205,40 @@ class _SkillBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: KSpace.sm),
-    child: Row(
-      children: <Widget>[
-        SizedBox(
-          width: 62,
-          child: Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(fontSize: 13),
-          ),
-        ),
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(99),
-            child: LinearProgressIndicator(
-              value: (value / 100).clamp(0.0, 1.0),
-              minHeight: 9,
-              backgroundColor: KColors.creuse,
-              color: color,
+        padding: const EdgeInsets.only(bottom: KSpace.sm),
+        child: Row(
+          children: <Widget>[
+            SizedBox(
+              width: 62,
+              child: Text(
+                label,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontSize: 13),
+              ),
             ),
-          ),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(99),
+                child: LinearProgressIndicator(
+                  value: (value / 100).clamp(0.0, 1.0),
+                  minHeight: 9,
+                  backgroundColor: KColors.creuse,
+                  color: color,
+                ),
+              ),
+            ),
+            const SizedBox(width: KSpace.sm),
+            SizedBox(
+              width: 24,
+              child: Text(
+                band,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(letterSpacing: 0.4),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: KSpace.sm),
-        SizedBox(
-          width: 24,
-          child: Text(
-            band,
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(letterSpacing: 0.4),
-          ),
-        ),
-      ],
-    ),
-  );
+      );
 }

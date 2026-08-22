@@ -39,15 +39,15 @@ class PackLesson {
   });
 
   factory PackLesson.fromJson(Map<String, dynamic> json) => PackLesson(
-    id: json['id'] as String,
-    title: json['title'] as String,
-    canDo: (json['canDo'] as List<dynamic>)
-        .map((dynamic e) => e as String)
-        .toList(growable: false),
-    items: (json['items'] as List<dynamic>)
-        .map((dynamic e) => Item.fromJson(e as Map<String, dynamic>))
-        .toList(growable: false),
-  );
+        id: json['id'] as String,
+        title: json['title'] as String,
+        canDo: (json['canDo'] as List<dynamic>)
+            .map((dynamic e) => e as String)
+            .toList(growable: false),
+        items: (json['items'] as List<dynamic>)
+            .map((dynamic e) => Item.fromJson(e as Map<String, dynamic>))
+            .toList(growable: false),
+      );
 
   final String id;
   final String title;
@@ -126,13 +126,12 @@ class CityPack {
   final bool humanReviewed;
 
   List<Item> get allItems => <Item>[
-    for (final PackLesson l in lessons) ...l.items,
-    ...stampChallenge.items,
-  ];
+        for (final PackLesson l in lessons) ...l.items,
+        ...stampChallenge.items,
+      ];
 
   /// Tous les lemmes sur lesquels ce pack s'appuie.
-  Set<String> get lexemes =>
-      allItems.expand((Item i) => i.lexemes).toSet();
+  Set<String> get lexemes => allItems.expand((Item i) => i.lexemes).toSet();
 
   /// Les descripteurs CECR que ce pack prétend couvrir.
   Set<String> get canDo => allItems.expand((Item i) => i.canDo).toSet();

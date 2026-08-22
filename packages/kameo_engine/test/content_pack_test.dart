@@ -116,7 +116,8 @@ void main() {
       );
     });
 
-    test('la correction accepte les accents et la ponctuation approximatifs', () {
+    test('la correction accepte les accents et la ponctuation approximatifs',
+        () {
       final Item translate = pack.lessons.first.items
           .firstWhere((Item i) => i.kind == ItemKind.translate);
       expect(translate.accepts('quiero una paella por favor'), isTrue);
@@ -151,7 +152,8 @@ void main() {
       final Map<String, dynamic> fixture =
           jsonDecode(loadContentFile('es/difficulty-fixture.json'))
               as Map<String, dynamic>;
-      final Map<String, dynamic> bands = fixture['bands'] as Map<String, dynamic>;
+      final Map<String, dynamic> bands =
+          fixture['bands'] as Map<String, dynamic>;
       for (final MapEntry<String, dynamic> e in bands.entries) {
         expect(lex.bandOf(lex.byId(e.key)!).name.toUpperCase(), e.value);
       }

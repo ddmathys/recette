@@ -24,10 +24,10 @@ class CityExpression {
   });
 
   factory CityExpression.fromJson(Map<String, dynamic> json) => CityExpression(
-    text: json['text'] as String,
-    translation: json['translation'] as String,
-    note: json['note'] as String,
-  );
+        text: json['text'] as String,
+        translation: json['translation'] as String,
+        note: json['note'] as String,
+      );
 
   final String text;
   final String translation;
@@ -47,20 +47,20 @@ class City {
   });
 
   factory City.fromJson(Map<String, dynamic> json) => City(
-    id: json['id'] as String,
-    name: json['name'] as String,
-    emoji: json['emoji'] as String,
-    position: MapPoint(
-      (json['x'] as num).toDouble(),
-      (json['y'] as num).toDouble(),
-    ),
-    order: (json['order'] as num).toInt(),
-    theme: json['theme'] as String,
-    expression: CityExpression.fromJson(
-      json['expression'] as Map<String, dynamic>,
-    ),
-    labelOffset: (json['labelOffset'] as num?)?.toDouble() ?? -4.6,
-  );
+        id: json['id'] as String,
+        name: json['name'] as String,
+        emoji: json['emoji'] as String,
+        position: MapPoint(
+          (json['x'] as num).toDouble(),
+          (json['y'] as num).toDouble(),
+        ),
+        order: (json['order'] as num).toInt(),
+        theme: json['theme'] as String,
+        expression: CityExpression.fromJson(
+          json['expression'] as Map<String, dynamic>,
+        ),
+        labelOffset: (json['labelOffset'] as num?)?.toDouble() ?? -4.6,
+      );
 
   final String id;
   final String name;
@@ -109,20 +109,17 @@ class Country {
       accent: json['accent'] as String,
       ttsLocale: json['ttsLocale'] as String,
       note: json['note'] as String,
-      outline: (json['outline'] as List<dynamic>)
-          .map((dynamic e) {
-            final List<dynamic> p = e as List<dynamic>;
-            return MapPoint(
-              (p[0] as num).toDouble(),
-              (p[1] as num).toDouble(),
-            );
-          })
-          .toList(growable: false),
-      cities:
-          (json['cities'] as List<dynamic>)
-              .map((dynamic e) => City.fromJson(e as Map<String, dynamic>))
-              .toList()
-            ..sort((City a, City b) => a.order.compareTo(b.order)),
+      outline: (json['outline'] as List<dynamic>).map((dynamic e) {
+        final List<dynamic> p = e as List<dynamic>;
+        return MapPoint(
+          (p[0] as num).toDouble(),
+          (p[1] as num).toDouble(),
+        );
+      }).toList(growable: false),
+      cities: (json['cities'] as List<dynamic>)
+          .map((dynamic e) => City.fromJson(e as Map<String, dynamic>))
+          .toList()
+        ..sort((City a, City b) => a.order.compareTo(b.order)),
     );
   }
 

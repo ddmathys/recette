@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show SynchronousFuture;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:kameo_engine/kameo_engine.dart';
 
@@ -14,6 +15,7 @@ class ContentRepository {
   final String assetPrefix;
   final Map<String, Lexicon> _cache = <String, Lexicon>{};
   final Map<String, CityPack> _packs = <String, CityPack>{};
+  final Map<String, List<Country>> _countries = <String, List<Country>>{};
 
   /// La version de contenu active. En production, ce pointeur vient de
   /// Remote Config : corriger une faute d'espagnol devient un changement de
@@ -52,7 +54,14 @@ class ContentRepository {
     'en': <String>['uk', 'usa'],
   };
 
+  /// Une fois chargées, les destinations sont servies **de façon synchrone**.
+  ///
+  /// Ça évite de relire les assets à chaque navigation, et ça rend les écrans
+  /// testables : un test peut préchauffer le dépôt puis l'injecter, sans quoi
+  /// la lecture disque ne se résout jamais dans le temps simulé d'un test.
   Future<List<Country>> countries(String lang) async {
+    final List<Country>? cached = _countries[lang];
+    if (cached != null) return SynchronousFuture<List<Country>>(cached);
     final List<Country> out = <Country>[];
     for (final String id in catalogue[lang] ?? const <String>[]) {
       final String raw = await rootBundle.loadString(
@@ -60,12 +69,13 @@ class ContentRepository {
       );
       out.add(Country.fromJsonString(raw));
     }
+    _countries[lang] = out;
     return out;
   }
 
   Future<Lexicon> lexicon(String lang) async {
     final Lexicon? cached = _cache[lang];
-    if (cached != null) return cached;
+    if (cached != null) return SynchronousFuture<Lexicon>(cached);
     final String raw = await rootBundle.loadString(
       '$assetPrefix/$lang/lexicon-seed.json',
     );

@@ -1,3 +1,7 @@
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FDF8EF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kameo">
 <title>Kameo · Prototype de voyage</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -62,6 +66,22 @@ h1,h2,h3,h4,.disp{font-family:Fredoka,Nunito,sans-serif;font-weight:600;text-wra
   border:1px solid var(--line-strong);box-shadow:0 26px 60px -22px var(--shadow),0 0 0 9px var(--surface2),0 0 0 10px var(--line);
   position:relative;overflow:hidden;position:sticky;top:24px}
 @media(max-width:900px){.phone{position:static}}
+
+/* Sur un vrai téléphone, dessiner un téléphone n'a aucun sens : on prend
+   tout l'écran, et les notes de conception passent dessous, repliées. */
+@media(max-width:700px){
+  body{background:var(--surface);background-image:none}
+  .wrap{padding:0;gap:0;max-width:none;display:block}
+  .phone{width:100%;max-width:none;height:100dvh;aspect-ratio:auto;
+    border:0;border-radius:0;box-shadow:none}
+  .notch{display:none}
+  .view{padding:calc(18px + env(safe-area-inset-top)) 20px
+        calc(20px + env(safe-area-inset-bottom))}
+  .brand{padding:22px 20px 0;margin-bottom:12px}
+  .note{border-radius:0;border-left:0;border-right:0;box-shadow:none}
+  .side{border-top:1px solid var(--line)}
+}
+@media(min-width:701px){.mobile-only{display:none}}
 .notch{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:104px;height:24px;border-radius:99px;background:var(--ink);opacity:.9;z-index:40}
 .view{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:52px 22px 26px;display:none;flex-direction:column;gap:16px;scrollbar-width:thin}
 .view.on{display:flex;animation:in .28s ease}
@@ -360,7 +380,7 @@ h1,h2,h3,h4,.disp{font-family:Fredoka,Nunito,sans-serif;font-weight:600;text-wra
     </section>
   </div>
 
-  <div>
+  <div class="side">
     <div class="brand"><span class="dot">🦎</span><b>Kameo</b><span>prototype · non contractuel</span></div>
     <div class="note">
       <div class="eyebrow" id="nk">Écran 1 / 13</div>

@@ -383,7 +383,7 @@ const diff=l=>0.45*l.f+0.20*CEFR[l.cefr]+0.15*l.o+0.10*l.m+0.10*l.t;
 LEX.forEach(l=>l.d=diff(l));
 
 /* ============ état ============ */
-const S={lang:"Espagnol",dest:"Espagne",theta:40,step:20,asked:[],log:[],xp:0,gems:0,
+const S={lang:"Espagnol",dest:"Espagne",theta:40,step:20,asked:[],log:[],resp:[],xp:0,gems:0,
   hearts:5,carnet:[],stamps:[],lessonIdx:0,skill:{ecrire:[],ecouter:[],parler:[]}};
 
 const CITIES=[
@@ -441,7 +441,27 @@ function go(s){
 document.getElementById("jump").innerHTML=ORDER.map(k=>`<button data-j="${k}" onclick="go('${k}')">${NOTES[k][0]}</button>`).join("");
 
 function pick(k,label,code){ S[k]=label; go(k==="lang"?"destination":"depart"); }
-function startAt(mode){ if(mode==="zero"){S.theta=15;finishTest(true);} else {S.asked=[];S.theta=40;S.step=20;S.log=[];S.skill={ecrire:[],ecouter:[],parler:[]};go("test");nextItem();} }
+function startAt(mode){ if(mode==="zero"){S.theta=15;S.resp=[];finishTest(true);}
+  else {S.asked=[];S.theta=40;S.step=20;S.log=[];S.resp=[];S.skill={ecrire:[],ecouter:[],parler:[]};go("test");nextItem();} }
+
+/* Estimation MAP (Rasch régularisé) — même modèle que packages/kameo_engine.
+   L'escalier choisit la question, le MAP note l'utilisateur. */
+const SCALE=10, PRIOR_MU=40, PRIOR_SD=22;
+function posterior(){
+  if(!S.resp.length) return {theta:40,se:PRIOR_SD};
+  let best=PRIOR_MU,bestLl=-Infinity;
+  for(let t=0;t<=100;t+=0.25){
+    let ll=-Math.pow((t-PRIOR_MU)/PRIOR_SD,2)/2;
+    for(const r of S.resp){
+      const p=Math.min(1-1e-6,Math.max(1e-6,1/(1+Math.exp((r.d-t)/SCALE))));
+      ll+=r.ok?Math.log(p):Math.log(1-p);
+    }
+    if(ll>bestLl){bestLl=ll;best=t;}
+  }
+  let info=1/(PRIOR_SD*PRIOR_SD);
+  for(const r of S.resp){ const p=1/(1+Math.exp((r.d-best)/SCALE)); info+=p*(1-p)/(SCALE*SCALE); }
+  return {theta:best, se:1/Math.sqrt(info)};
+}
 function reset(){ S.theta=15; go("carte"); }
 
 function say(t){ try{ const u=new SpeechSynthesisUtterance(t); u.lang="es-ES"; u.rate=.9;
@@ -450,8 +470,9 @@ function say(t){ try{ const u=new SpeechSynthesisUtterance(t); u.lang="es-ES"; u
 /* ============ moteur de placement ============ */
 const FORMATS=["sens","prod","ecoute"];
 function pickItem(){
+  const target=S.resp.length>=4?posterior().theta:S.theta;
   const pool=LEX.filter(l=>!S.asked.includes(l.id));
-  pool.sort((a,b)=>Math.abs(a.d-S.theta)-Math.abs(b.d-S.theta));
+  pool.sort((a,b)=>Math.abs(a.d-target)-Math.abs(b.d-target));
   const near=pool.slice(0,6);
   return near[Math.floor(Math.random()*near.length)];
 }
@@ -461,15 +482,17 @@ function distractors(l,n){
 }
 function nextItem(){
   const i=S.asked.length;
-  const done = i>=8 && S.step<=4.6;
-  if(i>=14||done) return finishTest();
+  const post=posterior();
+  // Arrêt sur l'erreur standard, pas sur le pas de l'escalier : mesuré, ça
+  // fait passer l'erreur moyenne de 9,6 à 4,2 points.
+  if(i>=18||(i>=8&&post.se<=5.5)) return finishTest();
   const l=pickItem(); S.asked.push(l.id);
   const isTrap=!!TRAP[l.id];
   const fmt=isTrap?"sens":FORMATS[i%3];
   const q=document.getElementById("tq"), o=document.getElementById("topts");
   document.getElementById("tkick").textContent=`Question ${i+1}`+(isTrap?" · attention":"");
-  document.getElementById("tprog").style.width=Math.min(100,(i/12)*100)+"%";
-  document.getElementById("tdbg").textContent=`niveau estimé θ ${S.theta.toFixed(0)} · pas ±${S.step.toFixed(1)} · palier ${band(S.theta)}`;
+  document.getElementById("tprog").style.width=Math.min(100,(i/16)*100)+"%";
+  document.getElementById("tdbg").textContent=`niveau estimé ${post.theta.toFixed(0)} ± ${post.se.toFixed(1)} · escalier ${S.theta.toFixed(0)} · palier ${band(post.theta)}`;
   document.getElementById("tfb").innerHTML="";
   let correct,opts;
   if(fmt==="prod"){ q.textContent=`Comment dit-on « ${l.fr} » ?`; correct=l.es; opts=distractors(l,3).map(x=>x.es); }
@@ -486,7 +509,8 @@ function answer(btn,ok,l,fmt,isTrap,correct){
   if(!ok)btn.classList.add("bad");
   const skill = fmt==="ecoute"?"ecouter":(fmt==="prod"?"ecrire":"ecrire");
   S.skill[skill].push(ok?1:0);
-  if(!isTrap){ S.theta=Math.max(0,Math.min(100,S.theta+(ok?S.step:-S.step))); S.step=Math.max(4,S.step*0.75); }
+  if(!isTrap){ S.resp.push({d:l.d,ok});
+    S.theta=Math.max(0,Math.min(100,S.theta+(ok?S.step:-S.step))); S.step=Math.max(4,S.step*0.75); }
   S.log.push({id:l.id,ok,d:Math.round(l.d)});
   if(!ok&&!S.carnet.find(c=>c.id===l.id)) S.carnet.push({id:l.id,es:l.es,fr:l.fr,city:"Test de placement",rung:0});
   const fb=document.getElementById("tfb");
@@ -495,7 +519,9 @@ function answer(btn,ok,l,fmt,isTrap,correct){
 }
 function band(d){ return ["P1","P2","P3","P4","P5","P6"][Math.min(5,Math.floor(d<20?0:d<35?1:d<50?2:d<65?3:d<80?4:5))]; }
 function finishTest(skipped){
-  const t=S.theta;
+  const post=posterior();
+  const t=skipped?15:post.theta;
+  S.theta=t;
   const lvl = t<25?["Explorateur","A1","Tour 1 · Barcelone"]
             : t<40?["Explorateur +","A1","Tour 1 · on saute les bases"]
             : t<55?["Voyageur","A2","Tour 2 · Barcelone"]
@@ -503,9 +529,13 @@ function finishTest(skipped){
             :      ["Aventurier +","B1/B2","Tour 3 · le contenu avancé arrive"];
   document.getElementById("rlvl").textContent=lvl[0];
   document.getElementById("rcefr").textContent=lvl[1];
+  const ceiling=Math.max(...LEX.map(l=>l.d));
+  const limited=!skipped&&(t+post.se>ceiling);
   document.getElementById("rtxt").textContent = skipped
     ? "Tu pars de zéro : on commence à Barcelone, avec le strict nécessaire pour survivre au premier jour."
-    : `Tu démarres au ${lvl[2]}. Estimation faite en ${S.log.length} questions — et tu peux la refaire dans un mois.`;
+    : limited
+      ? `Tu dépasses ce que ce répertoire sait mesurer. On te propose le ${lvl[2]}, mais l'estimation est incertaine — le contenu avancé arrive.`
+      : `Tu démarres au ${lvl[2]}. Estimé en ${S.log.length} questions, à ±${post.se.toFixed(0)} points près — et tu peux le refaire dans un mois.`;
   const acc=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0.5;
   const g=acc([...S.skill.ecrire,...S.skill.ecouter])||.5;
   const sk={ecrire:t+14*(acc(S.skill.ecrire)-g),ecouter:t+14*(acc(S.skill.ecouter)-g),parler:t-9};
@@ -517,7 +547,7 @@ function finishTest(skipped){
   const known=LEX.filter(l=>l.d<t).length, todo=S.carnet.length;
   document.getElementById("rcredit").innerHTML=
     `<div class="kicker">Ton carnet est déjà rempli</div>
-     <p class="lead" style="margin-top:8px"><b style="color:var(--ink);font-size:17px">${known} mots</b> sur les ${LEX.length} du répertoire sont crédités comme connus, et <b style="color:var(--ink)">${todo}</b> ${todo>1?"sont mis":"est mis"} de côté à travailler — les pièges où tu es tombé.</p>`;
+     <p class="lead" style="margin-top:8px"><b style="color:var(--ink);font-size:17px">${known} mots</b> sur les ${LEX.length} du répertoire sont crédités comme connus, et <b style="color:var(--ink)">${todo}</b> ${todo>1?"sont mis":"est mis"} de côté à travailler — ce que tu as raté, pièges compris.</p>`;
   go("resultat");
 }
 

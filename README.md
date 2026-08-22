@@ -17,6 +17,19 @@
 | 04 | [`docs/04-architecture-anti-reprise.md`](docs/04-architecture-anti-reprise.md) | Les 6 décisions qu'on ne veut pas refaire · le journal d'événements |
 | 05 | [`docs/05-plan-mvp.md`](docs/05-plan-mvp.md) | Le plan en 13 étapes, de la première à la dernière |
 
+## Code
+
+| Chemin | Quoi | État |
+|---|---|---|
+| `packages/kameo_engine/` | Le moteur d'apprentissage, en Dart pur | ✅ 48 tests au vert |
+| `lib/` | L'app Flutter (thème, design system, chargement du contenu) | 🚧 squelette, à compiler en local |
+| `.github/workflows/ci.yml` | CI : moteur + app | ✅ |
+
+```bash
+cd packages/kameo_engine && dart pub get && dart test   # le moteur, sans Flutter
+flutter create . && flutter pub get && flutter run      # l'app (génère android/ et ios/)
+```
+
 ## Contenu
 
 - `content/es/lexicon-seed.json` — 130 lemmes espagnols notés sur 5 composantes (fréquence, CECR, opacité vs français, irrégularité, piège), thématisés par ville. La difficulté n'est pas stockée : elle se calcule.

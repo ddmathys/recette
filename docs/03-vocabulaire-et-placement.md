@@ -81,21 +81,62 @@ Pour ton cas d'usage (fluidité à l'écrit), la même grille filtrée sur `skil
 ### 4.1 Objectif
 En **4 minutes**, produire : (a) un tour de départ, (b) un vecteur de compétences, (c) **un pré-remplissage du carnet** avec les mots visiblement déjà connus. Le (c) est sous-estimé : c'est ce qui évite de faire réviser *hola* à quelqu'un qui a fait 5 ans d'espagnol.
 
-### 4.2 Algorithme — escalier adaptatif (Rasch simplifié)
+### 4.2 Algorithme — escalier adaptatif + notation sur toutes les réponses
+
+Deux mécanismes distincts, et c'est important de ne pas les confondre :
+
+**1. Choisir la question suivante** — un escalier adaptatif. On part de θ = 40,
+on monte du pas courant si c'est juste, on descend sinon, et le pas décroît de
+25 % à chaque réponse. Simple, rapide à converger, sans calcul lourd.
 
 ```
-θ ← 40                       // estimation de niveau, échelle 0-100 (= échelle de difficulté)
-pas ← 20
-pour i de 1 à 20 :
-    item ← tirer un lemme non vu de difficulté ≈ θ (±5), format alterné
-    si réussi : θ ← θ + pas   sinon : θ ← θ − pas
-    pas ← max(4, pas × 0.75)                  // convergence
-    si i ≥ 8 et erreur_standard(θ) < 4 : arrêter
+θ ← 40 ; pas ← 20
+à chaque réponse : θ ← θ ± pas ; pas ← max(4, pas × 0,75)
+dès la 4e réponse, on cible l'estimation (ci-dessous) plutôt que l'escalier
 ```
 
-- **8 items minimum, 20 maximum.** Convergence typique en 12–14 items ≈ 3 min.
-- Les items sont **alternés par compétence** : reconnaissance (ES→FR), rappel (FR→ES), écoute (audio→sens), production (une phrase à écrire). On obtient trois θ partiels : `θ_écrire`, `θ_écouter`, `θ_parler` (dérivé, faible confiance au MVP).
-- **Deux items pièges obligatoires** (faux-amis) : ils ne comptent pas dans θ mais alimentent le carnet — un utilisateur qui tombe dans *salir* reçoit ce mot en priorité.
+**2. Noter l'utilisateur** — un maximum a posteriori sur **toutes** ses réponses
+(modèle de Rasch régularisé par un a priori faible, N(40, 22)). L'escalier
+s'arrête là où il se trouve, à un demi-pas près ; l'estimation, elle, exploite
+chaque réponse.
+
+```
+P(réussir un item de difficulté d | niveau θ) = 1 / (1 + e^((d − θ)/10))
+θ̂ = argmax  Σ log P(réponse_i)  −  ((θ − 40)/22)² / 2
+erreur standard = 1 / √(information de Fisher)
+```
+
+**Règle d'arrêt : sur l'erreur standard, pas sur le nombre de questions.**
+Minimum 8, maximum 18, on s'arrête dès que l'erreur standard passe sous 5,5.
+
+> **Mesuré** (1 000 apprenants simulés, sur le fichier semence) :
+>
+> | Version | Erreur moyenne | 90ᵉ centile | Questions | Bon tour |
+> |---|---|---|---|---|
+> | Escalier seul, arrêt sur le pas | 9,6 | 12,8 | 9 | 77 % |
+> | **MAP + arrêt sur l'erreur standard** | **4,2** | **8,6** | 16,7 | **84 %** |
+>
+> Et surtout : **100 % des apprenants sont placés à un tour près.** Se tromper
+> d'un tour est sans conséquence (le contenu se recouvre, et le résultat est une
+> proposition) ; se tromper de deux ne se produit jamais.
+
+Trois détails qui comptent :
+
+- **Les formats alternent** — reconnaissance (ES→FR), rappel (FR→ES), écoute.
+  On obtient trois θ partiels : `θ_écrire`, `θ_écouter`, et `θ_parler` **dérivé
+  et annoncé en retrait**, parce que le test ne mesure pas l'oral au MVP. On le
+  dit à l'utilisateur plutôt que de bluffer.
+- **Deux items pièges obligatoires** (faux-amis), placés en milieu de test une
+  fois θ dégrossi. Ils ne comptent pas dans le score : ils alimentent le carnet.
+- **Le plafond du répertoire est annoncé.** Si l'estimation touche le lemme le
+  plus difficile disponible, le résultat est marqué non fiable (`isBankLimited`).
+  Avec la semence, cela arrive au-delà de B1 — c'est un signal qu'il faut
+  enrichir le contenu, pas inventer un niveau.
+
+**Le coût en questions est connu et assumé.** Mesuré sur un répertoire dense :
+14 questions → 4,4 d'erreur ; 30 questions → 3,0 ; 45 questions → 2,2. Le
+rendement décroît vite, et le temps de l'utilisateur vaut plus que le troisième
+point de précision. D'où le plafond à 18.
 
 ### 4.3 Du score au tour de départ
 

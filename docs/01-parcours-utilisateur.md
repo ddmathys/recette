@@ -131,8 +131,13 @@ paywall_shown {trigger} · trial_started · subscription_started {plan}
 
 ---
 
-## 8. Décisions ouvertes (à trancher avec toi)
+## 8. Décisions prises
 
-1. **Test de placement au 1er lancement ou après la 1ʳᵉ leçon ?** Je recommande *avant* (l'utilisateur qui a des bases décroche s'il doit d'abord subir « hola = bonjour »), mais on peut A/B tester.
-2. **E-mail/mot de passe au MVP ?** Je recommande **Apple + Google uniquement** au départ : moins de code, moins de support, pas de reset de mot de passe à écrire. E-mail en V2 si besoin.
-3. **Âge minimum / mode enfant.** Cible « 8–99 ans » = App Store demandera une classification et potentiellement du COPPA/RGPD-K. À trancher avant la soumission, pas avant le code.
+Validées le 22/08/2026, elles ne se rediscutent plus sans raison nouvelle.
+
+1. **Le test de placement est proposé au premier lancement**, avant la première leçon, aiguillé par la question A4. Un utilisateur qui a des bases décroche s'il doit d'abord subir « hola = bonjour ».
+2. **Apple + Google uniquement au MVP.** Pas d'e-mail/mot de passe : moins de code, pas de réinitialisation à écrire, pas de support à assurer. E-mail en V2 si la demande apparaît.
+3. **Seuil de validation par compétence : `min(écrire, parler, écouter) ≥ N − 0,3`** (doc 02 §7). Volontairement exigeant : c'est lui qui empêche de valider un A2 avec un oral A1.
+4. **Les 6 paliers de vocabulaire et les 5 niveaux CECR** sont adoptés tels que décrits aux docs 02 et 03.
+
+Reste ouvert, à trancher avant la soumission aux stores (pas avant le code) : **classification d'âge et mode enfant**. La cible « 8–99 ans » implique une classification App Store et potentiellement du RGPD-K.

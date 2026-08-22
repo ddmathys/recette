@@ -8,7 +8,7 @@
 
 ---
 
-## Étape 0 — Valider ces documents *(cette semaine, avec toi)*
+## Étape 0 — Valider ces documents ✅ *(fait le 22/08/2026)*
 
 Rien à coder. Tu lis les docs 01 à 04 et tu tranches les points ouverts :
 - doc 01 §8 : test de placement avant ou après la 1ʳᵉ leçon · méthodes de connexion · classification d'âge
@@ -16,7 +16,7 @@ Rien à coder. Tu lis les docs 01 à 04 et tu tranches les points ouverts :
 - doc 03 : la formule de difficulté et les 6 paliers
 - doc 04 : les 6 décisions gelées
 
-**Sortie :** les docs sont amendés et validés. Tout le reste en découle.
+**Sortie :** ✅ validé. Les décisions sont consignées au doc 01 §8.
 
 ---
 
@@ -30,7 +30,7 @@ Un parcours complet jouable dans un navigateur : test de placement adaptatif ré
 
 ---
 
-## Étape 2 — Fondations techniques *(~1 semaine)*
+## Étape 2 — Fondations techniques ✅ *(squelette posé)*
 
 - Projet Flutter, flavors `dev` / `prod`, `analysis_options` strict.
 - Firebase : projet dev + projet prod, Auth anonyme, Firestore, Remote Config, Crashlytics.
@@ -38,11 +38,13 @@ Un parcours complet jouable dans un navigateur : test de placement adaptatif ré
 - CI GitHub Actions : `flutter analyze` + `flutter test` sur chaque push.
 - Arborescence du doc 04 §5, avec `domain/` vide mais isolé.
 
-**Sortie :** un écran blanc au thème Kameo tourne sur ton téléphone, la CI est verte.
+**Sortie :** ✅ posé — `pubspec.yaml`, `analysis_options.yaml` strict, thème Kameo (`lib/core/theme/`), `KButton` avec son retour haptique, `ContentRepository` qui charge le pack depuis les assets, un écran d'amorçage qui affiche la répartition du répertoire, et `.github/workflows/ci.yml` (deux jobs : moteur Dart pur, app Flutter).
+
+⚠️ **Restant à faire sur ta machine** : `flutter create` pour générer les dossiers `android/` et `ios/`, puis `flutter pub get && flutter run`. Le conteneur de développement n'a pas le SDK Flutter — le code Dart est vérifié syntaxiquement, mais l'app n'a pas été compilée. C'est la seule partie de l'étape 2 qui n'est pas prouvée.
 
 ---
 
-## Étape 3 — Le moteur, sans interface *(~1,5 semaine)* ⭐
+## Étape 3 — Le moteur, sans interface ✅ *(fait — `packages/kameo_engine`)* ⭐
 
 L'étape la plus importante du plan, et celle que personne ne fait dans cet ordre.
 
@@ -54,7 +56,14 @@ Dans `domain/`, en Dart pur, avec des tests unitaires :
 - `LessonBuilder` : la recette 60/20/20 du doc 02 §6.
 - `EventReducer` : journal → état (doc 04 §2).
 
-**Sortie :** `flutter test` passe, avec au minimum : un placement simulé sur 1 000 profils synthétiques qui converge, un SRS qui produit les bons intervalles, un réducteur idempotent (rejouer deux fois le même événement ne change pas l'état).
+**Sortie :** ✅ `dart analyze` sans avertissement, **48 tests au vert**, dont :
+
+- placement simulé sur **1 000 apprenants synthétiques** : erreur moyenne 4,2 points, **84 % dans le bon tour, 100 % à un tour près** ;
+- la démonstration chiffrée que noter sur toutes les réponses bat la position de l'escalier, et que la précision se paie en questions ;
+- SRS : un échec isolé ne fait jamais perdre d'échelon, il en faut trois consécutifs ; monter exige deux réussites espacées de 24 h ;
+- réducteur : rejouer un événement ne change rien, un tampon ne redescend jamais, le tour courant ne recule pas même après un placement raté, l'XP est monotone.
+
+Le package est du **Dart pur** : ni Flutter, ni Firebase, ni réseau. Il tourne en 12 secondes.
 
 ---
 

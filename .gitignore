@@ -1,0 +1,11 @@
+.dart_tool/
+.packages
+build/
+pubspec.lock
+packages/*/pubspec.lock
+packages/*/.dart_tool/
+*.iml
+.idea/
+.vscode/
+ios/Pods/
+node_modules/

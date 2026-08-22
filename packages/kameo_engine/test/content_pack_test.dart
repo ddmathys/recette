@@ -39,7 +39,7 @@ void main() {
         expect(
           lex.bandOf(lex.byId(id)!).index,
           lessThanOrEqualTo(Band.p3.index),
-          reason: '${lex.byId(id)!.es} est trop dur pour le tour 1',
+          reason: '${lex.byId(id)!.term} est trop dur pour le tour 1',
         );
       }
     });
@@ -141,7 +141,7 @@ void main() {
         expect(
           lex.difficultyOf(lemma!),
           closeTo((e.value as num).toDouble(), 0.0001),
-          reason: '${lemma.es} : Dart ${lex.difficultyOf(lemma)} '
+          reason: '${lemma.term} : Dart ${lex.difficultyOf(lemma)} '
               'vs Node ${e.value}',
         );
       }

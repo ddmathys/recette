@@ -54,8 +54,8 @@ export function bandIndex(name) {
  * Ce champ n'est PAS annoté par l'IA — il se calcule. Une valeur calculée ne
  * peut pas être fausse, une valeur annotée si (doc 03 §6, étape 3).
  */
-export function opacity(es, fr) {
-  const a = fold(es);
+export function opacity(term, fr) {
+  const a = fold(term);
   const b = fold(fr.split(/[/,(]/)[0].trim());
   if (!a.length || !b.length) return 100;
   const d = levenshtein(a, b);

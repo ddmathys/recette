@@ -28,7 +28,7 @@ void main() {
         expect(l.cefr, anyOf('B1', 'B2', 'C1'));
         expect(lex.difficultyOf(l), greaterThan(45));
       }
-      expect(sorted.first.es, 'no');
+      expect(sorted.first.term, 'no');
       // La formule doit séparer nettement le mot outil du mot abstrait.
       expect(lex.difficultyOf(lex.byId('es.hola')!),
           lessThan(lex.difficultyOf(lex.byId('es.soler')!)));

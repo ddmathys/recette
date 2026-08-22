@@ -12,8 +12,10 @@ abstract final class KColors {
   static const Color ciel = Color(0xFF3EA8FF);
 
   static const Color corailOmbre = Color(0xFFD8493D);
+  static const Color lagonOmbre = Color(0xFF00A386);
   static const Color encreDouce = Color(0xFF6F6A9B);
   static const Color trait = Color(0xFFE4D9C6);
+  static const Color traitFort = Color(0xFFCFC2AA);
   static const Color creuse = Color(0xFFF3EADC);
 }
 

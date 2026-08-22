@@ -11,7 +11,7 @@ import { band, bandIndex, difficulty } from './difficulty.mjs';
  */
 export function systemPrompt({ descriptors, allowedLemmas, weights }) {
   const vocab = allowedLemmas
-    .map((l) => `${l.id} · ${l.es} = ${l.fr} [${band(difficulty(l, weights))}]${l.note ? ` — ${l.note}` : ''}`)
+    .map((l) => `${l.id} · ${l.term} = ${l.fr} [${band(difficulty(l, weights))}]${l.note ? ` — ${l.note}` : ''}`)
     .join('\n');
   const cando = Object.entries(descriptors)
     .map(([id, text]) => `${id} : ${text}`)

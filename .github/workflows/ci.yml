@@ -36,7 +36,9 @@ jobs:
       - name: Valider le contenu
         run: node validate-content.mjs
       - name: Vérifier la parité de la formule de difficulté
-        run: node emit-difficulty-fixture.mjs es --check
+        run: |
+          node emit-difficulty-fixture.mjs es --check
+          node emit-difficulty-fixture.mjs en --check
 
   app:
     name: Application Flutter
@@ -46,6 +48,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          cache: true
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test

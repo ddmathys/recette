@@ -28,13 +28,13 @@ const moves = [];
 for (const lemma of doc.lemmas) {
   if (lemma.oManual) continue;
   const before = band(difficulty(lemma));
-  const computed = opacity(lemma.es, lemma.fr);
+  const computed = opacity(lemma.term, lemma.fr);
   if (computed !== lemma.o) {
     changed++;
     lemma.o = computed;
   }
   const after = band(difficulty(lemma));
-  if (before !== after) moves.push(`${lemma.es} : ${before} → ${after}`);
+  if (before !== after) moves.push(`${lemma.term} : ${before} → ${after}`);
 }
 
 if (dry) {

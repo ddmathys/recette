@@ -1,0 +1,101 @@
+name: APK
+
+# Produit un APK installable à chaque push sur main, et l'attache à une
+# release quand on pose un tag `v*`. Aucun secret n'est nécessaire pour
+# obtenir un APK : la distribution Firebase, elle, est optionnelle.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Construire l'APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Vérifier le contenu avant de construire
+        working-directory: tools
+        run: |
+          npm ci
+          node validate-content.mjs
+          node emit-difficulty-fixture.mjs es --check
+          node emit-difficulty-fixture.mjs en --check
+
+      - name: Moteur
+        working-directory: packages/kameo_engine
+        run: |
+          dart pub get
+          dart analyze
+          dart test
+
+      - name: Application
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+
+      - name: Générer le dossier android si absent
+        # `flutter create` n'écrase pas lib/ : il ne fait qu'ajouter ce qui
+        # manque. Le dossier android/ peut donc être versionné ou pas — la CI
+        # fonctionne dans les deux cas.
+        run: |
+          if [ ! -d android ]; then
+            flutter create --platforms=android --org ch.kameo --project-name kameo .
+          fi
+
+      - name: Construire l'APK
+        # Sans keystore, Flutter signe avec la clé de debug : l'APK
+        # s'installe en autorisant les « sources inconnues », mais ne peut
+        # pas être publié sur le Play Store en l'état.
+        run: flutter build apk --release
+
+      - name: Renommer avec le numéro de build
+        run: |
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk \
+             "dist/kameo-${GITHUB_REF_NAME//\//-}-${GITHUB_RUN_NUMBER}.apk"
+          ls -lh dist/
+
+      - name: Publier l'APK comme artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kameo-apk
+          path: dist/*.apk
+          retention-days: 30
+
+      - name: Attacher l'APK à la release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.apk
+          generate_release_notes: true
+
+      # Distribution aux testeurs. S'active toute seule le jour où les deux
+      # secrets existent — sans eux, l'étape est simplement sautée.
+      - name: Distribuer aux testeurs (Firebase App Distribution)
+        if: ${{ vars.FIREBASE_APP_ID != '' }}
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ vars.FIREBASE_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          groups: testeurs
+          file: build/app/outputs/flutter-apk/app-release.apk
+          releaseNotes: |
+            ${{ github.event.head_commit.message }}

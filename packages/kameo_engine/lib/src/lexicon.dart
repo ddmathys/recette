@@ -71,6 +71,14 @@ class Lexicon {
       .where((Lemma l) => l.themes.contains(theme))
       .toList(growable: false);
 
+  /// Le vocabulaire valable pour une destination donnée.
+  ///
+  /// Un voyageur qui part à New York n'a rien à faire avec « pavement » :
+  /// filtrer ici évite d'enseigner un mot qu'on n'entendra jamais sur place.
+  List<Lemma> forVariant(String? variant) => _lemmas
+      .where((Lemma l) => l.variant == null || l.variant == variant)
+      .toList(growable: false);
+
   List<Lemma> get traps =>
       _lemmas.where((Lemma l) => l.isTrap).toList(growable: false);
 

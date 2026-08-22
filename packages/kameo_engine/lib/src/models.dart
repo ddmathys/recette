@@ -78,7 +78,7 @@ class DifficultyWeights {
 class Lemma {
   const Lemma({
     required this.id,
-    required this.es,
+    required this.term,
     required this.fr,
     required this.cefr,
     required this.f,
@@ -88,12 +88,13 @@ class Lemma {
     this.pos,
     this.themes = const <String>[],
     this.city,
+    this.variant,
     this.note,
   });
 
   factory Lemma.fromJson(Map<String, dynamic> json) => Lemma(
         id: json['id'] as String,
-        es: json['es'] as String,
+        term: json['term'] as String,
         fr: json['fr'] as String,
         cefr: json['cefr'] as String,
         f: (json['f'] as num).toDouble(),
@@ -105,11 +106,12 @@ class Lemma {
             .map((dynamic e) => e as String)
             .toList(growable: false),
         city: json['city'] as String?,
+        variant: json['variant'] as String?,
         note: json['note'] as String?,
       );
 
   final String id;
-  final String es;
+  final String term;
   final String fr;
   final String cefr;
 
@@ -128,6 +130,11 @@ class Lemma {
   final String? pos;
   final List<String> themes;
   final String? city;
+
+  /// `uk` ou `us` quand le mot ne s'emploie que d'un côté de l'Atlantique.
+  /// `null` = valable partout.
+  final String? variant;
+
   final String? note;
 
   /// Un lemme est un piège à partir de 70 : c'est le seuil au-delà duquel il
@@ -150,7 +157,7 @@ class Lemma {
       w.trap * t;
 
   @override
-  String toString() => 'Lemma($id, $es)';
+  String toString() => 'Lemma($id, $term)';
 }
 
 /// La nature d'un exercice.

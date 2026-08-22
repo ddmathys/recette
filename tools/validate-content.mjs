@@ -45,10 +45,10 @@ function loadLexicon(lang) {
         fail(where, `champ ${f} hors de [0, 100]`);
       }
     }
-    if (!l.es || !l.fr || !l.cefr) fail(where, 'es, fr et cefr sont obligatoires');
+    if (!l.term || !l.fr || !l.cefr) fail(where, 'es, fr et cefr sont obligatoires');
     // L'opacité se calcule : si la valeur annotée s'en écarte trop, c'est
     // qu'elle a été saisie à la main ou hallucinée.
-    const computed = opacity(l.es, l.fr);
+    const computed = opacity(l.term, l.fr);
     if (Math.abs(computed - l.o) > 35) {
       warn(where, `opacité annotée ${l.o}, calculée ${computed} — à revoir`);
     }
@@ -107,7 +107,7 @@ function validatePack(path, pack, lexById, descriptors) {
       if (bandIndex(band(difficulty(lemma))) > maxBand) {
         fail(
           where,
-          `« ${lemma.es} » est en ${band(difficulty(lemma))}, trop dur pour le tour ${p.tour}`,
+          `« ${lemma.term} » est en ${band(difficulty(lemma))}, trop dur pour le tour ${p.tour}`,
         );
       }
     }

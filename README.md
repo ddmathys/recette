@@ -22,19 +22,27 @@
 | Chemin | Quoi | État |
 |---|---|---|
 | `packages/kameo_engine/` | Le moteur d'apprentissage, en Dart pur | ✅ 48 tests au vert |
-| `lib/` | L'app Flutter (thème, design system, chargement du contenu) | 🚧 squelette, à compiler en local |
+| `lib/` | L'app Flutter : onboarding, test de placement, cartes | ✅ analyze propre + tests d'écran |
 | `tools/` | Pipeline de contenu : génération, validation, recalibrage | ✅ validateur en CI |
 | `.github/workflows/ci.yml` | CI : moteur + contenu + app | ✅ |
 
 ```bash
 cd packages/kameo_engine && dart pub get && dart test   # le moteur, sans Flutter
-flutter create . && flutter pub get && flutter run      # l'app (génère android/ et ios/)
+flutter pub get && flutter test && flutter run          # l'app
+flutter build apk --release                             # un APK installable
 ```
+
+**Un APK à chaque push.** Le workflow `.github/workflows/apk.yml` construit l'APK sur `main`,
+l'attache comme artefact téléchargeable, et le publie en release sur un tag `v*`.
+Aucun secret n'est nécessaire ; la distribution Firebase s'active toute seule le jour où
+`FIREBASE_APP_ID` et `FIREBASE_SERVICE_ACCOUNT` existent.
 
 ## Contenu
 
 - `content/es/lexicon-seed.json` — 130 lemmes espagnols notés sur 5 composantes (fréquence, CECR, opacité vs français, irrégularité, piège), thématisés par ville. La difficulté n'est pas stockée : elle se calcule. L'opacité non plus : elle est calculée par `tools/normalize-lexicon.mjs`.
 - `content/cefr-descriptors.json` — les affirmations testables adossées au CECR.
+- `content/en/lexicon-seed.json` — 114 lemmes anglais, dont 25 qui n'existent que d'un côté de l'Atlantique et 22 faux-amis du francophone.
+- `content/{lang}/countries/*.json` — trois destinations : Espagne, Royaume-Uni, États-Unis. Contour de carte, six villes chacune, expression locale expliquée.
 - `content/es/packs/2026-08-22_v1/valencia.t1.json` — le pack de référence : Valence, tour 1, 3 leçons, 17 items, épreuve de tampon.
 
 Voir [`tools/README.md`](tools/README.md) pour le circuit complet, de la liste de fréquence à la publication.

@@ -1,0 +1,1848 @@
+{
+  "meta": {
+    "lang": "en",
+    "version": "seed-0.1",
+    "note": "Semence du répertoire anglais. La difficulté et l'opacité ne sont pas saisies : elles sont calculées.",
+    "formula": "difficulte = 0.45*f + 0.20*cefrScore + 0.15*o + 0.10*m + 0.10*t",
+    "cefrScore": {
+      "A1": 0,
+      "A2": 30,
+      "B1": 60,
+      "B2": 80,
+      "C1": 100
+    },
+    "fields": {
+      "term": "le mot dans la langue apprise",
+      "f": "difficulte de frequence 0-100 (0 = tres frequent)",
+      "o": "opacite orthographique vs francais 0-100 (calculee, pas saisie)",
+      "m": "irregularite morphologique 0-100",
+      "t": "piege (faux-ami, polysemie, construction) 0-100",
+      "city": "affinite ville, null = partout",
+      "variant": "uk ou us quand le mot ne s'emploie que d'un cote de l'Atlantique"
+    },
+    "bands": [
+      [
+        0,
+        20,
+        "P1"
+      ],
+      [
+        20,
+        35,
+        "P2"
+      ],
+      [
+        35,
+        50,
+        "P3"
+      ],
+      [
+        50,
+        65,
+        "P4"
+      ],
+      [
+        65,
+        80,
+        "P5"
+      ],
+      [
+        80,
+        101,
+        "P6"
+      ]
+    ]
+  },
+  "lemmas": [
+    {
+      "id": "en.hello",
+      "term": "hello",
+      "fr": "bonjour / salut",
+      "pos": "interj",
+      "cefr": "A1",
+      "f": 3,
+      "o": 86,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "salutation"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.thanks",
+      "term": "thanks",
+      "fr": "merci",
+      "pos": "interj",
+      "cefr": "A1",
+      "f": 5,
+      "o": 100,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "politesse"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.please",
+      "term": "please",
+      "fr": "s'il te plaît",
+      "pos": "interj",
+      "cefr": "A1",
+      "f": 8,
+      "o": 75,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "politesse"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.sorry",
+      "term": "sorry",
+      "fr": "pardon / désolé",
+      "pos": "interj",
+      "cefr": "A1",
+      "f": 10,
+      "o": 83,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "politesse"
+      ],
+      "city": null,
+      "note": "En Angleterre, « sorry » sert aussi à s'excuser quand c'est l'autre qui t'a bousculé."
+    },
+    {
+      "id": "en.yes",
+      "term": "yes",
+      "fr": "oui",
+      "pos": "adv",
+      "cefr": "A1",
+      "f": 2,
+      "o": 100,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "base"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.no",
+      "term": "no",
+      "fr": "non",
+      "pos": "adv",
+      "cefr": "A1",
+      "f": 1,
+      "o": 33,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "base"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.water",
+      "term": "water",
+      "fr": "eau",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 6,
+      "o": 80,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "restaurant"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.house",
+      "term": "house",
+      "fr": "maison",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 7,
+      "o": 83,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "quotidien"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.day",
+      "term": "day",
+      "fr": "jour",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 5,
+      "o": 100,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "temps"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.night",
+      "term": "night",
+      "fr": "nuit / soirée",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 10,
+      "o": 60,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "sortie"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.eat",
+      "term": "to eat",
+      "fr": "manger",
+      "pos": "verbe",
+      "cefr": "A1",
+      "f": 9,
+      "o": 100,
+      "m": 80,
+      "t": 0,
+      "themes": [
+        "restaurant"
+      ],
+      "city": null,
+      "note": "Irrégulier : eat / ate / eaten."
+    },
+    {
+      "id": "en.drink",
+      "term": "to drink",
+      "fr": "boire",
+      "pos": "verbe",
+      "cefr": "A1",
+      "f": 14,
+      "o": 75,
+      "m": 80,
+      "t": 0,
+      "themes": [
+        "restaurant"
+      ],
+      "city": null,
+      "note": "Irrégulier : drink / drank / drunk."
+    },
+    {
+      "id": "en.be",
+      "term": "to be",
+      "fr": "être",
+      "pos": "verbe",
+      "cefr": "A1",
+      "f": 1,
+      "o": 80,
+      "m": 100,
+      "t": 0,
+      "themes": [
+        "base"
+      ],
+      "city": null,
+      "note": "Le verbe le plus irrégulier de la langue : am / is / are / was / were / been."
+    },
+    {
+      "id": "en.have",
+      "term": "to have",
+      "fr": "avoir",
+      "pos": "verbe",
+      "cefr": "A1",
+      "f": 3,
+      "o": 100,
+      "m": 80,
+      "t": 0,
+      "themes": [
+        "base"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.do",
+      "term": "to do",
+      "fr": "faire",
+      "pos": "verbe",
+      "cefr": "A1",
+      "f": 3,
+      "o": 100,
+      "m": 90,
+      "t": 30,
+      "themes": [
+        "base"
+      ],
+      "city": null,
+      "note": "Sert aussi d'auxiliaire pour les questions et les négations : « Do you like it? »"
+    },
+    {
+      "id": "en.go",
+      "term": "to go",
+      "fr": "aller",
+      "pos": "verbe",
+      "cefr": "A1",
+      "f": 4,
+      "o": 100,
+      "m": 100,
+      "t": 0,
+      "themes": [
+        "base"
+      ],
+      "city": null,
+      "note": "Irrégulier : go / went / gone."
+    },
+    {
+      "id": "en.want",
+      "term": "to want",
+      "fr": "vouloir",
+      "pos": "verbe",
+      "cefr": "A1",
+      "f": 6,
+      "o": 86,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "base"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.can",
+      "term": "can",
+      "fr": "pouvoir",
+      "pos": "verbe",
+      "cefr": "A1",
+      "f": 5,
+      "o": 100,
+      "m": 70,
+      "t": 40,
+      "themes": [
+        "base"
+      ],
+      "city": null,
+      "note": "Modal : jamais de « to » derrière, jamais de « s » à la troisième personne."
+    },
+    {
+      "id": "en.good",
+      "term": "good",
+      "fr": "bon / bien",
+      "pos": "adj",
+      "cefr": "A1",
+      "f": 6,
+      "o": 75,
+      "m": 60,
+      "t": 0,
+      "themes": [
+        "base"
+      ],
+      "city": null,
+      "note": "Comparatif irrégulier : good / better / best."
+    },
+    {
+      "id": "en.big",
+      "term": "big",
+      "fr": "grand",
+      "pos": "adj",
+      "cefr": "A1",
+      "f": 9,
+      "o": 100,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "base"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.small",
+      "term": "small",
+      "fr": "petit",
+      "pos": "adj",
+      "cefr": "A1",
+      "f": 13,
+      "o": 100,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "base"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.man",
+      "term": "man",
+      "fr": "homme",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 8,
+      "o": 80,
+      "m": 60,
+      "t": 0,
+      "themes": [
+        "gens"
+      ],
+      "city": null,
+      "note": "Pluriel irrégulier : men."
+    },
+    {
+      "id": "en.woman",
+      "term": "woman",
+      "fr": "femme",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 9,
+      "o": 80,
+      "m": 70,
+      "t": 0,
+      "themes": [
+        "gens"
+      ],
+      "city": null,
+      "note": "Pluriel irrégulier : women, qui se prononce « wimin »."
+    },
+    {
+      "id": "en.child",
+      "term": "child",
+      "fr": "enfant",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 12,
+      "o": 100,
+      "m": 80,
+      "t": 0,
+      "themes": [
+        "gens"
+      ],
+      "city": null,
+      "note": "Pluriel irrégulier : children."
+    },
+    {
+      "id": "en.friend",
+      "term": "friend",
+      "fr": "ami",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 10,
+      "o": 83,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "gens"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.city",
+      "term": "city",
+      "fr": "ville",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 14,
+      "o": 80,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "ville"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.street",
+      "term": "street",
+      "fr": "rue",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 15,
+      "o": 67,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "ville"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.beach",
+      "term": "beach",
+      "fr": "plage",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 24,
+      "o": 80,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "mer"
+      ],
+      "city": "losangeles"
+    },
+    {
+      "id": "en.sea",
+      "term": "sea",
+      "fr": "mer",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 20,
+      "o": 67,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "mer"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.buy",
+      "term": "to buy",
+      "fr": "acheter",
+      "pos": "verbe",
+      "cefr": "A1",
+      "f": 16,
+      "o": 100,
+      "m": 70,
+      "t": 0,
+      "themes": [
+        "marche"
+      ],
+      "city": null,
+      "note": "Irrégulier : buy / bought / bought."
+    },
+    {
+      "id": "en.pay",
+      "term": "to pay",
+      "fr": "payer",
+      "pos": "verbe",
+      "cefr": "A1",
+      "f": 18,
+      "o": 83,
+      "m": 50,
+      "t": 0,
+      "themes": [
+        "marche"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.money",
+      "term": "money",
+      "fr": "argent",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 17,
+      "o": 83,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "marche"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.bill",
+      "term": "the bill",
+      "fr": "l'addition",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 26,
+      "o": 89,
+      "m": 0,
+      "t": 50,
+      "themes": [
+        "restaurant"
+      ],
+      "city": "london",
+      "variant": "uk",
+      "note": "Au Royaume-Uni on demande « the bill », aux États-Unis « the check »."
+    },
+    {
+      "id": "en.check",
+      "term": "the check",
+      "fr": "l'addition",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 26,
+      "o": 100,
+      "m": 0,
+      "t": 60,
+      "themes": [
+        "restaurant"
+      ],
+      "city": "newyork",
+      "variant": "us",
+      "note": "Aux États-Unis, « check » c'est l'addition. Au Royaume-Uni, ce serait un chèque."
+    },
+    {
+      "id": "en.table",
+      "term": "table",
+      "fr": "table",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 19,
+      "o": 0,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "restaurant"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.bread",
+      "term": "bread",
+      "fr": "pain",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 15,
+      "o": 100,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "cuisine"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.beer",
+      "term": "beer",
+      "fr": "bière",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 26,
+      "o": 40,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "sortie"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.expensive",
+      "term": "expensive",
+      "fr": "cher",
+      "pos": "adj",
+      "cefr": "A1",
+      "f": 25,
+      "o": 89,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "marche"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.cheap",
+      "term": "cheap",
+      "fr": "bon marché",
+      "pos": "adj",
+      "cefr": "A1",
+      "f": 28,
+      "o": 90,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "marche"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.tasty",
+      "term": "tasty",
+      "fr": "délicieux",
+      "pos": "adj",
+      "cefr": "A2",
+      "f": 34,
+      "o": 100,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "cuisine"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.morning",
+      "term": "morning",
+      "fr": "matin",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 10,
+      "o": 57,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "temps"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.afternoon",
+      "term": "afternoon",
+      "fr": "après-midi",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 14,
+      "o": 78,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "temps"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.tomorrow",
+      "term": "tomorrow",
+      "fr": "demain",
+      "pos": "adv",
+      "cefr": "A1",
+      "f": 16,
+      "o": 88,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "temps"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.yesterday",
+      "term": "yesterday",
+      "fr": "hier",
+      "pos": "adv",
+      "cefr": "A1",
+      "f": 16,
+      "o": 78,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "temps"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.today",
+      "term": "today",
+      "fr": "aujourd'hui",
+      "pos": "adv",
+      "cefr": "A1",
+      "f": 8,
+      "o": 80,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "temps"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.near",
+      "term": "near",
+      "fr": "près",
+      "pos": "adv",
+      "cefr": "A1",
+      "f": 20,
+      "o": 100,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "orientation"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.far",
+      "term": "far",
+      "fr": "loin",
+      "pos": "adv",
+      "cefr": "A1",
+      "f": 24,
+      "o": 100,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "orientation"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.left",
+      "term": "left",
+      "fr": "gauche",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 30,
+      "o": 100,
+      "m": 0,
+      "t": 30,
+      "themes": [
+        "orientation"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.right",
+      "term": "right",
+      "fr": "droite / correct",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 28,
+      "o": 83,
+      "m": 0,
+      "t": 45,
+      "themes": [
+        "orientation"
+      ],
+      "city": null,
+      "note": "Trois sens : la droite, le fait d'avoir raison, et un droit."
+    },
+    {
+      "id": "en.ticket",
+      "term": "ticket",
+      "fr": "billet",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 32,
+      "o": 50,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "transport"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.train",
+      "term": "train",
+      "fr": "train",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 20,
+      "o": 0,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "transport"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.take",
+      "term": "to take",
+      "fr": "prendre",
+      "pos": "verbe",
+      "cefr": "A1",
+      "f": 12,
+      "o": 86,
+      "m": 80,
+      "t": 0,
+      "themes": [
+        "base"
+      ],
+      "city": null,
+      "note": "Irrégulier : take / took / taken."
+    },
+    {
+      "id": "en.door",
+      "term": "door",
+      "fr": "porte",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 14,
+      "o": 80,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "quotidien"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.weather",
+      "term": "weather",
+      "fr": "le temps (qu'il fait)",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 22,
+      "o": 75,
+      "m": 0,
+      "t": 60,
+      "themes": [
+        "meteo"
+      ],
+      "city": null,
+      "note": "Le temps qu'il fait, jamais le temps qui passe — celui-là c'est « time »."
+    },
+    {
+      "id": "en.rain",
+      "term": "rain",
+      "fr": "pluie",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 24,
+      "o": 80,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "meteo"
+      ],
+      "city": "manchester"
+    },
+    {
+      "id": "en.music",
+      "term": "music",
+      "fr": "musique",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 16,
+      "o": 43,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "culture"
+      ],
+      "city": "liverpool"
+    },
+    {
+      "id": "en.song",
+      "term": "song",
+      "fr": "chanson",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 22,
+      "o": 71,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "culture"
+      ],
+      "city": "liverpool"
+    },
+    {
+      "id": "en.band",
+      "term": "band",
+      "fr": "groupe (de musique)",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 30,
+      "o": 100,
+      "m": 0,
+      "t": 50,
+      "themes": [
+        "culture"
+      ],
+      "city": "liverpool",
+      "note": "Un groupe de musique, pas une bande de copains."
+    },
+    {
+      "id": "en.gig",
+      "term": "gig",
+      "fr": "concert",
+      "pos": "nom",
+      "cefr": "B1",
+      "f": 48,
+      "o": 100,
+      "m": 0,
+      "t": 40,
+      "themes": [
+        "culture"
+      ],
+      "city": "liverpool",
+      "note": "Argot devenu courant : un concert, et par extension une mission ponctuelle."
+    },
+    {
+      "id": "en.museum",
+      "term": "museum",
+      "fr": "musée",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 26,
+      "o": 33,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "culture"
+      ],
+      "city": null
+    },
+    {
+      "id": "en.castle",
+      "term": "castle",
+      "fr": "château",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 34,
+      "o": 71,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "culture"
+      ],
+      "city": "edinburgh"
+    },
+    {
+      "id": "en.festival",
+      "term": "festival",
+      "fr": "festival",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 32,
+      "o": 0,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "culture"
+      ],
+      "city": "edinburgh"
+    },
+    {
+      "id": "en.college",
+      "term": "college",
+      "fr": "université",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 30,
+      "o": 80,
+      "m": 0,
+      "t": 60,
+      "themes": [
+        "etudes"
+      ],
+      "city": "oxford",
+      "note": "Au Royaume-Uni un établissement d'enseignement supérieur ; aux États-Unis, l'université en général."
+    },
+    {
+      "id": "en.essay",
+      "term": "essay",
+      "fr": "dissertation",
+      "pos": "nom",
+      "cefr": "B1",
+      "f": 42,
+      "o": 75,
+      "m": 0,
+      "t": 50,
+      "themes": [
+        "etudes"
+      ],
+      "city": "oxford",
+      "note": "Un devoir d'étudiant, pas un essai au sens de tentative."
+    },
+    {
+      "id": "en.read",
+      "term": "to read",
+      "fr": "lire",
+      "pos": "verbe",
+      "cefr": "A1",
+      "f": 14,
+      "o": 71,
+      "m": 70,
+      "t": 0,
+      "themes": [
+        "etudes"
+      ],
+      "city": "oxford",
+      "note": "Piège à l'oral : le passé s'écrit « read » mais se prononce « red »."
+    },
+    {
+      "id": "en.match",
+      "term": "match",
+      "fr": "match",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 30,
+      "o": 0,
+      "m": 0,
+      "t": 40,
+      "themes": [
+        "sport"
+      ],
+      "city": "manchester",
+      "note": "Aussi une allumette, selon le contexte."
+    },
+    {
+      "id": "en.team",
+      "term": "team",
+      "fr": "équipe",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 28,
+      "o": 100,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "sport"
+      ],
+      "city": "manchester"
+    },
+    {
+      "id": "en.fan",
+      "term": "fan",
+      "fr": "supporter",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 32,
+      "o": 100,
+      "m": 0,
+      "t": 40,
+      "themes": [
+        "sport"
+      ],
+      "city": "manchester",
+      "note": "Un supporter — même si le mot sert aussi pour un ventilateur."
+    },
+    {
+      "id": "en.blues",
+      "term": "blues",
+      "fr": "le blues",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 44,
+      "o": 38,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "culture"
+      ],
+      "city": "chicago"
+    },
+    {
+      "id": "en.jazz",
+      "term": "jazz",
+      "fr": "le jazz",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 44,
+      "o": 43,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "culture"
+      ],
+      "city": "neworleans"
+    },
+    {
+      "id": "en.parade",
+      "term": "parade",
+      "fr": "défilé",
+      "pos": "nom",
+      "cefr": "B1",
+      "f": 46,
+      "o": 83,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "culture"
+      ],
+      "city": "neworleans"
+    },
+    {
+      "id": "en.barbecue",
+      "term": "barbecue",
+      "fr": "barbecue",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 42,
+      "o": 0,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "cuisine"
+      ],
+      "city": "austin"
+    },
+    {
+      "id": "en.cowboy",
+      "term": "cowboy",
+      "fr": "cowboy",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 50,
+      "o": 0,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "culture"
+      ],
+      "city": "austin"
+    },
+    {
+      "id": "en.movie",
+      "term": "movie",
+      "fr": "film",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 24,
+      "o": 100,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "culture"
+      ],
+      "city": "losangeles",
+      "variant": "us",
+      "note": "Aux États-Unis « movie », au Royaume-Uni « film »."
+    },
+    {
+      "id": "en.freeway",
+      "term": "freeway",
+      "fr": "autoroute",
+      "pos": "nom",
+      "cefr": "B1",
+      "f": 52,
+      "o": 100,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "transport"
+      ],
+      "city": "losangeles",
+      "variant": "us"
+    },
+    {
+      "id": "en.skyline",
+      "term": "skyline",
+      "fr": "les gratte-ciel",
+      "pos": "nom",
+      "cefr": "B1",
+      "f": 50,
+      "o": 86,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "ville"
+      ],
+      "city": "newyork"
+    },
+    {
+      "id": "en.deli",
+      "term": "deli",
+      "fr": "épicerie-traiteur",
+      "pos": "nom",
+      "cefr": "B1",
+      "f": 56,
+      "o": 88,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "cuisine"
+      ],
+      "city": "newyork",
+      "variant": "us"
+    },
+    {
+      "id": "en.harbor",
+      "term": "harbor",
+      "fr": "port",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 40,
+      "o": 83,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "mer"
+      ],
+      "city": "boston",
+      "variant": "us",
+      "note": "Orthographe américaine ; les Britanniques écrivent « harbour »."
+    },
+    {
+      "id": "en.flat",
+      "term": "flat",
+      "fr": "appartement",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 28,
+      "o": 82,
+      "m": 0,
+      "t": 60,
+      "themes": [
+        "quotidien"
+      ],
+      "city": "london",
+      "variant": "uk",
+      "note": "Au Royaume-Uni un « flat », aux États-Unis un « apartment ». Le mot veut aussi dire plat."
+    },
+    {
+      "id": "en.apartment",
+      "term": "apartment",
+      "fr": "appartement",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 28,
+      "o": 18,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "quotidien"
+      ],
+      "city": "newyork",
+      "variant": "us"
+    },
+    {
+      "id": "en.lift",
+      "term": "lift",
+      "fr": "ascenseur",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 34,
+      "o": 100,
+      "m": 0,
+      "t": 70,
+      "themes": [
+        "quotidien"
+      ],
+      "city": "london",
+      "variant": "uk",
+      "note": "Britannique. Aux États-Unis, un ascenseur est un « elevator » — « lift » n'y passe pas."
+    },
+    {
+      "id": "en.elevator",
+      "term": "elevator",
+      "fr": "ascenseur",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 34,
+      "o": 78,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "quotidien"
+      ],
+      "city": "newyork",
+      "variant": "us"
+    },
+    {
+      "id": "en.queue",
+      "term": "queue",
+      "fr": "file d'attente",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 36,
+      "o": 85,
+      "m": 0,
+      "t": 60,
+      "themes": [
+        "ville"
+      ],
+      "city": "london",
+      "variant": "uk",
+      "note": "Se prononce simplement « kyou ». Faire la queue est un sport national britannique."
+    },
+    {
+      "id": "en.line",
+      "term": "line",
+      "fr": "file d'attente / ligne",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 20,
+      "o": 77,
+      "m": 0,
+      "t": 50,
+      "themes": [
+        "ville"
+      ],
+      "city": "newyork",
+      "variant": "us",
+      "note": "Aux États-Unis on fait « the line », pas « the queue »."
+    },
+    {
+      "id": "en.tube",
+      "term": "the tube",
+      "fr": "le métro",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 44,
+      "o": 88,
+      "m": 0,
+      "t": 50,
+      "themes": [
+        "transport"
+      ],
+      "city": "london",
+      "variant": "uk",
+      "note": "Le métro londonien. Personne ne dit « metro » à Londres."
+    },
+    {
+      "id": "en.subway",
+      "term": "subway",
+      "fr": "le métro",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 36,
+      "o": 100,
+      "m": 0,
+      "t": 60,
+      "themes": [
+        "transport"
+      ],
+      "city": "newyork",
+      "variant": "us",
+      "note": "Aux États-Unis le métro. Au Royaume-Uni, un « subway » est un passage souterrain piéton."
+    },
+    {
+      "id": "en.pavement",
+      "term": "pavement",
+      "fr": "trottoir",
+      "pos": "nom",
+      "cefr": "B1",
+      "f": 48,
+      "o": 100,
+      "m": 0,
+      "t": 80,
+      "themes": [
+        "ville"
+      ],
+      "city": "london",
+      "variant": "uk",
+      "note": "Britannique. Aux États-Unis, « pavement » désigne la chaussée — le piège est réel."
+    },
+    {
+      "id": "en.sidewalk",
+      "term": "sidewalk",
+      "fr": "trottoir",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 42,
+      "o": 100,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "ville"
+      ],
+      "city": "newyork",
+      "variant": "us"
+    },
+    {
+      "id": "en.chips",
+      "term": "chips",
+      "fr": "frites",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 30,
+      "o": 67,
+      "m": 0,
+      "t": 90,
+      "themes": [
+        "cuisine"
+      ],
+      "city": "london",
+      "variant": "uk",
+      "note": "Au Royaume-Uni ce sont des frites. Aux États-Unis, ce sont des chips."
+    },
+    {
+      "id": "en.crisps",
+      "term": "crisps",
+      "fr": "chips",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 50,
+      "o": 33,
+      "m": 0,
+      "t": 80,
+      "themes": [
+        "cuisine"
+      ],
+      "city": "london",
+      "variant": "uk",
+      "note": "Le miroir du piège précédent : les chips britanniques sont des « crisps »."
+    },
+    {
+      "id": "en.fries",
+      "term": "fries",
+      "fr": "frites",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 34,
+      "o": 17,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "cuisine"
+      ],
+      "city": "newyork",
+      "variant": "us"
+    },
+    {
+      "id": "en.football",
+      "term": "football",
+      "fr": "football",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 22,
+      "o": 0,
+      "m": 0,
+      "t": 70,
+      "themes": [
+        "sport"
+      ],
+      "city": "manchester",
+      "variant": "uk",
+      "note": "Au Royaume-Uni le football ; aux États-Unis, « football » c'est le football américain, et notre foot s'appelle « soccer »."
+    },
+    {
+      "id": "en.soccer",
+      "term": "soccer",
+      "fr": "football",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 44,
+      "o": 88,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "sport"
+      ],
+      "city": "boston",
+      "variant": "us"
+    },
+    {
+      "id": "en.holiday",
+      "term": "holiday",
+      "fr": "vacances",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 26,
+      "o": 100,
+      "m": 0,
+      "t": 60,
+      "themes": [
+        "quotidien"
+      ],
+      "city": "london",
+      "variant": "uk",
+      "note": "Britannique pour les vacances ; aux États-Unis « vacation », et « holiday » y désigne un jour férié."
+    },
+    {
+      "id": "en.vacation",
+      "term": "vacation",
+      "fr": "vacances",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 34,
+      "o": 50,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "quotidien"
+      ],
+      "city": "losangeles",
+      "variant": "us"
+    },
+    {
+      "id": "en.autumn",
+      "term": "autumn",
+      "fr": "automne",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 38,
+      "o": 29,
+      "m": 0,
+      "t": 0,
+      "themes": [
+        "temps"
+      ],
+      "city": "oxford",
+      "variant": "uk"
+    },
+    {
+      "id": "en.fall",
+      "term": "fall",
+      "fr": "automne / tomber",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 18,
+      "o": 100,
+      "m": 70,
+      "t": 60,
+      "themes": [
+        "temps"
+      ],
+      "city": "boston",
+      "variant": "us",
+      "note": "Aux États-Unis, l'automne. Et le verbe tomber, irrégulier : fall / fell / fallen."
+    },
+    {
+      "id": "en.actually",
+      "term": "actually",
+      "fr": "en fait",
+      "pos": "adv",
+      "cefr": "A2",
+      "f": 24,
+      "o": 88,
+      "m": 0,
+      "t": 100,
+      "themes": [
+        "abstrait"
+      ],
+      "city": null,
+      "note": "FAUX-AMI majeur : ne veut pas dire actuellement. Actuellement se dit « currently »."
+    },
+    {
+      "id": "en.eventually",
+      "term": "eventually",
+      "fr": "finalement",
+      "pos": "adv",
+      "cefr": "B1",
+      "f": 44,
+      "o": 100,
+      "m": 0,
+      "t": 100,
+      "themes": [
+        "abstrait"
+      ],
+      "city": null,
+      "note": "FAUX-AMI : finalement, au bout du compte — pas éventuellement."
+    },
+    {
+      "id": "en.library",
+      "term": "library",
+      "fr": "bibliothèque",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 30,
+      "o": 83,
+      "m": 0,
+      "t": 100,
+      "themes": [
+        "etudes"
+      ],
+      "city": "oxford",
+      "note": "FAUX-AMI : une librairie se dit « bookshop » ou « bookstore »."
+    },
+    {
+      "id": "en.sensible",
+      "term": "sensible",
+      "fr": "raisonnable",
+      "pos": "adj",
+      "cefr": "B1",
+      "f": 46,
+      "o": 55,
+      "m": 0,
+      "t": 90,
+      "themes": [
+        "abstrait"
+      ],
+      "city": null,
+      "note": "FAUX-AMI : sensible au sens français se dit « sensitive »."
+    },
+    {
+      "id": "en.attend",
+      "term": "to attend",
+      "fr": "assister à",
+      "pos": "verbe",
+      "cefr": "B1",
+      "f": 42,
+      "o": 80,
+      "m": 0,
+      "t": 95,
+      "themes": [
+        "etudes"
+      ],
+      "city": null,
+      "note": "FAUX-AMI : attendre se dit « to wait »."
+    },
+    {
+      "id": "en.achieve",
+      "term": "to achieve",
+      "fr": "réaliser / atteindre",
+      "pos": "verbe",
+      "cefr": "B1",
+      "f": 40,
+      "o": 80,
+      "m": 0,
+      "t": 85,
+      "themes": [
+        "abstrait"
+      ],
+      "city": null,
+      "note": "FAUX-AMI : achever au sens de terminer se dit « to finish »."
+    },
+    {
+      "id": "en.location",
+      "term": "location",
+      "fr": "emplacement",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 34,
+      "o": 82,
+      "m": 0,
+      "t": 85,
+      "themes": [
+        "ville"
+      ],
+      "city": null,
+      "note": "FAUX-AMI : une location se dit « a rental »."
+    },
+    {
+      "id": "en.journey",
+      "term": "journey",
+      "fr": "voyage / trajet",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 36,
+      "o": 71,
+      "m": 0,
+      "t": 90,
+      "themes": [
+        "transport"
+      ],
+      "city": null,
+      "note": "FAUX-AMI : une journée se dit « a day »."
+    },
+    {
+      "id": "en.lecture",
+      "term": "lecture",
+      "fr": "cours magistral",
+      "pos": "nom",
+      "cefr": "B1",
+      "f": 44,
+      "o": 93,
+      "m": 0,
+      "t": 95,
+      "themes": [
+        "etudes"
+      ],
+      "city": "oxford",
+      "note": "FAUX-AMI : la lecture se dit « reading »."
+    },
+    {
+      "id": "en.resume",
+      "term": "to resume",
+      "fr": "reprendre",
+      "pos": "verbe",
+      "cefr": "B1",
+      "f": 52,
+      "o": 67,
+      "m": 0,
+      "t": 90,
+      "themes": [
+        "abstrait"
+      ],
+      "city": null,
+      "note": "FAUX-AMI : résumer se dit « to summarise »."
+    },
+    {
+      "id": "en.prune",
+      "term": "prune",
+      "fr": "pruneau",
+      "pos": "nom",
+      "cefr": "B1",
+      "f": 62,
+      "o": 29,
+      "m": 0,
+      "t": 95,
+      "themes": [
+        "cuisine"
+      ],
+      "city": null,
+      "note": "FAUX-AMI : une prune se dit « plum »."
+    },
+    {
+      "id": "en.raisin",
+      "term": "raisin",
+      "fr": "raisin sec",
+      "pos": "nom",
+      "cefr": "B1",
+      "f": 58,
+      "o": 40,
+      "m": 0,
+      "t": 90,
+      "themes": [
+        "cuisine"
+      ],
+      "city": null,
+      "note": "FAUX-AMI : le raisin frais se dit « grape »."
+    },
+    {
+      "id": "en.coin",
+      "term": "coin",
+      "fr": "pièce (de monnaie)",
+      "pos": "nom",
+      "cefr": "A2",
+      "f": 32,
+      "o": 100,
+      "m": 0,
+      "t": 85,
+      "themes": [
+        "marche"
+      ],
+      "city": null,
+      "note": "FAUX-AMI : un coin se dit « corner »."
+    },
+    {
+      "id": "en.chair",
+      "term": "chair",
+      "fr": "chaise",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 22,
+      "o": 33,
+      "m": 0,
+      "t": 80,
+      "themes": [
+        "quotidien"
+      ],
+      "city": null,
+      "note": "FAUX-AMI : la chair se dit « flesh »."
+    },
+    {
+      "id": "en.car",
+      "term": "car",
+      "fr": "voiture",
+      "pos": "nom",
+      "cefr": "A1",
+      "f": 18,
+      "o": 86,
+      "m": 0,
+      "t": 80,
+      "themes": [
+        "transport"
+      ],
+      "city": null,
+      "note": "FAUX-AMI : un car se dit « coach » ou « bus »."
+    },
+    {
+      "id": "en.support",
+      "term": "to support",
+      "fr": "soutenir",
+      "pos": "verbe",
+      "cefr": "B1",
+      "f": 38,
+      "o": 80,
+      "m": 0,
+      "t": 75,
+      "themes": [
+        "abstrait"
+      ],
+      "city": "manchester",
+      "note": "FAUX-AMI : supporter au sens d'endurer se dit « to put up with »."
+    },
+    {
+      "id": "en.demand",
+      "term": "to demand",
+      "fr": "exiger",
+      "pos": "verbe",
+      "cefr": "B1",
+      "f": 40,
+      "o": 89,
+      "m": 0,
+      "t": 75,
+      "themes": [
+        "abstrait"
+      ],
+      "city": null,
+      "note": "FAUX-AMI : demander se dit « to ask »."
+    }
+  ]
+}

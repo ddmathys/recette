@@ -42,6 +42,27 @@ class ContentRepository {
     return loaded;
   }
 
+  /// Les destinations disponibles pour une langue.
+  ///
+  /// Le catalogue est déclaré ici plutôt que découvert : lister le contenu
+  /// des assets n'est pas possible à l'exécution, et une liste explicite se
+  /// relit.
+  static const Map<String, List<String>> catalogue = <String, List<String>>{
+    'es': <String>['espana'],
+    'en': <String>['uk', 'usa'],
+  };
+
+  Future<List<Country>> countries(String lang) async {
+    final List<Country> out = <Country>[];
+    for (final String id in catalogue[lang] ?? const <String>[]) {
+      final String raw = await rootBundle.loadString(
+        '$assetPrefix/$lang/countries/$id.json',
+      );
+      out.add(Country.fromJsonString(raw));
+    }
+    return out;
+  }
+
   Future<Lexicon> lexicon(String lang) async {
     final Lexicon? cached = _cache[lang];
     if (cached != null) return cached;

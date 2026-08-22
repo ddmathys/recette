@@ -45,7 +45,7 @@ const words = readFileSync(input, 'utf8')
 const Annotated = z.object({
   lemmas: z.array(
     z.object({
-      es: z.string(),
+      term: z.string(),
       fr: z.string(),
       pos: z.enum(['nom', 'verbe', 'adj', 'adv', 'interj', 'conj', 'prep', 'loc', 'pron']),
       cefr: z.enum(['A1', 'A2', 'B1', 'B2', 'C1']),
@@ -71,7 +71,7 @@ const response = await client.messages.parse({
       type: 'text',
       text: `Tu annotes un répertoire de vocabulaire espagnol destiné à des apprenants FRANCOPHONES. Pour chaque mot :
 
-- \`fr\` : la traduction la plus courante, en une ou deux formulations séparées par « / ».
+- `fr` : la traduction la plus courante, en une ou deux formulations séparées par « / ».
 - \`pos\` : la nature grammaticale.
 - \`cefr\` : le niveau où ce mot devient utile (A1 = survie, C1 = subtilité).
 - \`f\` : difficulté de fréquence, 0 = parmi les 100 mots les plus fréquents, 100 = rare. Fie-toi à l'ordre de la liste fournie, qui est un classement de fréquence.
@@ -96,11 +96,11 @@ if (!response.parsed_output) {
   process.exit(1);
 }
 
-const slug = (es) => `${lang}.${es.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '')}`;
+const slug = (term) => `${lang}.${term.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '')}`;
 const lemmas = response.parsed_output.lemmas.map((l) => ({
-  id: slug(l.es),
+  id: slug(l.term),
   ...l,
-  o: opacity(l.es, l.fr), // calculé, pas annoté
+  o: opacity(l.term, l.fr), // calculé, pas annoté
 }));
 
 const out = join(here, '..', 'content', lang, `lexicon-draft-${from}.json`);
@@ -108,5 +108,5 @@ writeFileSync(out, `${JSON.stringify({ lemmas }, null, 2)}\n`);
 
 const traps = lemmas.filter((l) => l.t >= 70);
 console.log(`✍️  ${out} — ${lemmas.length} lemmes, ${traps.length} piège(s)`);
-if (traps.length) console.log(`   à relire en priorité : ${traps.map((l) => l.es).join(', ')}`);
+if (traps.length) console.log(`   à relire en priorité : ${traps.map((l) => l.term).join(', ')}`);
 console.log('   puis : relire 5 % au hasard, fusionner dans lexicon-seed.json, npm run validate');

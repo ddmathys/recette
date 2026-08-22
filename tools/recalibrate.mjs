@@ -73,7 +73,7 @@ for (const t of telemetry) {
 
   rows.push({
     id: lemma.id,
-    es: lemma.es,
+    es: lemma.term,
     attempts: t.attempts,
     p: Number(p.toFixed(2)),
     current: Math.round(current),
@@ -109,7 +109,7 @@ if (apply) {
 }
 for (const r of rows.slice(0, 8)) {
   console.log(
-    `   ${r.es.padEnd(16)} ${r.p * 100}% de réussite · ${r.current} → ${r.target}` +
+    `   ${r.term.padEnd(16)} ${r.p * 100}% de réussite · ${r.current} → ${r.target}` +
       (r.band.from !== r.band.to ? ` (${r.band.from} → ${r.band.to})` : ''),
   );
 }

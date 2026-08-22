@@ -515,10 +515,10 @@ function nextItem(){
   document.getElementById("tdbg").textContent=`niveau estimé ${post.theta.toFixed(0)} ± ${post.se.toFixed(1)} · escalier ${S.theta.toFixed(0)} · palier ${band(post.theta)}`;
   document.getElementById("tfb").innerHTML="";
   let correct,opts;
-  if(fmt==="prod"){ q.textContent=`Comment dit-on « ${l.fr} » ?`; correct=l.es; opts=distractors(l,3).map(x=>x.es); }
-  else if(fmt==="ecoute"){ q.innerHTML=`Écoute et choisis le sens <button class="btn ghost" style="width:auto;display:inline-block;padding:4px 10px;margin-left:6px" onclick="say('${l.es}')">🔊</button>`;
-    correct=l.fr; opts=distractors(l,3).map(x=>x.fr); say(l.es); }
-  else { q.textContent=`Que veut dire « ${l.es} » ?`; correct=l.fr; opts=distractors(l,3).map(x=>x.fr);
+  if(fmt==="prod"){ q.textContent=`Comment dit-on « ${l.fr} » ?`; correct=l.term; opts=distractors(l,3).map(x=>x.term); }
+  else if(fmt==="ecoute"){ q.innerHTML=`Écoute et choisis le sens <button class="btn ghost" style="width:auto;display:inline-block;padding:4px 10px;margin-left:6px" onclick="say('${l.term}')">🔊</button>`;
+    correct=l.fr; opts=distractors(l,3).map(x=>x.fr); say(l.term); }
+  else { q.textContent=`Que veut dire « ${l.term} » ?`; correct=l.fr; opts=distractors(l,3).map(x=>x.fr);
     if(isTrap){ opts[0]=TRAP[l.id]; } }
   const all=[correct,...opts].sort(()=>Math.random()-.5);
   o.innerHTML=all.map(t=>`<button class="opt">${t}</button>`).join("");
@@ -532,9 +532,9 @@ function answer(btn,ok,l,fmt,isTrap,correct){
   if(!isTrap){ S.resp.push({d:l.d,ok});
     S.theta=Math.max(0,Math.min(100,S.theta+(ok?S.step:-S.step))); S.step=Math.max(4,S.step*0.75); }
   S.log.push({id:l.id,ok,d:Math.round(l.d)});
-  if(!ok&&!S.carnet.find(c=>c.id===l.id)) S.carnet.push({id:l.id,es:l.es,fr:l.fr,city:"Test de placement",rung:0});
+  if(!ok&&!S.carnet.find(c=>c.id===l.id)) S.carnet.push({id:l.id,es:l.term,fr:l.fr,city:"Test de placement",rung:0});
   const fb=document.getElementById("tfb");
-  fb.innerHTML=`<div class="feedback ${ok?'ok':'no'}">${ok?"Bien vu.":"Presque."} <small>${l.note?l.note:`« ${l.es} » = ${l.fr}`}</small></div>`;
+  fb.innerHTML=`<div class="feedback ${ok?'ok':'no'}">${ok?"Bien vu.":"Presque."} <small>${l.note?l.note:`« ${l.term} » = ${l.fr}`}</small></div>`;
   setTimeout(nextItem,ok?800:1700);
 }
 function band(d){ return ["P1","P2","P3","P4","P5","P6"][Math.min(5,Math.floor(d<20?0:d<35?1:d<50?2:d<65?3:d<80?4:5))]; }

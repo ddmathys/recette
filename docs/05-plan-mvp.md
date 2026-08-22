@@ -88,19 +88,21 @@ Le package est du **Dart pur** : ni Flutter, ni Firebase, ni réseau. Il tourne 
 
 ---
 
-## Étape 5 — Onboarding + placement *(~1 semaine)*
+## Étape 5 — Onboarding + placement ✅ *(fait)*
 
 Écrans A1→A7 du doc 01, branchés sur le vrai `PlacementEngine`.
 
-**Sortie :** sur un téléphone, en 5 minutes, un inconnu arrive à la carte avec un niveau estimé et un carnet pré-rempli.
+**Sortie :** ✅ les trois questions du doc 01 (§2 A1–A7), puis le test de placement branché sur le vrai `PlacementEngine` — l'écran ne connaît pas l'algorithme, il pose la question que le moteur lui donne. L'écran de résultat montre le niveau **par compétence**, l'incertitude assumée (« à ±5 points près »), et « je préfère commencer au début » est un vrai bouton.
 
 ---
 
-## Étape 6 — La carte et la fiche ville *(~1 semaine)*
+## Étape 6 — La carte et la fiche ville ✅ *(fait — trois destinations)*
 
-Carte d'Espagne en SVG illustré, 6 villes, itinéraire pointillé, états (validée / en cours / verrouillée), bandeau passeport, bottom sheet de ville.
+Cartes illustrées dessinées au `CustomPainter` depuis le contenu, villes, itinéraire (plein pour le parcouru, pointillé pour le reste), états validée / en cours / verrouillée, bandeau passeport, fiche ville en bottom sheet avec son expression locale prononcée.
 
-**Sortie :** la carte est belle sur un petit écran (iPhone SE) comme sur une tablette. C'est l'écran signature : il doit donner envie tout seul, sans explication.
+**Sortie :** ✅ **trois destinations, pas une** : l'Espagne, le Royaume-Uni et les États-Unis. Chaque pays est un fichier de contenu (contour + villes + expressions), aucune géométrie n'est codée en dur. Un test vérifie que **chaque ville tombe bien à l'intérieur de son contour**.
+
+Et surtout, la destination n'est pas cosmétique : elle porte une **variante de langue**. Le répertoire anglais contient 25 mots qui n'existent que d'un côté de l'Atlantique (*the tube* / *subway*, *pavement* / *sidewalk*, *chips* qui veut dire frites à Londres et chips à New York). Partir à New York filtre le vocabulaire britannique, et l'accent des voix suit (`en-GB` contre `en-US`).
 
 ---
 

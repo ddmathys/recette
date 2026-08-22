@@ -41,7 +41,7 @@ Lexicon syntheticLexicon({int count = 600, double maxDifficulty = 90}) {
     final bool trap = i % 12 == 0;
     lemmas.add(Lemma(
       id: 'syn.$i',
-      es: 'palabra$i',
+      term: 'palabra$i',
       fr: 'mot$i',
       cefr: cefr,
       f: v,

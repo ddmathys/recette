@@ -72,13 +72,13 @@ class PlacementQuestion {
   final int index;
 
   String get prompt => switch (format) {
-        PlacementFormat.recognize => 'Que veut dire « ${lemma.es} » ?',
+        PlacementFormat.recognize => 'Que veut dire « ${lemma.term} » ?',
         PlacementFormat.produce => 'Comment dit-on « ${lemma.fr} » ?',
         PlacementFormat.listen => 'Écoute et choisis le sens',
       };
 
   String get expected =>
-      format == PlacementFormat.produce ? lemma.es : lemma.fr;
+      format == PlacementFormat.produce ? lemma.term : lemma.fr;
 }
 
 class PlacementResult {

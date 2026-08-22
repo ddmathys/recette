@@ -9,6 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_tts: ^4.2.0
   google_fonts: ^6.2.1
   kameo_engine:
     path: packages/kameo_engine
@@ -23,6 +24,10 @@ flutter:
   assets:
     # Le contenu n'est jamais en dur dans le code Dart (doc 04 §6).
     # Même format en local qu'en Firestore : seule la source change.
-    - content/es/lexicon-seed.json
     - content/cefr-descriptors.json
+    - content/es/lexicon-seed.json
+    - content/es/countries/espana.json
     - content/es/packs/2026-08-22_v1/
+    - content/en/lexicon-seed.json
+    - content/en/countries/uk.json
+    - content/en/countries/usa.json

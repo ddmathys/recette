@@ -12,14 +12,39 @@ class KButton extends StatefulWidget {
     this.color = KColors.corail,
     this.shadow = KColors.corailOmbre,
     this.enabled = true,
+    this.ghost = false,
     super.key,
   });
+
+  /// La variante discrète : bordure, pas de fond, pas d'ombre portée.
+  ///
+  /// Elle sert aux actions secondaires qui doivent rester de vrais boutons —
+  /// « je préfère commencer au début » n'est pas un lien gris (doc 03 §4.3).
+  const KButton.ghost({
+    required this.label,
+    required this.onPressed,
+    this.enabled = true,
+    super.key,
+  }) : color = KColors.trait,
+       shadow = KColors.creuse,
+       ghost = true;
+
+  /// La variante d'action positive (valider, continuer le voyage).
+  const KButton.go({
+    required this.label,
+    required this.onPressed,
+    this.enabled = true,
+    super.key,
+  }) : color = KColors.lagon,
+       shadow = KColors.lagonOmbre,
+       ghost = false;
 
   final String label;
   final VoidCallback? onPressed;
   final Color color;
   final Color shadow;
   final bool enabled;
+  final bool ghost;
 
   @override
   State<KButton> createState() => _KButtonState();
@@ -47,7 +72,7 @@ class _KButtonState extends State<KButton> {
             : null,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 90),
-          transform: Matrix4.translationValues(0, _down ? 3 : 0, 0),
+          transform: Matrix4.translationValues(0, _down && !widget.ghost ? 3 : 0, 0),
           padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 18),
           decoration: BoxDecoration(
             color: active ? widget.color : KColors.trait,

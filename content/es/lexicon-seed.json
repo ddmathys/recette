@@ -16,7 +16,8 @@
       "o": "opacite orthographique vs francais 0-100",
       "m": "irregularite morphologique 0-100",
       "t": "piege (faux-ami, polysemie, construction) 0-100",
-      "city": "affinite ville (contenu thematique), null = partout"
+      "city": "affinite ville (contenu thematique), null = partout",
+      "term": "le mot dans la langue apprise"
     },
     "bands": [
       [
@@ -54,7 +55,7 @@
   "lemmas": [
     {
       "id": "es.hola",
-      "es": "hola",
+      "term": "hola",
       "fr": "bonjour / salut",
       "pos": "interj",
       "cefr": "A1",
@@ -69,7 +70,7 @@
     },
     {
       "id": "es.gracias",
-      "es": "gracias",
+      "term": "gracias",
       "fr": "merci",
       "pos": "interj",
       "cefr": "A1",
@@ -84,7 +85,7 @@
     },
     {
       "id": "es.adios",
-      "es": "adiós",
+      "term": "adiós",
       "fr": "au revoir",
       "pos": "interj",
       "cefr": "A1",
@@ -99,7 +100,7 @@
     },
     {
       "id": "es.porfavor",
-      "es": "por favor",
+      "term": "por favor",
       "fr": "s'il te plaît",
       "pos": "loc",
       "cefr": "A1",
@@ -114,7 +115,7 @@
     },
     {
       "id": "es.si",
-      "es": "sí",
+      "term": "sí",
       "fr": "oui",
       "pos": "adv",
       "cefr": "A1",
@@ -129,7 +130,7 @@
     },
     {
       "id": "es.no",
-      "es": "no",
+      "term": "no",
       "fr": "non / ne pas",
       "pos": "adv",
       "cefr": "A1",
@@ -144,7 +145,7 @@
     },
     {
       "id": "es.vale",
-      "es": "vale",
+      "term": "vale",
       "fr": "d'accord / OK",
       "pos": "interj",
       "cefr": "A1",
@@ -160,7 +161,7 @@
     },
     {
       "id": "es.agua",
-      "es": "agua",
+      "term": "agua",
       "fr": "eau",
       "pos": "nom",
       "cefr": "A1",
@@ -176,7 +177,7 @@
     },
     {
       "id": "es.casa",
-      "es": "casa",
+      "term": "casa",
       "fr": "maison",
       "pos": "nom",
       "cefr": "A1",
@@ -191,7 +192,7 @@
     },
     {
       "id": "es.dia",
-      "es": "día",
+      "term": "día",
       "fr": "jour",
       "pos": "nom",
       "cefr": "A1",
@@ -207,7 +208,7 @@
     },
     {
       "id": "es.noche",
-      "es": "noche",
+      "term": "noche",
       "fr": "nuit / soirée",
       "pos": "nom",
       "cefr": "A1",
@@ -222,7 +223,7 @@
     },
     {
       "id": "es.comer",
-      "es": "comer",
+      "term": "comer",
       "fr": "manger",
       "pos": "verbe",
       "cefr": "A1",
@@ -237,7 +238,7 @@
     },
     {
       "id": "es.beber",
-      "es": "beber",
+      "term": "beber",
       "fr": "boire",
       "pos": "verbe",
       "cefr": "A1",
@@ -252,7 +253,7 @@
     },
     {
       "id": "es.ser",
-      "es": "ser",
+      "term": "ser",
       "fr": "être (essence)",
       "pos": "verbe",
       "cefr": "A1",
@@ -268,7 +269,7 @@
     },
     {
       "id": "es.estar",
-      "es": "estar",
+      "term": "estar",
       "fr": "être (état, lieu)",
       "pos": "verbe",
       "cefr": "A1",
@@ -283,7 +284,7 @@
     },
     {
       "id": "es.tener",
-      "es": "tener",
+      "term": "tener",
       "fr": "avoir",
       "pos": "verbe",
       "cefr": "A1",
@@ -298,7 +299,7 @@
     },
     {
       "id": "es.hacer",
-      "es": "hacer",
+      "term": "hacer",
       "fr": "faire",
       "pos": "verbe",
       "cefr": "A1",
@@ -313,7 +314,7 @@
     },
     {
       "id": "es.ir",
-      "es": "ir",
+      "term": "ir",
       "fr": "aller",
       "pos": "verbe",
       "cefr": "A1",
@@ -328,7 +329,7 @@
     },
     {
       "id": "es.querer",
-      "es": "querer",
+      "term": "querer",
       "fr": "vouloir / aimer",
       "pos": "verbe",
       "cefr": "A1",
@@ -343,7 +344,7 @@
     },
     {
       "id": "es.poder",
-      "es": "poder",
+      "term": "poder",
       "fr": "pouvoir",
       "pos": "verbe",
       "cefr": "A1",
@@ -358,7 +359,7 @@
     },
     {
       "id": "es.bueno",
-      "es": "bueno",
+      "term": "bueno",
       "fr": "bon",
       "pos": "adj",
       "cefr": "A1",
@@ -373,7 +374,7 @@
     },
     {
       "id": "es.grande",
-      "es": "grande",
+      "term": "grande",
       "fr": "grand",
       "pos": "adj",
       "cefr": "A1",
@@ -389,7 +390,7 @@
     },
     {
       "id": "es.pequeno",
-      "es": "pequeño",
+      "term": "pequeño",
       "fr": "petit",
       "pos": "adj",
       "cefr": "A1",
@@ -404,7 +405,7 @@
     },
     {
       "id": "es.mucho",
-      "es": "mucho",
+      "term": "mucho",
       "fr": "beaucoup",
       "pos": "adv",
       "cefr": "A1",
@@ -419,7 +420,7 @@
     },
     {
       "id": "es.poco",
-      "es": "poco",
+      "term": "poco",
       "fr": "peu",
       "pos": "adv",
       "cefr": "A1",
@@ -434,7 +435,7 @@
     },
     {
       "id": "es.hombre",
-      "es": "hombre",
+      "term": "hombre",
       "fr": "homme",
       "pos": "nom",
       "cefr": "A1",
@@ -449,7 +450,7 @@
     },
     {
       "id": "es.mujer",
-      "es": "mujer",
+      "term": "mujer",
       "fr": "femme",
       "pos": "nom",
       "cefr": "A1",
@@ -464,7 +465,7 @@
     },
     {
       "id": "es.nino",
-      "es": "niño",
+      "term": "niño",
       "fr": "enfant",
       "pos": "nom",
       "cefr": "A1",
@@ -479,7 +480,7 @@
     },
     {
       "id": "es.amigo",
-      "es": "amigo",
+      "term": "amigo",
       "fr": "ami",
       "pos": "nom",
       "cefr": "A1",
@@ -494,7 +495,7 @@
     },
     {
       "id": "es.gato",
-      "es": "gato",
+      "term": "gato",
       "fr": "chat",
       "pos": "nom",
       "cefr": "A1",
@@ -509,7 +510,7 @@
     },
     {
       "id": "es.perro",
-      "es": "perro",
+      "term": "perro",
       "fr": "chien",
       "pos": "nom",
       "cefr": "A1",
@@ -524,7 +525,7 @@
     },
     {
       "id": "es.mercado",
-      "es": "mercado",
+      "term": "mercado",
       "fr": "marché",
       "pos": "nom",
       "cefr": "A1",
@@ -539,7 +540,7 @@
     },
     {
       "id": "es.calle",
-      "es": "calle",
+      "term": "calle",
       "fr": "rue",
       "pos": "nom",
       "cefr": "A1",
@@ -554,7 +555,7 @@
     },
     {
       "id": "es.ciudad",
-      "es": "ciudad",
+      "term": "ciudad",
       "fr": "ville",
       "pos": "nom",
       "cefr": "A1",
@@ -569,7 +570,7 @@
     },
     {
       "id": "es.playa",
-      "es": "playa",
+      "term": "playa",
       "fr": "plage",
       "pos": "nom",
       "cefr": "A1",
@@ -584,7 +585,7 @@
     },
     {
       "id": "es.mar",
-      "es": "mar",
+      "term": "mar",
       "fr": "mer",
       "pos": "nom",
       "cefr": "A1",
@@ -599,7 +600,7 @@
     },
     {
       "id": "es.comprar",
-      "es": "comprar",
+      "term": "comprar",
       "fr": "acheter",
       "pos": "verbe",
       "cefr": "A1",
@@ -614,7 +615,7 @@
     },
     {
       "id": "es.pagar",
-      "es": "pagar",
+      "term": "pagar",
       "fr": "payer",
       "pos": "verbe",
       "cefr": "A1",
@@ -629,7 +630,7 @@
     },
     {
       "id": "es.dinero",
-      "es": "dinero",
+      "term": "dinero",
       "fr": "argent",
       "pos": "nom",
       "cefr": "A1",
@@ -644,7 +645,7 @@
     },
     {
       "id": "es.cuenta",
-      "es": "cuenta",
+      "term": "cuenta",
       "fr": "addition / compte",
       "pos": "nom",
       "cefr": "A1",
@@ -660,7 +661,7 @@
     },
     {
       "id": "es.mesa",
-      "es": "mesa",
+      "term": "mesa",
       "fr": "table",
       "pos": "nom",
       "cefr": "A1",
@@ -675,7 +676,7 @@
     },
     {
       "id": "es.camarero",
-      "es": "camarero",
+      "term": "camarero",
       "fr": "serveur",
       "pos": "nom",
       "cefr": "A2",
@@ -690,7 +691,7 @@
     },
     {
       "id": "es.plato",
-      "es": "plato",
+      "term": "plato",
       "fr": "plat / assiette",
       "pos": "nom",
       "cefr": "A1",
@@ -705,7 +706,7 @@
     },
     {
       "id": "es.arroz",
-      "es": "arroz",
+      "term": "arroz",
       "fr": "riz",
       "pos": "nom",
       "cefr": "A1",
@@ -720,7 +721,7 @@
     },
     {
       "id": "es.paella",
-      "es": "paella",
+      "term": "paella",
       "fr": "paella",
       "pos": "nom",
       "cefr": "A1",
@@ -735,7 +736,7 @@
     },
     {
       "id": "es.naranja",
-      "es": "naranja",
+      "term": "naranja",
       "fr": "orange",
       "pos": "nom",
       "cefr": "A1",
@@ -750,7 +751,7 @@
     },
     {
       "id": "es.pan",
-      "es": "pan",
+      "term": "pan",
       "fr": "pain",
       "pos": "nom",
       "cefr": "A1",
@@ -765,7 +766,7 @@
     },
     {
       "id": "es.vino",
-      "es": "vino",
+      "term": "vino",
       "fr": "vin",
       "pos": "nom",
       "cefr": "A1",
@@ -781,7 +782,7 @@
     },
     {
       "id": "es.cerveza",
-      "es": "cerveza",
+      "term": "cerveza",
       "fr": "bière",
       "pos": "nom",
       "cefr": "A1",
@@ -796,7 +797,7 @@
     },
     {
       "id": "es.caro",
-      "es": "caro",
+      "term": "caro",
       "fr": "cher (prix)",
       "pos": "adj",
       "cefr": "A1",
@@ -811,7 +812,7 @@
     },
     {
       "id": "es.barato",
-      "es": "barato",
+      "term": "barato",
       "fr": "bon marché",
       "pos": "adj",
       "cefr": "A1",
@@ -826,7 +827,7 @@
     },
     {
       "id": "es.rico",
-      "es": "rico",
+      "term": "rico",
       "fr": "délicieux / riche",
       "pos": "adj",
       "cefr": "A1",
@@ -842,7 +843,7 @@
     },
     {
       "id": "es.tarde",
-      "es": "tarde",
+      "term": "tarde",
       "fr": "après-midi / tard",
       "pos": "nom",
       "cefr": "A1",
@@ -857,7 +858,7 @@
     },
     {
       "id": "es.manana",
-      "es": "mañana",
+      "term": "mañana",
       "fr": "matin / demain",
       "pos": "nom",
       "cefr": "A1",
@@ -872,7 +873,7 @@
     },
     {
       "id": "es.ayer",
-      "es": "ayer",
+      "term": "ayer",
       "fr": "hier",
       "pos": "adv",
       "cefr": "A1",
@@ -887,7 +888,7 @@
     },
     {
       "id": "es.hoy",
-      "es": "hoy",
+      "term": "hoy",
       "fr": "aujourd'hui",
       "pos": "adv",
       "cefr": "A1",
@@ -902,7 +903,7 @@
     },
     {
       "id": "es.cerca",
-      "es": "cerca",
+      "term": "cerca",
       "fr": "près",
       "pos": "adv",
       "cefr": "A1",
@@ -917,7 +918,7 @@
     },
     {
       "id": "es.lejos",
-      "es": "lejos",
+      "term": "lejos",
       "fr": "loin",
       "pos": "adv",
       "cefr": "A1",
@@ -932,7 +933,7 @@
     },
     {
       "id": "es.izquierda",
-      "es": "izquierda",
+      "term": "izquierda",
       "fr": "gauche",
       "pos": "nom",
       "cefr": "A1",
@@ -947,7 +948,7 @@
     },
     {
       "id": "es.derecha",
-      "es": "derecha",
+      "term": "derecha",
       "fr": "droite",
       "pos": "nom",
       "cefr": "A1",
@@ -962,7 +963,7 @@
     },
     {
       "id": "es.billete",
-      "es": "billete",
+      "term": "billete",
       "fr": "ticket / billet",
       "pos": "nom",
       "cefr": "A2",
@@ -977,7 +978,7 @@
     },
     {
       "id": "es.metro",
-      "es": "metro",
+      "term": "metro",
       "fr": "métro",
       "pos": "nom",
       "cefr": "A1",
@@ -992,7 +993,7 @@
     },
     {
       "id": "es.tren",
-      "es": "tren",
+      "term": "tren",
       "fr": "train",
       "pos": "nom",
       "cefr": "A1",
@@ -1007,7 +1008,7 @@
     },
     {
       "id": "es.coche",
-      "es": "coche",
+      "term": "coche",
       "fr": "voiture",
       "pos": "nom",
       "cefr": "A1",
@@ -1022,7 +1023,7 @@
     },
     {
       "id": "es.piso",
-      "es": "piso",
+      "term": "piso",
       "fr": "appartement / étage",
       "pos": "nom",
       "cefr": "A2",
@@ -1037,7 +1038,7 @@
     },
     {
       "id": "es.puerta",
-      "es": "puerta",
+      "term": "puerta",
       "fr": "porte",
       "pos": "nom",
       "cefr": "A1",
@@ -1052,7 +1053,7 @@
     },
     {
       "id": "es.prisa",
-      "es": "prisa",
+      "term": "prisa",
       "fr": "hâte",
       "pos": "nom",
       "cefr": "A2",
@@ -1068,7 +1069,7 @@
     },
     {
       "id": "es.salir",
-      "es": "salir",
+      "term": "salir",
       "fr": "sortir",
       "pos": "verbe",
       "cefr": "A1",
@@ -1084,7 +1085,7 @@
     },
     {
       "id": "es.largo",
-      "es": "largo",
+      "term": "largo",
       "fr": "long",
       "pos": "adj",
       "cefr": "A1",
@@ -1100,7 +1101,7 @@
     },
     {
       "id": "es.ropa",
-      "es": "ropa",
+      "term": "ropa",
       "fr": "vêtements",
       "pos": "nom",
       "cefr": "A1",
@@ -1116,7 +1117,7 @@
     },
     {
       "id": "es.quitar",
-      "es": "quitar",
+      "term": "quitar",
       "fr": "enlever / retirer",
       "pos": "verbe",
       "cefr": "A2",
@@ -1132,7 +1133,7 @@
     },
     {
       "id": "es.subir",
-      "es": "subir",
+      "term": "subir",
       "fr": "monter",
       "pos": "verbe",
       "cefr": "A2",
@@ -1148,7 +1149,7 @@
     },
     {
       "id": "es.entender",
-      "es": "entender",
+      "term": "entender",
       "fr": "comprendre",
       "pos": "verbe",
       "cefr": "A2",
@@ -1164,7 +1165,7 @@
     },
     {
       "id": "es.exito",
-      "es": "éxito",
+      "term": "éxito",
       "fr": "succès",
       "pos": "nom",
       "cefr": "B1",
@@ -1180,7 +1181,7 @@
     },
     {
       "id": "es.constipado",
-      "es": "constipado",
+      "term": "constipado",
       "fr": "enrhumé",
       "pos": "adj",
       "cefr": "B1",
@@ -1196,7 +1197,7 @@
     },
     {
       "id": "es.embarazada",
-      "es": "embarazada",
+      "term": "embarazada",
       "fr": "enceinte",
       "pos": "adj",
       "cefr": "B1",
@@ -1212,7 +1213,7 @@
     },
     {
       "id": "es.discutir",
-      "es": "discutir",
+      "term": "discutir",
       "fr": "se disputer",
       "pos": "verbe",
       "cefr": "B1",
@@ -1228,7 +1229,7 @@
     },
     {
       "id": "es.todavia",
-      "es": "todavía",
+      "term": "todavía",
       "fr": "encore / toujours",
       "pos": "adv",
       "cefr": "A2",
@@ -1243,7 +1244,7 @@
     },
     {
       "id": "es.demasiado",
-      "es": "demasiado",
+      "term": "demasiado",
       "fr": "trop",
       "pos": "adv",
       "cefr": "A2",
@@ -1258,7 +1259,7 @@
     },
     {
       "id": "es.bastante",
-      "es": "bastante",
+      "term": "bastante",
       "fr": "assez / plutôt",
       "pos": "adv",
       "cefr": "A2",
@@ -1273,7 +1274,7 @@
     },
     {
       "id": "es.aunque",
-      "es": "aunque",
+      "term": "aunque",
       "fr": "bien que / même si",
       "pos": "conj",
       "cefr": "B1",
@@ -1289,7 +1290,7 @@
     },
     {
       "id": "es.sinembargo",
-      "es": "sin embargo",
+      "term": "sin embargo",
       "fr": "cependant",
       "pos": "loc",
       "cefr": "B1",
@@ -1304,7 +1305,7 @@
     },
     {
       "id": "es.acordarse",
-      "es": "acordarse",
+      "term": "acordarse",
       "fr": "se souvenir",
       "pos": "verbe",
       "cefr": "A2",
@@ -1319,7 +1320,7 @@
     },
     {
       "id": "es.quedar",
-      "es": "quedar",
+      "term": "quedar",
       "fr": "rester / se donner rdv",
       "pos": "verbe",
       "cefr": "A2",
@@ -1335,7 +1336,7 @@
     },
     {
       "id": "es.tardar",
-      "es": "tardar",
+      "term": "tardar",
       "fr": "mettre du temps",
       "pos": "verbe",
       "cefr": "B1",
@@ -1350,7 +1351,7 @@
     },
     {
       "id": "es.soler",
-      "es": "soler",
+      "term": "soler",
       "fr": "avoir l'habitude de",
       "pos": "verbe",
       "cefr": "B1",
@@ -1366,7 +1367,7 @@
     },
     {
       "id": "es.echardemenos",
-      "es": "echar de menos",
+      "term": "echar de menos",
       "fr": "manquer (à quelqu'un)",
       "pos": "loc",
       "cefr": "B1",
@@ -1382,7 +1383,7 @@
     },
     {
       "id": "es.hacerfalta",
-      "es": "hacer falta",
+      "term": "hacer falta",
       "fr": "falloir / manquer",
       "pos": "loc",
       "cefr": "B1",
@@ -1397,7 +1398,7 @@
     },
     {
       "id": "es.apetecer",
-      "es": "apetecer",
+      "term": "apetecer",
       "fr": "avoir envie de",
       "pos": "verbe",
       "cefr": "B1",
@@ -1413,7 +1414,7 @@
     },
     {
       "id": "es.seguir",
-      "es": "seguir",
+      "term": "seguir",
       "fr": "continuer / suivre",
       "pos": "verbe",
       "cefr": "A2",
@@ -1428,7 +1429,7 @@
     },
     {
       "id": "es.llevar",
-      "es": "llevar",
+      "term": "llevar",
       "fr": "porter / emmener",
       "pos": "verbe",
       "cefr": "A2",
@@ -1443,7 +1444,7 @@
     },
     {
       "id": "es.dejar",
-      "es": "dejar",
+      "term": "dejar",
       "fr": "laisser",
       "pos": "verbe",
       "cefr": "A2",
@@ -1458,7 +1459,7 @@
     },
     {
       "id": "es.pedir",
-      "es": "pedir",
+      "term": "pedir",
       "fr": "commander / demander",
       "pos": "verbe",
       "cefr": "A1",
@@ -1473,7 +1474,7 @@
     },
     {
       "id": "es.probar",
-      "es": "probar",
+      "term": "probar",
       "fr": "goûter / essayer",
       "pos": "verbe",
       "cefr": "A2",
@@ -1488,7 +1489,7 @@
     },
     {
       "id": "es.traer",
-      "es": "traer",
+      "term": "traer",
       "fr": "apporter",
       "pos": "verbe",
       "cefr": "A2",
@@ -1503,7 +1504,7 @@
     },
     {
       "id": "es.volver",
-      "es": "volver",
+      "term": "volver",
       "fr": "revenir",
       "pos": "verbe",
       "cefr": "A1",
@@ -1518,7 +1519,7 @@
     },
     {
       "id": "es.empezar",
-      "es": "empezar",
+      "term": "empezar",
       "fr": "commencer",
       "pos": "verbe",
       "cefr": "A1",
@@ -1533,7 +1534,7 @@
     },
     {
       "id": "es.terminar",
-      "es": "terminar",
+      "term": "terminar",
       "fr": "finir",
       "pos": "verbe",
       "cefr": "A1",
@@ -1548,7 +1549,7 @@
     },
     {
       "id": "es.trabajar",
-      "es": "trabajar",
+      "term": "trabajar",
       "fr": "travailler",
       "pos": "verbe",
       "cefr": "A1",
@@ -1563,7 +1564,7 @@
     },
     {
       "id": "es.vivir",
-      "es": "vivir",
+      "term": "vivir",
       "fr": "vivre / habiter",
       "pos": "verbe",
       "cefr": "A1",
@@ -1578,7 +1579,7 @@
     },
     {
       "id": "es.gustar",
-      "es": "gustar",
+      "term": "gustar",
       "fr": "plaire (aimer)",
       "pos": "verbe",
       "cefr": "A1",
@@ -1594,7 +1595,7 @@
     },
     {
       "id": "es.doler",
-      "es": "doler",
+      "term": "doler",
       "fr": "faire mal",
       "pos": "verbe",
       "cefr": "A2",
@@ -1609,7 +1610,7 @@
     },
     {
       "id": "es.parecer",
-      "es": "parecer",
+      "term": "parecer",
       "fr": "sembler",
       "pos": "verbe",
       "cefr": "A2",
@@ -1624,7 +1625,7 @@
     },
     {
       "id": "es.pensar",
-      "es": "pensar",
+      "term": "pensar",
       "fr": "penser",
       "pos": "verbe",
       "cefr": "A1",
@@ -1639,7 +1640,7 @@
     },
     {
       "id": "es.creer",
-      "es": "creer",
+      "term": "creer",
       "fr": "croire",
       "pos": "verbe",
       "cefr": "A1",
@@ -1654,7 +1655,7 @@
     },
     {
       "id": "es.saber",
-      "es": "saber",
+      "term": "saber",
       "fr": "savoir",
       "pos": "verbe",
       "cefr": "A1",
@@ -1670,7 +1671,7 @@
     },
     {
       "id": "es.conocer",
-      "es": "conocer",
+      "term": "conocer",
       "fr": "connaître",
       "pos": "verbe",
       "cefr": "A1",
@@ -1685,7 +1686,7 @@
     },
     {
       "id": "es.decir",
-      "es": "decir",
+      "term": "decir",
       "fr": "dire",
       "pos": "verbe",
       "cefr": "A1",
@@ -1700,7 +1701,7 @@
     },
     {
       "id": "es.ver",
-      "es": "ver",
+      "term": "ver",
       "fr": "voir",
       "pos": "verbe",
       "cefr": "A1",
@@ -1715,7 +1716,7 @@
     },
     {
       "id": "es.oir",
-      "es": "oír",
+      "term": "oír",
       "fr": "entendre",
       "pos": "verbe",
       "cefr": "A2",
@@ -1730,7 +1731,7 @@
     },
     {
       "id": "es.escuchar",
-      "es": "escuchar",
+      "term": "escuchar",
       "fr": "écouter",
       "pos": "verbe",
       "cefr": "A1",
@@ -1745,7 +1746,7 @@
     },
     {
       "id": "es.fiesta",
-      "es": "fiesta",
+      "term": "fiesta",
       "fr": "fête",
       "pos": "nom",
       "cefr": "A1",
@@ -1760,7 +1761,7 @@
     },
     {
       "id": "es.flamenco",
-      "es": "flamenco",
+      "term": "flamenco",
       "fr": "flamenco",
       "pos": "nom",
       "cefr": "A2",
@@ -1775,7 +1776,7 @@
     },
     {
       "id": "es.calor",
-      "es": "calor",
+      "term": "calor",
       "fr": "chaleur",
       "pos": "nom",
       "cefr": "A1",
@@ -1791,7 +1792,7 @@
     },
     {
       "id": "es.feria",
-      "es": "feria",
+      "term": "feria",
       "fr": "foire / féria",
       "pos": "nom",
       "cefr": "B1",
@@ -1806,7 +1807,7 @@
     },
     {
       "id": "es.barrio",
-      "es": "barrio",
+      "term": "barrio",
       "fr": "quartier",
       "pos": "nom",
       "cefr": "A2",
@@ -1821,7 +1822,7 @@
     },
     {
       "id": "es.tapa",
-      "es": "tapa",
+      "term": "tapa",
       "fr": "tapa",
       "pos": "nom",
       "cefr": "A1",
@@ -1836,7 +1837,7 @@
     },
     {
       "id": "es.gratis",
-      "es": "gratis",
+      "term": "gratis",
       "fr": "gratuit",
       "pos": "adj",
       "cefr": "A2",
@@ -1852,7 +1853,7 @@
     },
     {
       "id": "es.palacio",
-      "es": "palacio",
+      "term": "palacio",
       "fr": "palais",
       "pos": "nom",
       "cefr": "A2",
@@ -1867,7 +1868,7 @@
     },
     {
       "id": "es.montana",
-      "es": "montaña",
+      "term": "montaña",
       "fr": "montagne",
       "pos": "nom",
       "cefr": "A1",
@@ -1882,7 +1883,7 @@
     },
     {
       "id": "es.lluvia",
-      "es": "lluvia",
+      "term": "lluvia",
       "fr": "pluie",
       "pos": "nom",
       "cefr": "A1",
@@ -1897,7 +1898,7 @@
     },
     {
       "id": "es.equipo",
-      "es": "equipo",
+      "term": "equipo",
       "fr": "équipe",
       "pos": "nom",
       "cefr": "A2",
@@ -1912,7 +1913,7 @@
     },
     {
       "id": "es.partido",
-      "es": "partido",
+      "term": "partido",
       "fr": "match",
       "pos": "nom",
       "cefr": "A2",
@@ -1927,7 +1928,7 @@
     },
     {
       "id": "es.aficion",
-      "es": "afición",
+      "term": "afición",
       "fr": "les supporters / la passion",
       "pos": "nom",
       "cefr": "B1",
@@ -1942,7 +1943,7 @@
     },
     {
       "id": "es.pintxo",
-      "es": "pintxo",
+      "term": "pintxo",
       "fr": "pintxo",
       "pos": "nom",
       "cefr": "A2",
@@ -1958,7 +1959,7 @@
     },
     {
       "id": "es.museo",
-      "es": "museo",
+      "term": "museo",
       "fr": "musée",
       "pos": "nom",
       "cefr": "A1",
@@ -1973,7 +1974,7 @@
     },
     {
       "id": "es.obra",
-      "es": "obra",
+      "term": "obra",
       "fr": "œuvre / chantier",
       "pos": "nom",
       "cefr": "A2",
@@ -1988,7 +1989,7 @@
     },
     {
       "id": "es.iglesia",
-      "es": "iglesia",
+      "term": "iglesia",
       "fr": "église",
       "pos": "nom",
       "cefr": "A1",
@@ -2003,7 +2004,7 @@
     },
     {
       "id": "es.guay",
-      "es": "guay",
+      "term": "guay",
       "fr": "cool / génial",
       "pos": "adj",
       "cefr": "A2",
@@ -2019,7 +2020,7 @@
     },
     {
       "id": "es.tio",
-      "es": "tío",
+      "term": "tío",
       "fr": "mec / oncle",
       "pos": "nom",
       "cefr": "A2",

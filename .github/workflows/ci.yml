@@ -21,6 +21,23 @@ jobs:
       - run: dart analyze --fatal-infos
       - run: dart test
 
+  contenu:
+    name: Contenu (schéma, règles pédagogiques, parité)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tools
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - name: Valider le contenu
+        run: node validate-content.mjs
+      - name: Vérifier la parité de la formule de difficulté
+        run: node emit-difficulty-fixture.mjs es --check
+
   app:
     name: Application Flutter
     runs-on: ubuntu-latest

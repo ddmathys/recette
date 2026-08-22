@@ -162,7 +162,9 @@ Chaque lemme réussi au test entre au carnet à **R1 acquis** avec `source: "pla
 
 `content/es/lexicon-seed.json` — **130 lemmes espagnols réels**, notés sur les 5 composantes, thématisés par ville, avec 11 faux-amis marqués. Il sert **tout de suite** : c'est lui qui alimente le prototype de test de placement.
 
-Répartition obtenue avec la formule ci-dessus : **P1 59 · P2 48 · P3 16 · P4 7 · P5–P6 0**. C'est normal et voulu — une semence tirée du vocabulaire courant couvre les paliers bas ; les paliers 5 et 6 arriveront par l'import fréquentiel (§6). Les extrêmes calculés : *no* (2), *hola* (6) … *soler* (59), *echar de menos* (62). La formule classe donc correctement sans intervention humaine.
+Répartition obtenue avec la formule ci-dessus : **P1 47 · P2 53 · P3 21 · P4 8 · P5 1 · P6 0**. C'est normal et voulu — une semence tirée du vocabulaire courant couvre les paliers bas ; les paliers 5 et 6 arriveront par l'import fréquentiel (§6). Les extrêmes calculés : *no* (5), *hombre* (9) … *embarazada* (62), *constipado* (67). La formule classe donc correctement sans intervention humaine.
+
+> **L'opacité n'est pas annotée, elle est calculée.** `tools/normalize-lexicon.mjs` la recalcule pour tout le répertoire (distance de Levenshtein pliée entre le mot espagnol et sa traduction). Sur la semence, mes 130 valeurs saisies à la main s'écartaient de la valeur calculée sur 20 entrées, parfois de 60 points — et 28 lemmes ont changé de palier après recalcul. Une valeur calculée ne peut pas être fausse ; une valeur saisie sur 3 000 entrées le sera forcément.
 
 Format :
 

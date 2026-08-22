@@ -173,8 +173,11 @@ class Item {
     this.lexemes = const <String>[],
     this.alternates = const <String>[],
     this.wordBank = const <String>[],
+    this.options = const <String>[],
     this.difficulty = 50,
+    this.audioText,
     this.audioRef,
+    this.note,
   });
 
   factory Item.fromJson(Map<String, dynamic> json) => Item(
@@ -192,8 +195,11 @@ class Item {
         lexemes: _strings(json['lexemes']),
         alternates: _strings(json['alternates']),
         wordBank: _strings(json['wordBank']),
+        options: _strings(json['options']),
         difficulty: (json['difficulty'] as num?)?.toDouble() ?? 50,
+        audioText: json['audioText'] as String?,
         audioRef: json['audioRef'] as String?,
+        note: json['note'] as String?,
       );
 
   static List<String> _strings(Object? v) =>
@@ -215,8 +221,25 @@ class Item {
   final List<String> lexemes;
   final List<String> alternates;
   final List<String> wordBank;
+
+  /// Les propositions d'un QCM ou d'un exercice d'écoute.
+  final List<String> options;
+
   final double difficulty;
+
+  /// Le texte espagnol à faire dire par la synthèse vocale. Séparé de
+  /// [prompt] (la consigne) et de [answer] (ce qu'on attend).
+  final String? audioText;
+
   final String? audioRef;
+
+  /// L'explication montrée après une erreur. Elle doit apprendre quelque
+  /// chose, pas répéter la correction.
+  final String? note;
+
+  /// Ce qu'il faut prononcer : le texte d'audio s'il existe, sinon la réponse
+  /// attendue (cas des exercices de répétition).
+  String? get spokenText => audioText ?? (kind == ItemKind.speak ? answer : null);
 
   /// Comparaison indulgente : on ignore la casse, les accents, la ponctuation
   /// et les espaces multiples. Un apprenant ne doit pas perdre un cœur sur un

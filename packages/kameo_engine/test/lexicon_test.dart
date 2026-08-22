@@ -18,8 +18,17 @@ void main() {
 
     test('classe du plus facile au plus difficile', () {
       final List<Lemma> sorted = lex.byDifficulty;
+      // On teste des propriétés, pas des mots précis : le répertoire bouge à
+      // chaque recalibrage, la propriété doit tenir quand même.
+      for (final Lemma l in sorted.take(5)) {
+        expect(l.cefr, 'A1');
+        expect(lex.difficultyOf(l), lessThan(15));
+      }
+      for (final Lemma l in sorted.reversed.take(5)) {
+        expect(l.cefr, anyOf('B1', 'B2', 'C1'));
+        expect(lex.difficultyOf(l), greaterThan(45));
+      }
       expect(sorted.first.es, 'no');
-      expect(sorted.last.es, 'echar de menos');
       // La formule doit séparer nettement le mot outil du mot abstrait.
       expect(lex.difficultyOf(lex.byId('es.hola')!),
           lessThan(lex.difficultyOf(lex.byId('es.soler')!)));

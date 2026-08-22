@@ -67,7 +67,7 @@ Le package est du **Dart pur** : ni Flutter, ni Firebase, ni réseau. Il tourne 
 
 ---
 
-## Étape 4 — Contenu : pack Espagne Tour 1 *(~1 semaine, en parallèle possible)*
+## Étape 4 — Contenu : pack Espagne Tour 1 🚧 *(outillage fait, contenu à produire)*
 
 - Lexique espagnol porté à ~500 lemmes (import fréquentiel + annotation IA + revue, doc 03 §6).
 - 6 villes × 4 leçons × ~12 items = **~290 items**, générés par le pipeline, au schéma du doc 02 §8.
@@ -75,7 +75,16 @@ Le package est du **Dart pur** : ni Flutter, ni Firebase, ni réseau. Il tourne 
 - **Revue humaine** : les 6 expressions locales et tous les items marqués « piège » sont relus par un natif (Fiverr, ~50 €).
 - Audios TTS (voix castillane) générés en lot, stockés dans Firebase Storage.
 
-**Sortie :** le pack charge dans le moteur de l'étape 3 et un test génère 20 leçons différentes sans erreur de schéma.
+**Sortie :** ✅ **le pipeline est en place et prouvé de bout en bout** (`tools/`) :
+
+- `validate-content.mjs` — schéma Zod **et** onze règles pédagogiques, sans clé API, branché en CI. Dès son premier passage sur la semence il a trouvé deux vraies erreurs et vingt annotations approximatives ;
+- `normalize-lexicon.mjs` — l'opacité est désormais **calculée**, plus annotée (28 lemmes ont changé de palier après recalcul) ;
+- `annotate-lexicon.mjs` et `generate-pack.mjs` — annotation et génération sous schéma strict, prompt en cache, vocabulaire fermé ;
+- `recalibrate.mjs` — la télémétrie corrige la difficulté ; vérifié sur un jeu synthétique ;
+- `emit-difficulty-fixture.mjs` — témoin de parité entre la formule JS et la formule Dart, vérifié en CI ;
+- `content/es/packs/2026-08-22_v1/valencia.t1.json` — pack de référence écrit à la main (3 leçons, 17 items, épreuve de tampon), qui traverse le validateur, se charge dans le moteur et compose une vraie leçon (7 tests dédiés).
+
+🔑 **Ce qui reste et qui demande toi** : ta clé API pour lancer la génération des 5 autres villes, l'import fréquentiel pour porter le lexique à ~500 lemmes, la génération des audios TTS, et **la relecture par un natif** des expressions locales. Tant que `humanReviewed` est faux, l'app refuse de servir le pack — c'est volontaire.
 
 ---
 

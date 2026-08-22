@@ -23,7 +23,8 @@
 |---|---|---|
 | `packages/kameo_engine/` | Le moteur d'apprentissage, en Dart pur | ✅ 48 tests au vert |
 | `lib/` | L'app Flutter (thème, design system, chargement du contenu) | 🚧 squelette, à compiler en local |
-| `.github/workflows/ci.yml` | CI : moteur + app | ✅ |
+| `tools/` | Pipeline de contenu : génération, validation, recalibrage | ✅ validateur en CI |
+| `.github/workflows/ci.yml` | CI : moteur + contenu + app | ✅ |
 
 ```bash
 cd packages/kameo_engine && dart pub get && dart test   # le moteur, sans Flutter
@@ -32,7 +33,11 @@ flutter create . && flutter pub get && flutter run      # l'app (génère androi
 
 ## Contenu
 
-- `content/es/lexicon-seed.json` — 130 lemmes espagnols notés sur 5 composantes (fréquence, CECR, opacité vs français, irrégularité, piège), thématisés par ville. La difficulté n'est pas stockée : elle se calcule.
+- `content/es/lexicon-seed.json` — 130 lemmes espagnols notés sur 5 composantes (fréquence, CECR, opacité vs français, irrégularité, piège), thématisés par ville. La difficulté n'est pas stockée : elle se calcule. L'opacité non plus : elle est calculée par `tools/normalize-lexicon.mjs`.
+- `content/cefr-descriptors.json` — les affirmations testables adossées au CECR.
+- `content/es/packs/2026-08-22_v1/valencia.t1.json` — le pack de référence : Valence, tour 1, 3 leçons, 17 items, épreuve de tampon.
+
+Voir [`tools/README.md`](tools/README.md) pour le circuit complet, de la liste de fréquence à la publication.
 
 ## Prototype
 

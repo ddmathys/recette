@@ -4,17 +4,8 @@ import 'package:kameo_engine/kameo_engine.dart';
 
 /// Charge le vrai fichier semence du dépôt : les tests doivent porter sur le
 /// contenu réel, pas sur des données inventées pour l'occasion.
-Lexicon loadSeedLexicon() {
-  for (final String path in <String>[
-    '../../content/es/lexicon-seed.json',
-    'content/es/lexicon-seed.json',
-    '../../../content/es/lexicon-seed.json',
-  ]) {
-    final File f = File(path);
-    if (f.existsSync()) return Lexicon.fromJsonString(f.readAsStringSync());
-  }
-  throw StateError('lexicon-seed.json introuvable depuis ${Directory.current}');
-}
+Lexicon loadSeedLexicon() =>
+    Lexicon.fromJsonString(loadContentFile('es/lexicon-seed.json'));
 
 Item item({
   required String id,
@@ -61,4 +52,14 @@ Lexicon syntheticLexicon({int count = 600, double maxDifficulty = 90}) {
     ));
   }
   return Lexicon('syn', lemmas);
+}
+
+/// Lit un fichier de `/content` depuis les tests, quel que soit le dossier
+/// depuis lequel `dart test` a été lancé.
+String loadContentFile(String relative) {
+  for (final String prefix in <String>['../../content', 'content', '../../../content']) {
+    final File f = File('$prefix/$relative');
+    if (f.existsSync()) return f.readAsStringSync();
+  }
+  throw StateError('$relative introuvable depuis ${Directory.current}');
 }

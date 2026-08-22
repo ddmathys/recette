@@ -24,3 +24,5 @@ flutter:
     # Le contenu n'est jamais en dur dans le code Dart (doc 04 §6).
     # Même format en local qu'en Firestore : seule la source change.
     - content/es/lexicon-seed.json
+    - content/cefr-descriptors.json
+    - content/es/packs/2026-08-22_v1/

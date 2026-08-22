@@ -1,0 +1,272 @@
+{
+  "schemaVersion": 1,
+  "lang": "es",
+  "countryId": "espana",
+  "cityId": "valencia",
+  "cityName": "Valence",
+  "emoji": "🥘",
+  "theme": "La cuisine",
+  "tour": 1,
+  "localExpression": {
+    "text": "¡Qué rico!",
+    "translation": "C'est trop bon !",
+    "note": "À Valence, ça se dit devant une paella, pas devant un compte en banque : pour un plat, « rico » veut dire délicieux, jamais riche.",
+    "audioRef": "audio/es/valencia/t1/expr-que-rico.mp3"
+  },
+  "lessons": [
+    {
+      "id": "es.valencia.t1.restaurante",
+      "title": "Commander une paella",
+      "canDo": ["A1.ORAL.2", "A1.ECRIT.1", "A1.ECOUTE.1"],
+      "items": [
+        {
+          "id": "es.valencia.t1.restaurante.01",
+          "kind": "translate", "skill": "ecrire", "rung": "r2", "cefr": "A1",
+          "canDo": ["A1.ECRIT.1"],
+          "city": "valencia", "tour": 1, "theme": "restaurante",
+          "lexemes": ["es.querer", "es.paella", "es.porfavor"],
+          "grammar": ["pres.querer.1s"],
+          "prompt": "Traduis : « Je voudrais une paella, s'il vous plaît »",
+          "answer": "Quiero una paella, por favor",
+          "alternates": ["Querría una paella, por favor"],
+          "wordBank": ["Quiero", "una", "paella,", "por", "favor", "Tengo", "gracias", "muy"],
+          "difficulty": 18,
+          "note": "« Quiero » vient de querer : vouloir et aimer, le même verbe."
+        },
+        {
+          "id": "es.valencia.t1.restaurante.02",
+          "kind": "listen", "skill": "ecouter", "rung": "r1", "cefr": "A1",
+          "canDo": ["A1.ECOUTE.1"],
+          "city": "valencia", "tour": 1, "theme": "restaurante",
+          "lexemes": ["es.traer", "es.cuenta"],
+          "prompt": "Écoute le serveur et choisis ce qu'il propose.",
+          "answer": "Il propose d'apporter l'addition",
+          "options": [
+            "Il propose d'apporter l'addition",
+            "Il demande si le plat était bon",
+            "Il annonce que la cuisine ferme"
+          ],
+          "difficulty": 28,
+          "audioText": "¿Le traigo la cuenta?",
+          "audioRef": "audio/es/valencia/t1/restaurante-02.mp3",
+          "note": "traer = apporter · la cuenta = l'addition."
+        },
+        {
+          "id": "es.valencia.t1.restaurante.03",
+          "kind": "speak", "skill": "parler", "rung": "r4", "cefr": "A1",
+          "canDo": ["A1.ORAL.2"],
+          "city": "valencia", "tour": 1, "theme": "restaurante",
+          "lexemes": ["es.paella", "es.agua", "es.porfavor"],
+          "prompt": "Dis au serveur : « Une paella et une eau, s'il vous plaît »",
+          "answer": "Una paella y un agua, por favor",
+          "difficulty": 16,
+          "audioText": "Una paella y un agua, por favor",
+          "audioRef": "audio/es/valencia/t1/restaurante-03.mp3",
+          "note": "On dit « un agua » alors que le mot est féminin : c'est le a accentué qui impose l'article masculin."
+        },
+        {
+          "id": "es.valencia.t1.restaurante.04",
+          "kind": "gap", "skill": "ecrire", "rung": "r3", "cefr": "A1",
+          "canDo": ["A1.ECRIT.1"],
+          "city": "valencia", "tour": 1, "theme": "restaurante",
+          "lexemes": ["es.gustar", "es.arroz", "es.mucho"],
+          "grammar": ["gustar.inverse"],
+          "prompt": "Complète : « Me ___ mucho el arroz. » (le riz me plaît beaucoup)",
+          "answer": "gusta",
+          "difficulty": 17,
+          "note": "Construction inversée : ce n'est pas toi qui aimes le riz, c'est le riz qui te plaît."
+        },
+        {
+          "id": "es.valencia.t1.restaurante.05",
+          "kind": "mcq", "skill": "ecrire", "rung": "r1", "cefr": "A1",
+          "canDo": ["A1.ECRIT.1"],
+          "city": "valencia", "tour": 1, "theme": "restaurante",
+          "lexemes": ["es.rico"],
+          "prompt": "Le serveur demande « ¿Está rico? ». Que veut-il savoir ?",
+          "answer": "Si c'est bon",
+          "options": ["Si c'est bon", "Si tu es riche", "Si c'est cher"],
+          "difficulty": 22,
+          "note": "Pour un plat, rico = délicieux. Le piège classique du francophone."
+        }
+      ]
+    },
+    {
+      "id": "es.valencia.t1.gustos",
+      "title": "Dire ce qu'on aime",
+      "canDo": ["A1.ECRIT.2", "A1.ORAL.4", "A1.ECOUTE.1"],
+      "items": [
+        {
+          "id": "es.valencia.t1.gustos.06",
+          "kind": "translate", "skill": "ecrire", "rung": "r2", "cefr": "A1",
+          "canDo": ["A1.ECRIT.2"],
+          "city": "valencia", "tour": 1, "theme": "gustos",
+          "lexemes": ["es.gustar", "es.mucho", "es.arroz"],
+          "prompt": "Traduis : « J'aime beaucoup le riz »",
+          "answer": "Me gusta mucho el arroz",
+          "wordBank": ["Me", "gusta", "mucho", "el", "arroz", "gustan", "yo", "muy"],
+          "difficulty": 17,
+          "note": "« Yo gusto » n'existe pas : on ne traduit jamais « j'aime » mot à mot."
+        },
+        {
+          "id": "es.valencia.t1.gustos.07",
+          "kind": "mcq", "skill": "ecrire", "rung": "r3", "cefr": "A1",
+          "canDo": ["A1.ECRIT.2"],
+          "city": "valencia", "tour": 1, "theme": "gustos",
+          "lexemes": ["es.gustar", "es.naranja"],
+          "grammar": ["gustar.accord"],
+          "prompt": "Comment dit-on « j'aime les oranges » ?",
+          "answer": "Me gustan las naranjas",
+          "options": ["Me gustan las naranjas", "Me gusta las naranjas", "Yo gusto las naranjas"],
+          "difficulty": 21,
+          "note": "Le verbe s'accorde avec ce qui plaît : plusieurs oranges, donc gustan."
+        },
+        {
+          "id": "es.valencia.t1.gustos.08",
+          "kind": "listen", "skill": "ecouter", "rung": "r1", "cefr": "A1",
+          "canDo": ["A1.ECOUTE.1"],
+          "city": "valencia", "tour": 1, "theme": "gustos",
+          "lexemes": ["es.gustar", "es.pan"],
+          "prompt": "Écoute et choisis la bonne interprétation.",
+          "answer": "Il n'aime pas le pain",
+          "options": ["Il n'aime pas le pain", "Il adore le pain", "Il n'a plus de pain"],
+          "difficulty": 15,
+          "audioText": "No me gusta el pan.",
+          "audioRef": "audio/es/valencia/t1/gustos-08.mp3"
+        },
+        {
+          "id": "es.valencia.t1.gustos.09",
+          "kind": "speak", "skill": "parler", "rung": "r4", "cefr": "A1",
+          "canDo": ["A1.ORAL.4"],
+          "city": "valencia", "tour": 1, "theme": "gustos",
+          "lexemes": ["es.gustar", "es.paella"],
+          "prompt": "Dis que tu aimes la paella.",
+          "answer": "Me gusta la paella",
+          "difficulty": 19,
+          "audioText": "Me gusta la paella",
+          "audioRef": "audio/es/valencia/t1/gustos-09.mp3"
+        }
+      ]
+    },
+    {
+      "id": "es.valencia.t1.mercado",
+      "title": "Au marché central",
+      "canDo": ["A1.ECRIT.3", "A1.ORAL.3", "A1.ECOUTE.2"],
+      "items": [
+        {
+          "id": "es.valencia.t1.mercado.10",
+          "kind": "translate", "skill": "ecrire", "rung": "r2", "cefr": "A1",
+          "canDo": ["A1.ECRIT.3"],
+          "city": "valencia", "tour": 1, "theme": "mercado",
+          "lexemes": ["es.querer", "es.comprar", "es.naranja"],
+          "prompt": "Traduis : « Je veux acheter des oranges »",
+          "answer": "Quiero comprar naranjas",
+          "wordBank": ["Quiero", "comprar", "naranjas", "vender", "el", "muy"],
+          "difficulty": 20,
+          "note": "En espagnol, pas d'article partitif : « des oranges » devient simplement naranjas."
+        },
+        {
+          "id": "es.valencia.t1.mercado.11",
+          "kind": "mcq", "skill": "ecrire", "rung": "r1", "cefr": "A1",
+          "canDo": ["A1.ECRIT.3"],
+          "city": "valencia", "tour": 1, "theme": "mercado",
+          "lexemes": ["es.caro", "es.estar"],
+          "prompt": "« Es muy caro » veut dire…",
+          "answer": "C'est très cher",
+          "options": ["C'est très cher", "C'est très bon", "C'est très loin"],
+          "difficulty": 21
+        },
+        {
+          "id": "es.valencia.t1.mercado.12",
+          "kind": "listen", "skill": "ecouter", "rung": "r1", "cefr": "A1",
+          "canDo": ["A1.ECOUTE.2"],
+          "city": "valencia", "tour": 1, "theme": "mercado",
+          "lexemes": ["es.pan", "es.barato", "es.hoy", "es.estar"],
+          "prompt": "Écoute la marchande et choisis la bonne interprétation.",
+          "answer": "Aujourd'hui le pain est très bon marché",
+          "options": [
+            "Aujourd'hui le pain est très bon marché",
+            "Aujourd'hui le pain est très cher",
+            "Aujourd'hui il n'y a plus de pain"
+          ],
+          "difficulty": 22,
+          "audioText": "Hoy el pan está muy barato.",
+          "audioRef": "audio/es/valencia/t1/mercado-12.mp3"
+        },
+        {
+          "id": "es.valencia.t1.mercado.13",
+          "kind": "speak", "skill": "parler", "rung": "r4", "cefr": "A1",
+          "canDo": ["A1.ORAL.3"],
+          "city": "valencia", "tour": 1, "theme": "mercado",
+          "lexemes": ["es.querer", "es.comprar", "es.pan"],
+          "prompt": "Dis : « Je veux acheter du pain »",
+          "answer": "Quiero comprar pan",
+          "difficulty": 17,
+          "audioText": "Quiero comprar pan",
+          "audioRef": "audio/es/valencia/t1/mercado-13.mp3"
+        },
+        {
+          "id": "es.valencia.t1.mercado.14",
+          "kind": "gap", "skill": "ecrire", "rung": "r3", "cefr": "A1",
+          "canDo": ["A1.ECRIT.3"],
+          "city": "valencia", "tour": 1, "theme": "mercado",
+          "lexemes": ["es.mercado", "es.cerca", "es.estar"],
+          "prompt": "Complète : « El mercado está muy ___ de aquí. » (tout près d'ici)",
+          "answer": "cerca",
+          "difficulty": 18
+        }
+      ]
+    }
+  ],
+  "stampChallenge": {
+    "title": "Épreuve du tampon · Valence",
+    "items": [
+      {
+        "id": "es.valencia.t1.tampon.15",
+        "kind": "speak", "skill": "parler", "rung": "r4", "cefr": "A1",
+        "canDo": ["A1.ORAL.2"],
+        "city": "valencia", "tour": 1, "theme": "restaurante",
+        "lexemes": ["es.paella", "es.agua", "es.porfavor"],
+        "prompt": "Le serveur arrive : « ¿Qué le pongo? ». Commande une paella et une eau.",
+        "answer": "Una paella y un agua, por favor",
+        "difficulty": 20,
+        "audioText": "Una paella y un agua, por favor",
+        "audioRef": "audio/es/valencia/t1/tampon-15.mp3"
+      },
+      {
+        "id": "es.valencia.t1.tampon.16",
+        "kind": "listen", "skill": "ecouter", "rung": "r2", "cefr": "A1",
+        "canDo": ["A1.ECOUTE.1"],
+        "city": "valencia", "tour": 1, "theme": "restaurante",
+        "lexemes": ["es.traer", "es.cuenta"],
+        "prompt": "Le repas est fini. Qu'est-ce que le serveur te demande ?",
+        "answer": "S'il doit apporter l'addition",
+        "options": [
+          "S'il doit apporter l'addition",
+          "Si tu veux un dessert",
+          "Si tu as aimé le plat"
+        ],
+        "difficulty": 30,
+        "audioText": "¿Le traigo ya la cuenta?",
+        "audioRef": "audio/es/valencia/t1/tampon-16.mp3"
+      },
+      {
+        "id": "es.valencia.t1.tampon.17",
+        "kind": "translate", "skill": "ecrire", "rung": "r3", "cefr": "A1",
+        "canDo": ["A1.ECRIT.1"],
+        "city": "valencia", "tour": 1, "theme": "restaurante",
+        "lexemes": ["es.estar", "es.rico", "es.gracias"],
+        "prompt": "Le plat était excellent. Traduis : « C'est très bon, merci »",
+        "answer": "Está muy rico, gracias",
+        "alternates": ["Está muy bueno, gracias"],
+        "difficulty": 24,
+        "note": "Avec estar, on parle de ce plat-ci maintenant — pas de la paella en général."
+      }
+    ]
+  },
+  "review": {
+    "generatedBy": "rédigé à la main comme pack de référence du schéma",
+    "generatedAt": "2026-08-22",
+    "humanReviewed": false,
+    "nativeReviewer": null
+  }
+}

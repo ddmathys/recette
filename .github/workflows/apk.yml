@@ -66,11 +66,13 @@ jobs:
         # pas être publié sur le Play Store en l'état.
         run: flutter build apk --release
 
-      - name: Renommer avec le numéro de build
+      - name: Préparer les fichiers à publier
         run: |
           mkdir -p dist
+          # Un nom stable pour le lien permanent, et un nom daté pour l'historique.
+          cp build/app/outputs/flutter-apk/app-release.apk dist/kameo.apk
           cp build/app/outputs/flutter-apk/app-release.apk \
-             "dist/kameo-${GITHUB_REF_NAME//\//-}-${GITHUB_RUN_NUMBER}.apk"
+             "dist/kameo-build-${GITHUB_RUN_NUMBER}.apk"
           ls -lh dist/
 
       - name: Publier l'APK comme artefact
@@ -80,7 +82,30 @@ jobs:
           path: dist/*.apk
           retention-days: 30
 
-      - name: Attacher l'APK à la release
+      # Un lien permanent, téléchargeable depuis un téléphone sans compte :
+      #   https://github.com/ddmathys/langage/releases/download/latest/kameo.apk
+      # La release `latest` est réécrite à chaque build de main.
+      - name: Publier le dernier APK (lien permanent)
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Dernier APK
+          body: |
+            APK de développement, reconstruit à chaque push sur `main`.
+
+            **Lien permanent** — il pointe toujours vers la dernière version :
+            https://github.com/ddmathys/langage/releases/download/latest/kameo.apk
+
+            Construit depuis `${{ github.sha }}`.
+
+            Signé avec la clé de debug : Android demandera d'autoriser
+            l'installation depuis une source inconnue. Ne peut pas être publié
+            sur le Play Store en l'état.
+          files: dist/*.apk
+          make_latest: true
+
+      - name: Attacher l'APK à la release de version
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:

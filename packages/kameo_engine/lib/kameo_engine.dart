@@ -7,6 +7,7 @@
 library;
 
 export 'src/content_pack.dart';
+export 'src/city_objective.dart';
 export 'src/country.dart';
 export 'src/events.dart';
 export 'src/lesson_builder.dart';

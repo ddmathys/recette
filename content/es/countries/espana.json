@@ -8,37 +8,235 @@
   "variant": null,
   "accent": "Castillan",
   "ttsLocale": "es-ES",
-  "note": "L'espagnol d'Espagne : le « c » qui zozote, le vosotros, et le tutoiement partout.",
+  "note": "L'espagnol d'Espagne : le « c » qui zozote, le vosotros, et le tutoiement partout. Les expressions sont en castillan, jamais en langue régionale.",
   "outline": [
-    [8.5, 7.3], [29.2, 4.9], [43.8, 6.1], [59.2, 7.9], [69.2, 14.6], [84.6, 18.3],
-    [98.5, 20.7], [91.5, 32.9], [80, 40.2], [73, 56], [74.6, 64.6], [65.5, 78],
-    [54.2, 87.4], [39.1, 88.8], [30, 97.6], [24.7, 91.1], [19.6, 82.2], [16.2, 81.7],
-    [19.2, 70.7], [18.5, 52.4], [20, 36.6], [10, 25.6], [6.2, 22], [1.5, 13.4]
+    [
+      8.5,
+      7.3
+    ],
+    [
+      29.2,
+      4.9
+    ],
+    [
+      43.8,
+      6.1
+    ],
+    [
+      59.2,
+      7.9
+    ],
+    [
+      69.2,
+      14.6
+    ],
+    [
+      84.6,
+      18.3
+    ],
+    [
+      98.5,
+      20.7
+    ],
+    [
+      91.5,
+      32.9
+    ],
+    [
+      80,
+      40.2
+    ],
+    [
+      73,
+      56
+    ],
+    [
+      74.6,
+      64.6
+    ],
+    [
+      65.5,
+      78
+    ],
+    [
+      54.2,
+      87.4
+    ],
+    [
+      39.1,
+      88.8
+    ],
+    [
+      30,
+      97.6
+    ],
+    [
+      24.7,
+      91.1
+    ],
+    [
+      19.6,
+      82.2
+    ],
+    [
+      16.2,
+      81.7
+    ],
+    [
+      19.2,
+      70.7
+    ],
+    [
+      18.5,
+      52.4
+    ],
+    [
+      20,
+      36.6
+    ],
+    [
+      10,
+      25.6
+    ],
+    [
+      6.2,
+      22
+    ],
+    [
+      1.5,
+      13.4
+    ]
   ],
   "cities": [
-    { "id": "barcelona", "name": "Barcelone", "emoji": "🎨", "x": 89.8, "y": 31.8, "order": 1,
-      "theme": "La mer, l'art et l'accueil catalan",
-      "expression": { "text": "Déu n'hi do!", "translation": "Ça alors !",
-        "note": "Un catalanisme entré dans l'espagnol de Barcelone : intraduisible, il exprime l'admiration devant quelque chose de remarquable." } },
-    { "id": "valencia", "name": "Valence", "emoji": "🥘", "x": 70.2, "y": 55.2, "order": 2,
+    {
+      "id": "barcelona",
+      "name": "Barcelone",
+      "emoji": "🎨",
+      "x": 89.8,
+      "y": 31.8,
+      "order": 1,
+      "theme": "La mer, l'art et Gaudí",
+      "expression": {
+        "text": "¡Qué pasada!",
+        "translation": "C'est dingue !",
+        "note": "Du castillan pur, qu'on entend devant la Sagrada Família comme devant un but. À Barcelone on parle aussi catalan, mais Kameo t'apprend l'espagnol."
+      }
+    },
+    {
+      "id": "valencia",
+      "name": "Valence",
+      "emoji": "🥘",
+      "x": 70.2,
+      "y": 55.2,
+      "order": 2,
       "theme": "La cuisine, le riz et le marché central",
-      "expression": { "text": "¡Qué rico!", "translation": "C'est trop bon !",
-        "note": "Devant une paella, jamais devant un compte en banque : pour un plat, « rico » veut dire délicieux." } },
-    { "id": "granada", "name": "Grenade", "emoji": "🏛️", "x": 45.4, "y": 83.2, "order": 3, "labelOffset": 6.6,
+      "expression": {
+        "text": "¡Qué rico!",
+        "translation": "C'est trop bon !",
+        "note": "Devant une paella, jamais devant un compte en banque : pour un plat, « rico » veut dire délicieux."
+      }
+    },
+    {
+      "id": "granada",
+      "name": "Grenade",
+      "emoji": "🏛️",
+      "x": 45.4,
+      "y": 83.2,
+      "order": 3,
       "theme": "Les tapas offertes et l'héritage andalou",
-      "expression": { "text": "¡Vaya tapa!", "translation": "Quelle tapa !",
-        "note": "À Grenade, la tapa est offerte avec la boisson. C'est la seule ville d'Espagne où c'est encore systématique." } },
-    { "id": "sevilla", "name": "Séville", "emoji": "💃", "x": 27.1, "y": 80.6, "order": 4,
+      "expression": {
+        "text": "¡Vaya tapa!",
+        "translation": "Quelle tapa !",
+        "note": "À Grenade, la tapa est offerte avec la boisson. C'est la seule ville d'Espagne où c'est encore systématique."
+      },
+      "labelOffset": 6.6
+    },
+    {
+      "id": "cordoba",
+      "name": "Cordoue",
+      "emoji": "🕌",
+      "x": 36.3,
+      "y": 74.5,
+      "order": 4,
+      "theme": "Les patios fleuris et la mosquée-cathédrale",
+      "expression": {
+        "text": "¡Qué arte!",
+        "translation": "Quelle classe !",
+        "note": "En Andalousie, « arte » ne parle pas de peinture : c'est le talent, l'allure, la façon de faire les choses avec grâce."
+      },
+      "labelOffset": -4.6
+    },
+    {
+      "id": "sevilla",
+      "name": "Séville",
+      "emoji": "💃",
+      "x": 27.1,
+      "y": 80.6,
+      "order": 5,
       "theme": "La fête, le flamenco et la chaleur",
-      "expression": { "text": "¡Ole!", "translation": "Bravo !",
-        "note": "Le cri du flamenco, devenu une approbation universelle — on le lance aussi bien devant un chanteur que devant une bonne blague." } },
-    { "id": "madrid", "name": "Madrid", "emoji": "🚇", "x": 44.6, "y": 43.7, "order": 5, "labelOffset": -4.6,
+      "expression": {
+        "text": "¡Ole!",
+        "translation": "Bravo !",
+        "note": "Le cri du flamenco, devenu une approbation universelle — on le lance aussi bien devant un chanteur que devant une bonne blague."
+      }
+    },
+    {
+      "id": "toledo",
+      "name": "Tolède",
+      "emoji": "🗡️",
+      "x": 42.1,
+      "y": 50.5,
+      "order": 6,
+      "theme": "Les trois cultures et les ruelles",
+      "expression": {
+        "text": "¡Ni harto de vino!",
+        "translation": "Même pas en rêve !",
+        "note": "Littéralement « même pas saoul de vin ». Une façon très castillane de dire qu'on ne ferait ça sous aucun prétexte."
+      },
+      "labelOffset": 6.6
+    },
+    {
+      "id": "madrid",
+      "name": "Madrid",
+      "emoji": "🚇",
+      "x": 44.6,
+      "y": 43.7,
+      "order": 7,
       "theme": "La vie urbaine, le métro et la nuit",
-      "expression": { "text": "¡Qué guay!", "translation": "Trop cool !",
-        "note": "L'expression la plus madrilène qui soit. Un manuel scolaire ne te l'apprendra jamais, la rue si." } },
-    { "id": "bilbao", "name": "Bilbao", "emoji": "⚽", "x": 50.5, "y": 9.0, "order": 6,
+      "expression": {
+        "text": "¡Qué guay!",
+        "translation": "Trop cool !",
+        "note": "L'expression la plus madrilène qui soit. Un manuel scolaire ne te l'apprendra jamais, la rue si."
+      },
+      "labelOffset": -4.6
+    },
+    {
+      "id": "santiago",
+      "name": "Saint-Jacques",
+      "emoji": "🐚",
+      "x": 7.4,
+      "y": 13.7,
+      "order": 8,
+      "theme": "Le chemin, la pluie et la Galice",
+      "expression": {
+        "text": "¡Buen camino!",
+        "translation": "Bonne route !",
+        "note": "Ce qu'on se lance entre pèlerins sur le chemin de Compostelle. En Galice, ça sert aussi à dire au revoir."
+      }
+    },
+    {
+      "id": "bilbao",
+      "name": "Bilbao",
+      "emoji": "⚽",
+      "x": 50.5,
+      "y": 9.0,
+      "order": 9,
       "theme": "Le football, les pintxos et la pluie",
-      "expression": { "text": "¡Aupa!", "translation": "Allez !",
-        "note": "Le cri des supporters de l'Athletic, venu du basque. À Bilbao, il sert aussi à dire bonjour." } }
+      "expression": {
+        "text": "¡Aupa!",
+        "translation": "Allez !",
+        "note": "Venu du basque mais entré dans l'espagnol courant, jusque dans le dictionnaire. À Bilbao, il sert aussi à dire bonjour."
+      }
+    }
   ]
 }

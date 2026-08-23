@@ -260,30 +260,46 @@ class _PassportStrip extends StatelessWidget {
         children: <Widget>[
           Text('TOUR ${session.currentTour}', style: text.labelSmall),
           const SizedBox(width: KSpace.sm),
-          for (final City c in country.cities)
-            Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: Container(
-                width: 24,
-                height: 24,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: session.isDone(c)
-                      ? KColors.soleil.withValues(alpha: 0.28)
-                      : null,
-                  border: Border.all(
-                    color:
-                        session.isDone(c) ? KColors.soleil : KColors.traitFort,
-                    width: session.isDone(c) ? 2 : 1.2,
-                  ),
-                ),
-                child: session.isDone(c)
-                    ? Text(c.emoji, style: const TextStyle(fontSize: 11))
-                    : null,
+          // Le nombre de villes va grandir : on met les pastilles à l'échelle
+          // plutôt que de laisser la rangée déborder.
+          Expanded(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Row(
+                children: <Widget>[
+                  for (final City c in country.cities)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 5),
+                      child: Container(
+                        width: 22,
+                        height: 22,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: session.isDone(c)
+                              ? KColors.soleil.withValues(alpha: 0.28)
+                              : null,
+                          border: Border.all(
+                            color: session.isDone(c)
+                                ? KColors.soleil
+                                : KColors.traitFort,
+                            width: session.isDone(c) ? 2 : 1.2,
+                          ),
+                        ),
+                        child: session.isDone(c)
+                            ? Text(
+                                c.emoji,
+                                style: const TextStyle(fontSize: 10),
+                              )
+                            : null,
+                      ),
+                    ),
+                ],
               ),
             ),
-          const Spacer(),
+          ),
+          const SizedBox(width: KSpace.xs),
           Text(
             '${session.stamps.length}/${country.cities.length}',
             style: text.labelSmall,

@@ -139,6 +139,58 @@ Deux propriétés importantes :
 
 ---
 
+## 6 bis. Valider une ville : par le vocabulaire, pas par les leçons
+
+**Décidé le 23/08/2026.** Une ville ne se valide pas en enchaînant des leçons —
+« j'ai fini 4 leçons » ne veut rien dire. Elle se valide en **assimilant son
+vocabulaire** : chaque ville se voit attribuer un lot de mots (une douzaine au
+tour 1), et le tampon tombe quand 80 % d'entre eux sont assimilés.
+
+Ce choix règle trois problèmes d'un coup : le tampon devient invérifiable au
+hasard, le carnet redevient la colonne vertébrale, et la progression se raconte
+(« j'ai appris 12 mots à Valence »).
+
+### Assimilé ≠ mémorisé
+
+Il y a un piège que cette règle aurait pu créer. La répétition espacée (§5)
+exige **deux réussites espacées de 24 h** pour monter d'échelon : si le tampon
+en dépendait, aucune ville ne serait finissable en une session, et le voyage
+s'arrêterait net.
+
+D'où deux notions distinctes, sur deux axes différents (§2) :
+
+| | Critère | Axe | Se perd ? |
+|---|---|---|---|
+| **Assimilé pour la ville** | le mot a été réussi sur **deux types d'exercice différents** — le reconnaître *et* le retrouver | parcours | jamais |
+| **Mémorisé** | la courbe SM-2 : réussites espacées, intervalles qui s'allongent | mémoire | s'entretient |
+
+Un mot assimilé fait avancer le voyage tout de suite. Sa survie dans le temps,
+elle, relève du carnet et de la révision. Un utilisateur ne perd jamais un
+tampon parce qu'il a oublié un mot.
+
+### Répartition du vocabulaire entre les villes
+
+Deux règles, appliquées par `CityObjectiveBuilder` :
+
+1. **Une ville enseigne d'abord ses propres mots** — ceux qui portent son
+   affinité (*paella*, *arroz*, *mercado* à Valence), puis le vocabulaire
+   général du palier.
+2. **Aucun mot n'est enseigné par deux villes du même tour.** Sans cette règle,
+   la neuvième étape répéterait la première.
+
+La sélection est **déterministe** : un objectif qui changerait entre deux
+ouvertures de l'app serait incompréhensible.
+
+### Ce que ça révèle sur le contenu
+
+Neuf villes × 12 mots = **108 mots pour le seul tour 1**, alors que le
+répertoire espagnol en compte 130 au total et que le tour 1 n'en autorise
+qu'une partie (paliers P1–P2). Le mécanisme fonctionne, mais le **stock de
+vocabulaire est ce qui bloquera en premier** — c'est là que le pipeline IA
+(doc 03 §6) devient nécessaire, pas pour la mécanique.
+
+---
+
 ## 7. Validation d'un tour (la cérémonie)
 
 Conditions pour valider une page de passeport (tour N, pays P) :

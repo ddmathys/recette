@@ -127,12 +127,8 @@ class _PlacementPageState extends State<PlacementPage> {
       _revealed = true;
     });
     _engine.submit(correct: option == q.expected);
-    Future<void>.delayed(
-      Duration(milliseconds: option == q.expected ? 700 : 1600),
-      () {
-        if (mounted) _nextQuestion();
-      },
-    );
+    // Pas d'enchaînement automatique : l'explication ne sert à rien si elle
+    // disparaît avant d'être lue. C'est l'utilisateur qui décide quand passer.
   }
 
   void _finish() {
@@ -213,11 +209,16 @@ class _PlacementPageState extends State<PlacementPage> {
                         ),
                       ),
                     const Spacer(),
-                    if (_revealed)
-                      _Feedback(
-                        correct: _chosen == q.expected,
-                        lemma: q.lemma,
+                    if (_revealed) ...<Widget>[
+                      _Feedback(correct: _chosen == q.expected, lemma: q.lemma),
+                      const SizedBox(height: KSpace.sm),
+                      KButton(
+                        label: _engine.isFinished
+                            ? 'Voir mon résultat'
+                            : 'Continuer',
+                        onPressed: _nextQuestion,
                       ),
+                    ],
                   ],
                 ),
         ),

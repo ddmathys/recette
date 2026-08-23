@@ -48,7 +48,7 @@ void usePhoneScreen(WidgetTester tester) {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('la carte d Espagne affiche ses six villes', (
+  testWidgets('la carte d Espagne affiche ses neuf villes', (
     WidgetTester tester,
   ) async {
     usePhoneScreen(tester);
@@ -67,7 +67,9 @@ void main() {
       expect(find.text(name), findsWidgets, reason: name);
     }
     expect(find.text('Espagne · Tour 1'), findsOneWidget);
-    expect(find.text('0/6'), findsOneWidget);
+    expect(find.text('Cordoue'), findsWidgets);
+    expect(find.text('Tolède'), findsWidgets);
+    expect(find.text('0/9'), findsOneWidget);
   });
 
   testWidgets('la carte des États-Unis affiche ses propres villes', (
@@ -95,6 +97,47 @@ void main() {
 
     expect(find.text('EXPRESSION LOCALE'), findsOneWidget);
     expect(find.text('Mind the gap!'), findsOneWidget);
+    // La fiche annonce aussi ce que la ville va apprendre.
+    expect(find.text('VOCABULAIRE DE LA VILLE'), findsOneWidget);
+  });
+
+  testWidgets('la fiche ville affiche l objectif de vocabulaire', (
+    WidgetTester tester,
+  ) async {
+    usePhoneScreen(tester);
+    final KameoSession session = await sessionFor(tester, 'es', 'espana');
+    await tester.pumpWidget(wrap(session));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Découvrir la ville'));
+    await tester.pumpAndSettle();
+
+    final CityObjective objective = session.objectiveFor('barcelona')!;
+    expect(objective.words, isNotEmpty);
+    expect(find.text('0/${objective.total}'), findsOneWidget);
+    expect(find.text('Apprendre le vocabulaire'), findsOneWidget);
+    // Chaque mot de l'objectif est montré à l'avance.
+    expect(find.text(objective.words.first.term), findsOneWidget);
+  });
+
+  testWidgets('assimiler le vocabulaire ouvre le tampon', (
+    WidgetTester tester,
+  ) async {
+    usePhoneScreen(tester);
+    final KameoSession session = await sessionFor(tester, 'es', 'espana');
+    final CityObjective objective = session.objectiveFor('barcelona')!;
+
+    // Le seuil, pas la totalité : la progression reste fluide.
+    for (final Lemma l in objective.words.take(objective.required)) {
+      session.recordDrill(l.id, DrillKind.recognize, success: true);
+      session.recordDrill(l.id, DrillKind.recall, success: true);
+    }
+    expect(objective.canStamp(session.drills), isTrue);
+
+    session.awardStamp('barcelona');
+    await tester.pumpWidget(wrap(session));
+    await tester.pumpAndSettle();
+    expect(session.currentCity?.id, 'valencia');
+    expect(find.byIcon(Icons.check), findsOneWidget);
   });
 
   testWidgets('les villes suivantes sont verrouillées', (
@@ -106,7 +149,7 @@ void main() {
     await tester.pumpAndSettle();
     // Rien n'est tamponné : la première ville est en cours, les cinq autres
     // sont verrouillées.
-    expect(find.byIcon(Icons.lock), findsNWidgets(5));
+    expect(find.byIcon(Icons.lock), findsNWidgets(8));
     expect(find.byIcon(Icons.check), findsNothing);
   });
 
@@ -120,6 +163,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(session.currentCity?.id, 'valencia');
     expect(find.byIcon(Icons.check), findsOneWidget);
-    expect(find.byIcon(Icons.lock), findsNWidgets(4));
+    expect(find.byIcon(Icons.lock), findsNWidgets(7));
   });
 }

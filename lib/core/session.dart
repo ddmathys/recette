@@ -17,6 +17,14 @@ class KameoSession extends ChangeNotifier {
   int gems = 0;
   final Set<String> stamps = <String>{};
 
+  /// Le vocabulaire que chaque ville se charge d'enseigner à ce tour.
+  Map<String, CityObjective> objectives = <String, CityObjective>{};
+
+  /// Ce que l'utilisateur a déjà réussi, mot par mot.
+  final Map<String, DrillRecord> drills = <String, DrillRecord>{};
+
+  static const CityObjectiveBuilder _objectives = CityObjectiveBuilder();
+
   /// Le répertoire filtré pour la destination : à New York, on n'apprend pas
   /// « pavement ».
   Lexicon get travelLexicon {
@@ -36,18 +44,55 @@ class KameoSession extends ChangeNotifier {
   void chooseDestination(Country c, Lexicon lex) {
     country = c;
     lexicon = lex;
+    _rebuildObjectives();
     notifyListeners();
   }
+
+  void _rebuildObjectives() {
+    final Country? c = country;
+    if (c == null || lexicon == null) return;
+    objectives = _objectives.buildAll(
+      lexicon: travelLexicon,
+      country: c,
+      tour: currentTour,
+    );
+  }
+
+  CityObjective? objectiveFor(String cityId) => objectives[cityId];
+
+  /// Enregistre le résultat d'un exercice.
+  void recordDrill(String lemmaId, DrillKind kind, {required bool success}) {
+    drills[lemmaId] = (drills[lemmaId] ?? const DrillRecord()).withResult(
+      kind,
+      success: success,
+    );
+    xp += success ? 2 : 0;
+    notifyListeners();
+  }
+
+  /// Le tampon d'une ville. Il ne se reprend jamais (doc 02 §2).
+  void awardStamp(String cityId) {
+    if (stamps.add(cityId)) {
+      xp += 40;
+      gems += 10;
+      notifyListeners();
+    }
+  }
+
+  int get wordsLearned =>
+      drills.values.where((DrillRecord r) => r.isAssimilated).length;
 
   void completePlacement(PlacementResult result) {
     placement = result;
     currentTour = result.startTour;
+    _rebuildObjectives();
     notifyListeners();
   }
 
   void startFromScratch() {
     placement = null;
     currentTour = 1;
+    _rebuildObjectives();
     notifyListeners();
   }
 

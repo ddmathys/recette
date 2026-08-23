@@ -17,7 +17,7 @@ void main() {
     test('les trois pays se chargent', () {
       expect(countries, hasLength(3));
       for (final Country c in countries.values) {
-        expect(c.cities, hasLength(6), reason: c.shortName);
+        expect(c.cities, hasLength(9), reason: c.shortName);
         expect(c.outline.length, greaterThan(12), reason: c.shortName);
       }
     });
@@ -40,10 +40,32 @@ void main() {
       for (final Country c in countries.values) {
         expect(
           c.cities.map((City x) => x.order),
-          <int>[1, 2, 3, 4, 5, 6],
+          <int>[1, 2, 3, 4, 5, 6, 7, 8, 9],
           reason: c.shortName,
         );
-        expect(c.cities.map((City x) => x.id).toSet(), hasLength(6));
+        expect(c.cities.map((City x) => x.id).toSet(), hasLength(9));
+      }
+    });
+
+    test('l Espagne enseigne le castillan, pas les langues régionales', () {
+      // Demande explicite : à Barcelone on parle catalan, mais Kameo enseigne
+      // l'espagnol. Aucune expression de la carte espagnole ne doit être
+      // catalane.
+      final Country espana = countries['es/countries/espana.json']!;
+      const List<String> catalanismes = <String>[
+        "Déu n'hi do",
+        'Bon dia',
+        'Adéu',
+        'Si us plau',
+      ];
+      for (final City c in espana.cities) {
+        for (final String mot in catalanismes) {
+          expect(
+            c.expression.text.toLowerCase(),
+            isNot(contains(mot.toLowerCase())),
+            reason: '${c.name} : « ${c.expression.text} » n est pas du castillan',
+          );
+        }
       }
     });
 

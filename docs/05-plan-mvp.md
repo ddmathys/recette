@@ -106,14 +106,16 @@ Et surtout, la destination n'est pas cosmétique : elle porte une **variante de 
 
 ---
 
-## Étape 7 — Le moteur d'exercices *(~2 semaines)* ⭐
+## Étape 7 — Le moteur d'exercices 🚧 *(vocabulaire fait, phrases à venir)* ⭐
 
 - **Écrire** : banque de mots, saisie libre, texte à trous, tolérance aux accents et à la ponctuation.
 - **Écouter** : dictée, QCM audio, contrôle de vitesse (×0,75).
 - **Parler** : répétition + `speech_to_text` + comparaison indulgente (doc 02 §9).
 - Barre de progression, cœurs, sélection d'un mot difficile **en un appui long**, écran de fin.
 
-**Sortie :** une leçon complète se joue de bout en bout, hors-ligne, sans crash, en < 4 minutes.
+**Sortie partielle :** ✅ **l'apprentissage du vocabulaire tourne, sans aucun contenu rédigé.** Les exercices sont fabriqués depuis le répertoire par le moteur (`DrillBuilder`) : reconnaître, retrouver, écouter. Une ville se valide en assimilant son vocabulaire (doc 02 §6 bis), pas en enchaînant des leçons.
+
+Reste à faire : les exercices sur **phrases** — traduction avec banque de mots, texte à trous, répétition orale notée. Ceux-là demandent du contenu rédigé, donc le pipeline IA.
 
 ---
 

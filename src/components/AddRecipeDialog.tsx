@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { CATEGORIES } from "@/lib/categories";
+import { compressImageIfNeeded } from "@/lib/compressImage";
 import type { CategoryKey, Difficulty, Ingredient, RecipeDraft } from "@/lib/types";
 import { addRecipe, uploadRecipePhoto } from "@/lib/useRecipes";
 
 const DIFFICULTIES: Difficulty[] = ["Facile", "Moyen", "Avancé"];
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 
 type Stage = "intro" | "form";
 
@@ -30,8 +32,27 @@ export function AddRecipeDialog({ onClose }: { onClose: () => void }) {
   });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  async function handlePhotoInput(f: File) {
+    setPhotoError(null);
+    setPhotoBusy(true);
+    try {
+      const toUse = await compressImageIfNeeded(f, MAX_PHOTO_BYTES);
+      if (toUse.size > MAX_PHOTO_BYTES) {
+        setPhotoError("Photo trop lourde (max 10 Mo), même après compression — essaie une image plus petite.");
+        return;
+      }
+      setPhotoFile(toUse);
+      setPhotoPreview(URL.createObjectURL(toUse));
+      setSuggestedPhoto(null);
+    } finally {
+      setPhotoBusy(false);
+    }
+  }
 
   function openForm(fromDraft: RecipeDraft | null) {
     setDraft(
@@ -346,17 +367,16 @@ export function AddRecipeDialog({ onClose }: { onClose: () => void }) {
                     />
                   )}
                   <label className="cursor-pointer rounded-xl border border-line bg-surface px-3.5 py-2 text-[0.85rem] text-ink hover:bg-surface-2">
-                    Choisir une photo
+                    {photoBusy ? "Compression…" : "Choisir une photo"}
                     <input
                       type="file"
                       accept="image/png,image/jpeg,image/webp,image/gif"
                       hidden
+                      disabled={photoBusy}
                       onChange={(e) => {
                         const f = e.target.files?.[0];
                         if (!f) return;
-                        setPhotoFile(f);
-                        setPhotoPreview(URL.createObjectURL(f));
-                        setSuggestedPhoto(null);
+                        handlePhotoInput(f);
                       }}
                     />
                   </label>
@@ -364,6 +384,7 @@ export function AddRecipeDialog({ onClose }: { onClose: () => void }) {
                     <span className="text-[0.76rem] text-ink-soft">Photo trouvée sur la page liée — tu peux la remplacer.</span>
                   )}
                 </div>
+                {photoError && <p className="mt-1.5 text-[0.76rem] text-accent">{photoError}</p>}
                 <p className="mt-1.5 text-[0.76rem] text-ink-soft">Sans photo, une icône de catégorie sera utilisée par défaut.</p>
               </Field>
 

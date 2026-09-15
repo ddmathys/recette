@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CATEGORY_BY_KEY } from "@/lib/categories";
 import { CategoryIcon } from "./CategoryIcon";
+import { compressImageIfNeeded } from "@/lib/compressImage";
 import type { Recipe } from "@/lib/types";
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -40,14 +41,15 @@ export function RecipeDetail({
       setPhotoError("Ce fichier n'est pas une image.");
       return;
     }
-    if (file.size > MAX_PHOTO_BYTES) {
-      setPhotoState("error");
-      setPhotoError("Photo trop lourde (max 10 Mo) — essaie une version compressée.");
-      return;
-    }
     setPhotoState("uploading");
     try {
-      await onPhotoFile(file);
+      const toUpload = await compressImageIfNeeded(file, MAX_PHOTO_BYTES);
+      if (toUpload.size > MAX_PHOTO_BYTES) {
+        setPhotoState("error");
+        setPhotoError("Photo trop lourde (max 10 Mo), même après compression — essaie une image plus petite.");
+        return;
+      }
+      await onPhotoFile(toUpload);
       setPhotoState("idle");
     } catch (e) {
       setPhotoState("error");

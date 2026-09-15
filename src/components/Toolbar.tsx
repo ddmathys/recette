@@ -32,9 +32,9 @@ export function Toolbar({
   addAvailable: boolean;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2.5">
-      <label className="flex flex-1 basis-[220px] items-center gap-2 rounded-[10px] border border-line bg-surface px-3 py-2">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="h-4 w-4 shrink-0 text-ink-soft">
+    <div className="flex items-center gap-2">
+      <label className="flex flex-1 items-center gap-2 rounded-full border-2 border-transparent bg-surface px-4 py-2.5 shadow-[0_1px_3px_rgba(43,42,38,.08)] transition focus-within:border-accent">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" className="h-4 w-4 shrink-0 text-accent">
           <circle cx="11" cy="11" r="7" />
           <path d="m21 21-4.3-4.3" />
         </svg>
@@ -42,21 +42,21 @@ export function Toolbar({
           type="search"
           value={search}
           onChange={(e) => onSearch(e.target.value)}
-          placeholder="Chercher une recette, un plat…"
+          placeholder="Chercher une recette, un ingrédient…"
           className="w-full bg-transparent text-[0.92rem] text-ink outline-none placeholder:text-ink-soft"
         />
       </label>
 
       <button
         onClick={onOpenFilters}
-        className="relative inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[0.85rem] font-medium text-ink transition hover:bg-surface-2 active:scale-[.97] md:hidden"
+        className="relative inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-accent-2 px-4 py-2.5 text-[0.85rem] font-bold text-accent-2-ink shadow-[0_2px_8px_-2px_rgba(23,162,184,.6)] transition active:scale-95 md:hidden"
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
           <path d="M4 6h16M7 12h10M10 18h4" />
         </svg>
         Filtres
         {activeFilterCount > 0 && (
-          <span className="ml-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-accent px-1 font-mono text-[0.68rem] text-accent-ink">
+          <span className="flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-white px-1 text-[0.68rem] font-extrabold text-accent-2">
             {activeFilterCount}
           </span>
         )}
@@ -65,9 +65,9 @@ export function Toolbar({
       {addAvailable && (
         <button
           onClick={onAdd}
-          className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[0.85rem] font-medium text-ink transition hover:bg-surface-2 active:scale-[.97]"
+          className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-accent px-4 py-2.5 text-[0.85rem] font-bold text-accent-ink shadow-[0_2px_10px_-2px_rgba(255,90,54,.65)] transition hover:brightness-105 active:scale-95"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="h-4 w-4">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" className="h-4 w-4">
             <path d="M12 5v14M5 12h14" />
           </svg>
           <span className="hidden sm:inline">Ajouter une recette</span>
@@ -93,8 +93,8 @@ export function ToggleButton({
     <button
       aria-pressed={pressed}
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border px-3.5 py-2.5 text-[0.85rem] font-medium transition active:scale-[.97] ${
-        pressed ? "border-transparent bg-herb text-accent-ink" : "border-line bg-surface text-ink hover:bg-surface-2"
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border-2 px-3.5 py-2 text-[0.83rem] font-semibold transition active:scale-95 ${
+        pressed ? "border-herb bg-herb text-white" : "border-line bg-surface text-ink hover:border-herb"
       }`}
     >
       {icon}
@@ -117,10 +117,10 @@ export function TimePills({
           key={b.key}
           aria-pressed={active === b.key}
           onClick={() => onChange(b.key)}
-          className={`rounded-full border px-3 py-1.5 font-mono text-[0.78rem] font-medium transition ${
+          className={`rounded-full border-2 px-3 py-1.5 text-[0.78rem] font-semibold transition ${
             active === b.key
-              ? "border-transparent bg-accent text-accent-ink"
-              : "border-line bg-surface text-ink-soft hover:text-ink"
+              ? "border-accent bg-accent text-accent-ink"
+              : "border-line bg-surface text-ink-soft hover:border-accent hover:text-accent"
           }`}
         >
           {b.label}

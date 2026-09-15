@@ -47,13 +47,13 @@ export function FilterDrawer({
     <>
       {open && <div className="fixed inset-0 z-40 bg-black/40 md:hidden" onClick={onClose} />}
       <div
-        className={`fixed inset-y-0 left-0 z-41 w-[85vw] max-w-[320px] overflow-y-auto bg-surface p-5 shadow-[12px_0_30px_-10px_rgba(0,0,0,.35)] transition-transform duration-200 md:static md:z-auto md:w-auto md:max-w-none md:translate-x-0 md:overflow-visible md:bg-transparent md:p-0 md:shadow-none ${
+        className={`fixed inset-y-0 left-0 z-41 w-[85vw] max-w-[320px] overflow-y-auto rounded-r-[24px] bg-surface p-5 shadow-[12px_0_30px_-10px_rgba(0,0,0,.35)] transition-transform duration-200 md:static md:z-auto md:w-auto md:max-w-none md:translate-x-0 md:overflow-visible md:rounded-none md:bg-transparent md:p-0 md:shadow-none ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
         style={{ paddingTop: "max(1.25rem, env(safe-area-inset-top, 0px))" }}
       >
         <div className="mb-4 flex items-center justify-between md:hidden">
-          <h2 className="text-[1.05rem] font-semibold">Filtres</h2>
+          <h2 className="text-[1.05rem] font-bold">Filtres</h2>
           <button onClick={onClose} aria-label="Fermer" className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-2 text-ink">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="h-4 w-4">
               <path d="M6 6l12 12M18 6 6 18" />
@@ -61,7 +61,7 @@ export function FilterDrawer({
           </button>
         </div>
 
-        <div className="mb-3.5 flex flex-wrap gap-2.5">
+        <div className="mb-3.5 flex flex-wrap gap-2">
           <ToggleButton pressed={veg} onClick={onVeg} label="Végétarien" icon={
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
               <path d="M12 21V11" />
@@ -76,7 +76,7 @@ export function FilterDrawer({
           } />
           <button
             onClick={onSurprise}
-            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-transparent bg-accent px-3.5 py-2.5 text-[0.85rem] font-medium text-accent-ink transition hover:brightness-105 active:scale-[.97]"
+            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border-2 border-transparent bg-gold px-3.5 py-2 text-[0.83rem] font-bold text-white transition hover:brightness-105 active:scale-95"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
               <path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
@@ -88,7 +88,7 @@ export function FilterDrawer({
 
         <CategoryTabs active={cat} onChange={onCat} />
 
-        <div className="flex flex-wrap items-center gap-2.5 border-b border-line py-3">
+        <div className="flex flex-wrap items-center gap-2.5 border-t border-line py-3">
           <TimePills active={time} onChange={onTime} />
         </div>
 

@@ -15,6 +15,7 @@ export function RecipeDetail({
   onClose,
   onSaveNotes,
   onPhotoFile,
+  onDelete,
   readOnly,
 }: {
   recipe: Recipe;
@@ -23,6 +24,7 @@ export function RecipeDetail({
   onClose: () => void;
   onSaveNotes: (text: string) => void;
   onPhotoFile: (file: File) => Promise<unknown>;
+  onDelete: () => Promise<unknown>;
   readOnly: boolean;
 }) {
   const cat = CATEGORY_BY_KEY[recipe.cat];
@@ -33,6 +35,22 @@ export function RecipeDetail({
   const fileRef = useRef<HTMLInputElement>(null);
   const [photoState, setPhotoState] = useState<"idle" | "uploading" | "error">("idle");
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    setDeleting(true);
+    try {
+      await onDelete();
+    } catch {
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+  }
 
   async function handlePhotoFile(file: File) {
     setPhotoError(null);
@@ -76,7 +94,7 @@ export function RecipeDetail({
       <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} />
       <aside className="fixed right-0 top-0 z-41 flex h-full w-full max-w-[440px] flex-col overflow-y-auto bg-surface shadow-[-12px_0_30px_-10px_rgba(0,0,0,.35)]">
         <div
-          className="relative flex h-[150px] shrink-0 items-end bg-cover bg-center p-4 text-[#FBF8EF]"
+          className="relative flex h-[110px] shrink-0 items-end bg-cover bg-center p-4 text-white"
           style={{
             backgroundColor: cat.color,
             backgroundImage: recipe.photoUrl ? `url('${recipe.photoUrl}')` : undefined,
@@ -98,8 +116,8 @@ export function RecipeDetail({
             <CategoryIcon cat={recipe.cat} className="absolute right-4 top-4 z-10 h-9 w-9 opacity-85" />
           )}
           <div className="relative z-10">
-            <p className="mb-1 text-[0.75rem] uppercase tracking-wide opacity-85">{cat.label}</p>
-            <h2 className="text-[1.4rem] font-semibold text-[#FBF8EF]">{recipe.name}</h2>
+            <p className="mb-0.5 text-[0.72rem] font-semibold uppercase tracking-wide opacity-90">{cat.label}</p>
+            <h2 className="text-[1.2rem] font-extrabold text-white">{recipe.name}</h2>
           </div>
         </div>
 
@@ -206,6 +224,24 @@ export function RecipeDetail({
                 : "Notes visibles par toute personne qui a accès à cette bibliothèque."}
             </p>
           </div>
+
+          {!readOnly && (
+            <button
+              onClick={handleDelete}
+              onBlur={() => setConfirmDelete(false)}
+              disabled={deleting}
+              className={`inline-flex items-center justify-center gap-1.5 rounded-full border-2 px-3.5 py-2 text-[0.82rem] font-bold transition active:scale-95 disabled:opacity-60 ${
+                confirmDelete
+                  ? "border-transparent bg-accent text-accent-ink"
+                  : "border-line bg-surface text-ink-soft hover:border-accent hover:text-accent"
+              }`}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+                <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+              </svg>
+              {deleting ? "Suppression…" : confirmDelete ? "Confirmer la suppression ?" : "Supprimer la recette"}
+            </button>
+          )}
         </div>
       </aside>
     </>

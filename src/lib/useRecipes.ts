@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   addDoc,
   collection,
+  deleteDoc,
   deleteField,
   doc,
   onSnapshot,
@@ -11,7 +12,7 @@ import {
   query,
   updateDoc,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { db, storage, firebaseEnabled } from "./firebase";
 import { SEED_RECIPES } from "@/data/seed-recipes";
 import type { Recipe, RecipeDraft } from "./types";
@@ -93,6 +94,18 @@ export async function uploadRecipePhoto(id: string, file: File) {
   } catch (e) {
     throw new Error(storageErrorMessage(e));
   }
+}
+
+export async function deleteRecipe(id: string, photoUrl?: string | null) {
+  if (!db) throw new Error("Firebase n'est pas configuré.");
+  if (storage && photoUrl) {
+    try {
+      await deleteObject(ref(storage, photoUrl));
+    } catch {
+      // Best effort: photo may already be gone, or hosted outside our bucket.
+    }
+  }
+  await deleteDoc(doc(db, COLLECTION, id));
 }
 
 export async function setRecipePhotoUrl(id: string, url: string) {

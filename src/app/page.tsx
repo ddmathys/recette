@@ -6,7 +6,7 @@ import { FilterDrawer } from "@/components/FilterDrawer";
 import { RecipeCard } from "@/components/RecipeCard";
 import { RecipeDetail } from "@/components/RecipeDetail";
 import { AddRecipeDialog } from "@/components/AddRecipeDialog";
-import { useRecipes, saveNotes, uploadRecipePhoto } from "@/lib/useRecipes";
+import { useRecipes, saveNotes, uploadRecipePhoto, deleteRecipe } from "@/lib/useRecipes";
 import { useFavorites } from "@/lib/useFavorites";
 import { firebaseEnabled } from "@/lib/firebase";
 import type { CategoryKey } from "@/lib/types";
@@ -90,23 +90,17 @@ export default function Home() {
 
   return (
     <div className="flex min-h-full flex-col">
-      <header className="sticky top-0 z-30 border-b border-line bg-bg pb-3 pt-4" style={{ paddingTop: "max(1rem, env(safe-area-inset-top, 0px))" }}>
-        <div className="mx-auto max-w-[1180px] px-5">
-          <div className="mb-3.5 flex items-baseline gap-3.5">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-ink shadow-[0_1px_2px_rgba(41,39,31,.06),0_8px_20px_-12px_rgba(41,39,31,.25)]">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="h-4.5 w-4.5">
-                  <rect x="4" y="3" width="16" height="18" rx="2" />
-                  <path d="M8 8h8M8 12h8M8 16h5" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-[1.5rem] font-semibold tracking-tight">Recettes du Tiroir</h1>
-                <p className="text-[0.85rem] text-ink-soft">
-                  {recipes.length} recettes de la famille, triées par temps &amp; par ce qu&apos;il reste au frigo
-                </p>
-              </div>
+      <header className="sticky top-0 z-30 bg-bg pb-2.5 pt-3" style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top, 0px))" }}>
+        <div className="mx-auto max-w-[1180px] px-4">
+          <div className="mb-2.5 flex items-center gap-2">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                <path d="M18 8h1a4 4 0 0 1 0 8h-1M6 8h12v9a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V8Z" />
+                <path d="M6 1v3M10 1v3M14 1v3" />
+              </svg>
             </div>
+            <h1 className="text-[1.15rem] font-extrabold tracking-tight text-ink">Recettes du Tiroir</h1>
+            <span className="text-[0.78rem] font-semibold text-ink-soft">{recipes.length} recette{recipes.length > 1 ? "s" : ""}</span>
           </div>
 
           <Toolbar
@@ -150,33 +144,39 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1180px] flex-1 px-5">
-        <div className="flex flex-wrap items-baseline justify-between gap-2.5 py-3.5">
-          <span className="text-[0.85rem] text-ink-soft">
-            <strong className="font-semibold text-ink">{filtered.length}</strong> recettes
+      <main className="mx-auto w-full max-w-[1180px] flex-1 px-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-2.5 py-3">
+          <span className="text-[0.8rem] font-semibold text-ink-soft">
+            <strong className="text-ink">{filtered.length}</strong> recette{filtered.length > 1 ? "s" : ""}
           </span>
-          <span className="text-[0.85rem] text-ink-soft">{filterBits.join(" · ")}</span>
+          <span className="text-[0.8rem] text-ink-soft">{filterBits.join(" · ")}</span>
         </div>
 
         {filtered.length === 0 ? (
-          <div className="mb-8 rounded-2xl border border-dashed border-line px-5 py-12 text-center text-ink-soft">
-            <p className="mb-3">Aucune recette ne correspond à ces filtres.</p>
-            <button
-              onClick={() => {
-                setSearch("");
-                setCat("all");
-                setTime("all");
-                setVegOnly(false);
-                setFavOnly(false);
-                setIngredients(new Set());
-              }}
-              className="rounded-xl border border-line bg-surface px-3.5 py-2 text-[0.85rem] text-ink hover:bg-surface-2"
-            >
-              Réinitialiser les filtres
-            </button>
+          <div className="mb-8 rounded-2xl border-2 border-dashed border-line px-5 py-12 text-center text-ink-soft">
+            <p className="mb-3">
+              {recipes.length === 0
+                ? "Aucune recette pour l'instant — ajoutez la première !"
+                : "Aucune recette ne correspond à ces filtres."}
+            </p>
+            {recipes.length > 0 && (
+              <button
+                onClick={() => {
+                  setSearch("");
+                  setCat("all");
+                  setTime("all");
+                  setVegOnly(false);
+                  setFavOnly(false);
+                  setIngredients(new Set());
+                }}
+                className="rounded-full border-2 border-line bg-surface px-4 py-2 text-[0.85rem] font-semibold text-ink hover:border-accent hover:text-accent"
+              >
+                Réinitialiser les filtres
+              </button>
+            )}
           </div>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(232px,1fr))] gap-4.5 pb-10">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(148px,1fr))] gap-3 pb-10">
             {filtered.map((r) => (
               <RecipeCard
                 key={r.id}
@@ -190,7 +190,7 @@ export default function Home() {
         )}
       </main>
 
-      <footer className="mx-auto w-full max-w-[1180px] border-t border-line px-5 py-7 text-center text-[0.78rem] text-ink-soft">
+      <footer className="mx-auto w-full max-w-[1180px] px-4 py-6 text-center text-[0.76rem] text-ink-soft">
         Bibliothèque de recettes familiale — pense à ajouter les vôtres.
       </footer>
 
@@ -203,6 +203,10 @@ export default function Home() {
           onClose={() => setOpenId(null)}
           onSaveNotes={(text) => saveNotes(openRecipe.id, text)}
           onPhotoFile={(file) => uploadRecipePhoto(openRecipe.id, file)}
+          onDelete={() => {
+            setOpenId(null);
+            return deleteRecipe(openRecipe.id, openRecipe.photoUrl);
+          }}
           readOnly={readOnly}
         />
       )}

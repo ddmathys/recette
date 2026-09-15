@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Work_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -17,6 +17,11 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Recettes du Tiroir",
   description: "Bibliothèque de recettes familiale et partagée.",
+};
+
+export const viewport: Viewport = {
+  colorScheme: "light",
+  themeColor: "#faf7f0",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

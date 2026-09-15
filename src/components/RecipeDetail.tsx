@@ -16,6 +16,8 @@ export function RecipeDetail({
   onSaveNotes,
   onPhotoFile,
   onDelete,
+  onAddEatenDate,
+  onRemoveEatenDate,
   readOnly,
 }: {
   recipe: Recipe;
@@ -25,6 +27,8 @@ export function RecipeDetail({
   onSaveNotes: (text: string) => void;
   onPhotoFile: (file: File) => Promise<unknown>;
   onDelete: () => Promise<unknown>;
+  onAddEatenDate: (date: string) => Promise<unknown>;
+  onRemoveEatenDate: (date: string) => Promise<unknown>;
   readOnly: boolean;
 }) {
   const cat = CATEGORY_BY_KEY[recipe.cat];
@@ -37,6 +41,19 @@ export function RecipeDetail({
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [newDate, setNewDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [addingDate, setAddingDate] = useState(false);
+  const eatenDates = [...(recipe.eatenDates ?? [])].sort().reverse();
+
+  async function handleAddDate() {
+    if (!newDate) return;
+    setAddingDate(true);
+    try {
+      await onAddEatenDate(newDate);
+    } finally {
+      setAddingDate(false);
+    }
+  }
 
   async function handleDelete() {
     if (!confirmDelete) {
@@ -183,6 +200,53 @@ export function RecipeDetail({
           )}
 
           <div>
+            <SectionLabel>Mangé le…</SectionLabel>
+            {!readOnly && (
+              <div className="mb-2.5 flex items-center gap-2">
+                <input
+                  type="date"
+                  value={newDate}
+                  onChange={(e) => setNewDate(e.target.value)}
+                  className="rounded-[10px] border border-line bg-surface-2 px-2.5 py-1.5 text-[0.85rem] text-ink outline-none"
+                />
+                <button
+                  onClick={handleAddDate}
+                  disabled={addingDate || !newDate}
+                  className="inline-flex items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-[0.8rem] font-bold text-accent-ink disabled:opacity-60"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" className="h-3.5 w-3.5">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                  Ajouter
+                </button>
+              </div>
+            )}
+            {eatenDates.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {eatenDates.map((d) => (
+                  <span
+                    key={d}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-2.5 py-1 text-[0.78rem] text-ink"
+                  >
+                    {formatDate(d)}
+                    {!readOnly && (
+                      <button
+                        aria-label={`retirer le ${formatDate(d)}`}
+                        onClick={() => onRemoveEatenDate(d)}
+                        className="text-ink-soft hover:text-accent"
+                      >
+                        &times;
+                      </button>
+                    )}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[0.78rem] text-ink-soft">Pas encore de date enregistrée.</p>
+            )}
+          </div>
+
+          <div>
             <SectionLabel>Ingrédients</SectionLabel>
             <ul className="flex flex-col">
               {recipe.ingr.map((i, idx) => (
@@ -259,4 +323,9 @@ function Badge({ value, label }: { value: string; label: string }) {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return <p className="mb-2.5 text-[0.72rem] font-semibold uppercase tracking-wider text-ink-soft">{children}</p>;
+}
+
+function formatDate(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("fr-CH", { day: "numeric", month: "short", year: "numeric" });
 }

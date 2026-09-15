@@ -6,7 +6,7 @@ import { FilterDrawer } from "@/components/FilterDrawer";
 import { RecipeCard } from "@/components/RecipeCard";
 import { RecipeDetail } from "@/components/RecipeDetail";
 import { AddRecipeDialog } from "@/components/AddRecipeDialog";
-import { useRecipes, saveNotes, uploadRecipePhoto, deleteRecipe } from "@/lib/useRecipes";
+import { useRecipes, saveNotes, uploadRecipePhoto, deleteRecipe, addEatenDate, removeEatenDate } from "@/lib/useRecipes";
 import { useFavorites } from "@/lib/useFavorites";
 import { firebaseEnabled } from "@/lib/firebase";
 import type { CategoryKey } from "@/lib/types";
@@ -207,6 +207,8 @@ export default function Home() {
             setOpenId(null);
             return deleteRecipe(openRecipe.id, openRecipe.photoUrl);
           }}
+          onAddEatenDate={(date) => addEatenDate(openRecipe.id, date)}
+          onRemoveEatenDate={(date) => removeEatenDate(openRecipe.id, date)}
           readOnly={readOnly}
         />
       )}

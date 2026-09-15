@@ -32,6 +32,7 @@ export interface Recipe {
   photoUrl?: string | null;
   notes?: string;
   createdAt?: string;
+  eatenDates?: string[];
 }
 
 export interface RecipeDraft {

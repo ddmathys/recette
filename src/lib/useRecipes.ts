@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import {
   addDoc,
+  arrayRemove,
+  arrayUnion,
   collection,
   deleteDoc,
   deleteField,
@@ -65,6 +67,16 @@ export async function addRecipe(draft: RecipeDraft, source: string | null, photo
 export async function saveNotes(id: string, text: string) {
   if (!db) throw new Error("Firebase n'est pas configuré.");
   await updateDoc(doc(db, COLLECTION, id), { notes: text });
+}
+
+export async function addEatenDate(id: string, date: string) {
+  if (!db) throw new Error("Firebase n'est pas configuré.");
+  await updateDoc(doc(db, COLLECTION, id), { eatenDates: arrayUnion(date) });
+}
+
+export async function removeEatenDate(id: string, date: string) {
+  if (!db) throw new Error("Firebase n'est pas configuré.");
+  await updateDoc(doc(db, COLLECTION, id), { eatenDates: arrayRemove(date) });
 }
 
 function storageErrorMessage(e: unknown): string {

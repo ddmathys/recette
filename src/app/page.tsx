@@ -1,9 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CategoryTabs } from "@/components/CategoryTabs";
-import { Toolbar, TimePills, TIME_BUCKETS, type TimeBucketKey } from "@/components/Toolbar";
-import { IngredientPicker } from "@/components/IngredientPicker";
+import { Toolbar, TIME_BUCKETS, type TimeBucketKey } from "@/components/Toolbar";
+import { FilterDrawer } from "@/components/FilterDrawer";
 import { RecipeCard } from "@/components/RecipeCard";
 import { RecipeDetail } from "@/components/RecipeDetail";
 import { AddRecipeDialog } from "@/components/AddRecipeDialog";
@@ -24,6 +23,7 @@ export default function Home() {
   const [ingredients, setIngredients] = useState<Set<string>>(new Set());
   const [openId, setOpenId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const freq = useMemo(() => {
     const f: Record<string, number> = {};
@@ -85,6 +85,8 @@ export default function Home() {
   if (vegOnly) filterBits.push("végétarien");
   if (favOnly) filterBits.push("favoris");
   if (ingredients.size) filterBits.push(`${ingredients.size} ingrédient(s) choisi(s)`);
+  const activeFilterCount =
+    (cat !== "all" ? 1 : 0) + (time !== "all" ? 1 : 0) + (vegOnly ? 1 : 0) + (favOnly ? 1 : 0) + (ingredients.size ? 1 : 0);
 
   return (
     <div className="flex min-h-full flex-col">
@@ -110,11 +112,8 @@ export default function Home() {
           <Toolbar
             search={search}
             onSearch={setSearch}
-            veg={vegOnly}
-            onVeg={() => setVegOnly((v) => !v)}
-            fav={favOnly}
-            onFav={() => setFavOnly((v) => !v)}
-            onSurprise={surprise}
+            onOpenFilters={() => setFiltersOpen(true)}
+            activeFilterCount={activeFilterCount}
             onAdd={() => setAddOpen(true)}
             addAvailable={firebaseEnabled}
           />
@@ -129,12 +128,25 @@ export default function Home() {
             </p>
           )}
 
-          <CategoryTabs active={cat} onChange={setCat} />
-
-          <div className="flex flex-wrap items-center gap-2.5 border-b border-line py-3">
-            <TimePills active={time} onChange={setTime} />
-          </div>
-          <IngredientPicker freq={freq} selected={ingredients} onToggle={toggleIngredient} />
+          <FilterDrawer
+            open={filtersOpen}
+            onClose={() => setFiltersOpen(false)}
+            cat={cat}
+            onCat={setCat}
+            time={time}
+            onTime={setTime}
+            veg={vegOnly}
+            onVeg={() => setVegOnly((v) => !v)}
+            fav={favOnly}
+            onFav={() => setFavOnly((v) => !v)}
+            onSurprise={() => {
+              surprise();
+              setFiltersOpen(false);
+            }}
+            freq={freq}
+            ingredients={ingredients}
+            onToggleIngredient={toggleIngredient}
+          />
         </div>
       </header>
 

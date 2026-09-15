@@ -11,30 +11,29 @@ export const TIME_BUCKETS = [
 
 export type TimeBucketKey = (typeof TIME_BUCKETS)[number]["key"];
 
+/**
+ * Compact top bar — always visible, on phone and desktop alike: search,
+ * a "Filtres" button that opens the drawer on phone (hidden at md+, where
+ * the drawer content renders inline instead), and the add-recipe action.
+ */
 export function Toolbar({
   search,
   onSearch,
-  veg,
-  onVeg,
-  fav,
-  onFav,
-  onSurprise,
+  onOpenFilters,
+  activeFilterCount,
   onAdd,
   addAvailable,
 }: {
   search: string;
   onSearch: (v: string) => void;
-  veg: boolean;
-  onVeg: () => void;
-  fav: boolean;
-  onFav: () => void;
-  onSurprise: () => void;
+  onOpenFilters: () => void;
+  activeFilterCount: number;
   onAdd: () => void;
   addAvailable: boolean;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2.5">
-      <label className="flex flex-1 basis-[260px] items-center gap-2 rounded-[10px] border border-line bg-surface px-3 py-2">
+      <label className="flex flex-1 basis-[220px] items-center gap-2 rounded-[10px] border border-line bg-surface px-3 py-2">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="h-4 w-4 shrink-0 text-ink-soft">
           <circle cx="11" cy="11" r="7" />
           <path d="m21 21-4.3-4.3" />
@@ -48,29 +47,19 @@ export function Toolbar({
         />
       </label>
 
-      <ToggleButton pressed={veg} onClick={onVeg} label="Végétarien" icon={
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-          <path d="M12 21V11" />
-          <path d="M12 11C12 6 8 5 5 5c0 4 2 6 7 6z" />
-          <path d="M12 14c0-4 4-5 7-5 0 4-2 6-7 5z" />
-        </svg>
-      } />
-
-      <ToggleButton pressed={fav} onClick={onFav} label="Favoris" icon={
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-          <path d="M12 20s-7-4.35-9.5-8.5C.8 8.1 2.4 5 5.6 5 7.6 5 9 6 12 8.5 15 6 16.4 5 18.4 5c3.2 0 4.8 3.1 3.1 6.5C19 15.65 12 20 12 20z" />
-        </svg>
-      } />
-
       <button
-        onClick={onSurprise}
-        className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-transparent bg-accent px-3.5 py-2.5 text-[0.85rem] font-medium text-accent-ink transition hover:brightness-105 active:scale-[.97]"
+        onClick={onOpenFilters}
+        className="relative inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[0.85rem] font-medium text-ink transition hover:bg-surface-2 active:scale-[.97] md:hidden"
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-          <path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
-          <circle cx="12" cy="12" r="3.2" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+          <path d="M4 6h16M7 12h10M10 18h4" />
         </svg>
-        Surprends-moi
+        Filtres
+        {activeFilterCount > 0 && (
+          <span className="ml-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-accent px-1 font-mono text-[0.68rem] text-accent-ink">
+            {activeFilterCount}
+          </span>
+        )}
       </button>
 
       {addAvailable && (
@@ -81,14 +70,15 @@ export function Toolbar({
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="h-4 w-4">
             <path d="M12 5v14M5 12h14" />
           </svg>
-          Ajouter une recette
+          <span className="hidden sm:inline">Ajouter une recette</span>
+          <span className="sm:hidden">Ajouter</span>
         </button>
       )}
     </div>
   );
 }
 
-function ToggleButton({
+export function ToggleButton({
   pressed,
   onClick,
   label,

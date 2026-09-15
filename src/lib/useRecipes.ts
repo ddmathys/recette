@@ -66,13 +66,33 @@ export async function saveNotes(id: string, text: string) {
   await updateDoc(doc(db, COLLECTION, id), { notes: text });
 }
 
+function storageErrorMessage(e: unknown): string {
+  const code = e && typeof e === "object" && "code" in e ? String((e as { code: unknown }).code) : "";
+  switch (code) {
+    case "storage/unauthorized":
+      return "Envoi refusé par les règles de sécurité Storage.";
+    case "storage/canceled":
+      return "Envoi annulé.";
+    case "storage/quota-exceeded":
+      return "Quota de stockage dépassé.";
+    case "storage/retry-limit-exceeded":
+      return "Connexion trop lente ou instable, réessaie.";
+    default:
+      return "L'envoi de la photo a échoué, réessaie.";
+  }
+}
+
 export async function uploadRecipePhoto(id: string, file: File) {
   if (!db || !storage) throw new Error("Firebase n'est pas configuré.");
   const fileRef = ref(storage, `recipes/${id}/${Date.now()}-${file.name}`);
-  await uploadBytes(fileRef, file);
-  const url = await getDownloadURL(fileRef);
-  await updateDoc(doc(db, COLLECTION, id), { photoUrl: url });
-  return url;
+  try {
+    await uploadBytes(fileRef, file);
+    const url = await getDownloadURL(fileRef);
+    await updateDoc(doc(db, COLLECTION, id), { photoUrl: url });
+    return url;
+  } catch (e) {
+    throw new Error(storageErrorMessage(e));
+  }
 }
 
 export async function setRecipePhotoUrl(id: string, url: string) {

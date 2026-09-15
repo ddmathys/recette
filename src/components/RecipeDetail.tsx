@@ -5,6 +5,8 @@ import { CATEGORY_BY_KEY } from "@/lib/categories";
 import { CategoryIcon } from "./CategoryIcon";
 import type { Recipe } from "@/lib/types";
 
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+
 export function RecipeDetail({
   recipe,
   isFav,
@@ -19,7 +21,7 @@ export function RecipeDetail({
   onToggleFav: () => void;
   onClose: () => void;
   onSaveNotes: (text: string) => void;
-  onPhotoFile: (file: File) => void;
+  onPhotoFile: (file: File) => Promise<unknown>;
   readOnly: boolean;
 }) {
   const cat = CATEGORY_BY_KEY[recipe.cat];
@@ -28,6 +30,30 @@ export function RecipeDetail({
   const [notes, setNotes] = useState(recipe.notes ?? "");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [photoState, setPhotoState] = useState<"idle" | "uploading" | "error">("idle");
+  const [photoError, setPhotoError] = useState<string | null>(null);
+
+  async function handlePhotoFile(file: File) {
+    setPhotoError(null);
+    if (!file.type.startsWith("image/")) {
+      setPhotoState("error");
+      setPhotoError("Ce fichier n'est pas une image.");
+      return;
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      setPhotoState("error");
+      setPhotoError("Photo trop lourde (max 10 Mo) — essaie une version compressée.");
+      return;
+    }
+    setPhotoState("uploading");
+    try {
+      await onPhotoFile(file);
+      setPhotoState("idle");
+    } catch (e) {
+      setPhotoState("error");
+      setPhotoError(e instanceof Error ? e.message : "L'envoi de la photo a échoué, réessaie.");
+    }
+  }
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -76,28 +102,38 @@ export function RecipeDetail({
         </div>
 
         <div className="flex flex-col gap-5 px-5 pb-8 pt-4.5">
-          <div className="flex justify-end gap-2.5">
-            {!readOnly && (
-              <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-line bg-surface-2 px-3.5 py-1.5 text-[0.78rem] text-ink">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
-                  <rect x="3" y="5" width="18" height="14" rx="2" />
-                  <circle cx="12" cy="12" r="3.5" />
-                  <path d="M8 5l1.5-2h5L16 5" />
-                </svg>
-                {recipe.photoUrl ? "Changer la photo" : "Ajouter une photo"}
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/gif"
-                  hidden
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) onPhotoFile(f);
-                    e.target.value = "";
-                  }}
-                />
-              </label>
-            )}
+          <div className="flex flex-col items-end gap-1.5">
+            <div className="flex justify-end gap-2.5">
+              {!readOnly && (
+                <label
+                  className={`inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-3.5 py-1.5 text-[0.78rem] text-ink ${
+                    photoState === "uploading" ? "cursor-wait opacity-70" : "cursor-pointer"
+                  }`}
+                >
+                  {photoState === "uploading" ? (
+                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-line border-t-accent" />
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+                      <rect x="3" y="5" width="18" height="14" rx="2" />
+                      <circle cx="12" cy="12" r="3.5" />
+                      <path d="M8 5l1.5-2h5L16 5" />
+                    </svg>
+                  )}
+                  {photoState === "uploading" ? "Envoi…" : recipe.photoUrl ? "Changer la photo" : "Ajouter une photo"}
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    hidden
+                    disabled={photoState === "uploading"}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handlePhotoFile(f);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              )}
             <button
               aria-pressed={isFav}
               onClick={onToggleFav}
@@ -110,6 +146,10 @@ export function RecipeDetail({
               </svg>
               {isFav ? "Dans vos favoris" : "Ajouter aux favoris"}
             </button>
+            </div>
+            {photoState === "error" && photoError && (
+              <p className="text-[0.78rem] text-accent">{photoError}</p>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-3.5">

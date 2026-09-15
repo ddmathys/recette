@@ -1,0 +1,16 @@
+rules_version = '2';
+
+// No Firebase Auth wired up yet (family app, v1) — anyone with the deployed
+// URL can read/write the recipes collection. Recipes aren't sensitive data,
+// so this is an intentional MVP trade-off, not an oversight. Revisit before
+// sharing this link beyond close family, or before adding real accounts.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /recipes/{recipeId} {
+      allow read, write: if true;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

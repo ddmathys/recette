@@ -1,0 +1,16 @@
+rules_version = '2';
+
+// Same trade-off as firestore.rules: no auth yet, open to anyone with the
+// deployed URL. Cap uploads at 10 MB and image types only.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /recipes/{recipeId}/{fileName} {
+      allow read: if true;
+      allow write: if request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

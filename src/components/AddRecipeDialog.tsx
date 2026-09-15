@@ -50,8 +50,8 @@ export function AddRecipeDialog({ onClose }: { onClose: () => void }) {
   }
 
   async function generateWithAi() {
-    if (!text.trim() && !name.trim()) {
-      setAiError("Écris au moins le nom d'un plat ou colle un texte avant de générer.");
+    if (!text.trim() && !name.trim() && !link.trim()) {
+      setAiError("Écris un nom de plat, colle un texte, ou donne un lien avant de générer.");
       return;
     }
     setAiBusy(true);

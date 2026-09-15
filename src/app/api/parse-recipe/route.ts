@@ -9,13 +9,31 @@ async function fetchPageText(url: string): Promise<{ text: string; ogImage: stri
       headers: { "User-Agent": "Mozilla/5.0 (compatible; RecettesDuTiroir/1.0)" },
       signal: AbortSignal.timeout(8000),
     });
+
+    // Some sites bounce non-browser requests to an unrelated page (home,
+    // consent wall, bot check) instead of serving the article — if we got
+    // redirected well away from the requested path, the content is not
+    // trustworthy, so treat it as unreadable rather than feeding DeepSeek
+    // an unrelated page.
+    try {
+      const requestedPath = new URL(url).pathname.replace(/\/+$/, "");
+      const finalPath = new URL(res.url).pathname.replace(/\/+$/, "");
+      if (requestedPath && finalPath !== requestedPath) {
+        return { text: "", ogImage: null };
+      }
+    } catch {
+      /* if URL parsing fails, fall through and try to use the content anyway */
+    }
+
     const html = await res.text();
 
     const ogMatch =
       html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
       html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i) ||
       html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i);
-    const ogImage = ogMatch ? ogMatch[1] : null;
+    const ogImage = ogMatch
+      ? ogMatch[1].replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+      : null;
 
     const text = html
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
@@ -48,8 +66,8 @@ export async function POST(req: NextRequest) {
   const name = typeof body.name === "string" ? body.name.trim() : "";
   const link = typeof body.link === "string" ? body.link.trim() : "";
 
-  if (!text && !name) {
-    return NextResponse.json({ error: "Donne au moins un nom de plat ou un texte." }, { status: 400 });
+  if (!text && !name && !link) {
+    return NextResponse.json({ error: "Donne au moins un nom de plat, un texte ou un lien." }, { status: 400 });
   }
 
   let linkText = "";
@@ -65,7 +83,7 @@ export async function POST(req: NextRequest) {
 On te donne des informations sur un plat : un nom, un texte libre (ingrédients/étapes dans le désordre, ou juste des notes), et éventuellement le contenu extrait d'une page web source. Structure tout ça.
 Réponds UNIQUEMENT avec un objet JSON valide (aucun texte autour, pas de balises markdown), au format exact :
 {"name": string, "cat": une valeur parmi [${catList}], "time": nombre entier de minutes de préparation active, "diff": "Facile" ou "Moyen" ou "Avancé", "servings": nombre entier de personnes, "veg": true si la recette ne contient ni viande ni poisson sinon false, "ingr": tableau de paires {"name": string, "qty": string}, "steps": tableau de 3 à 6 étapes concises en français}
-Si le texte ou la page donnent déjà des ingrédients/étapes précis, reprends-les fidèlement (range-les, complète les quantités manquantes de façon plausible). S'il n'y a qu'un nom de plat, base-toi sur une recette classique et réaliste, adaptée au nombre de personnes.
+Si le texte ou la page donnent déjà des ingrédients/étapes précis, reprends-les fidèlement (range-les, complète les quantités manquantes de façon plausible). Si le contenu extrait de la page ne correspond visiblement pas à une recette du plat demandé (page d'accueil, contenu sans rapport), ignore-le et base-toi uniquement sur le nom du plat et le texte libre. S'il ne reste qu'un nom de plat, base-toi sur une recette classique et réaliste, adaptée au nombre de personnes.
 
 Nom du plat indiqué : ${name || "(aucun)"}
 Texte libre fourni par l'utilisateur :

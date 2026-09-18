@@ -6,11 +6,22 @@ import '../models.dart';
 import '../services/ai_service.dart';
 import '../services/recipe_service.dart';
 import '../theme.dart';
+import '../widgets/recipe_form_fields.dart';
 
 enum _Stage { intro, form, done }
 
 class AddRecipeScreen extends StatefulWidget {
-  const AddRecipeScreen({super.key});
+  final String ownerUid;
+  final String ownerName;
+  final String householdId;
+
+  const AddRecipeScreen({
+    super.key,
+    required this.ownerUid,
+    required this.ownerName,
+    required this.householdId,
+  });
+
   @override
   State<AddRecipeScreen> createState() => _AddRecipeScreenState();
 }
@@ -99,6 +110,9 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
         _draft,
         source: _linkCtrl.text.trim().isEmpty ? null : _linkCtrl.text.trim(),
         photoUrl: _photoFile == null ? _suggestedPhoto : null,
+        ownerUid: widget.ownerUid,
+        ownerName: widget.ownerName,
+        householdId: widget.householdId,
       );
     } catch (_) {
       setState(() {
@@ -168,7 +182,7 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _FieldLabel('Ta recette, en texte libre'),
+          const FieldLabel('Ta recette, en texte libre'),
           TextField(
             controller: _textCtrl,
             maxLines: 6,
@@ -177,10 +191,10 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          const _FieldLabel('Nom du plat (si tu veux le préciser)'),
+          const FieldLabel('Nom du plat (si tu veux le préciser)'),
           TextField(controller: _nameCtrl, decoration: const InputDecoration(hintText: 'ex : Tarte aux poireaux')),
           const SizedBox(height: 14),
-          const _FieldLabel('Lien source (optionnel)'),
+          const FieldLabel('Lien source (optionnel)'),
           TextField(controller: _linkCtrl, keyboardType: TextInputType.url, decoration: const InputDecoration(hintText: 'https://...')),
           const SizedBox(height: 8),
           const Text(
@@ -223,77 +237,9 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _FieldLabel('Nom du plat'),
-          TextFormField(
-            initialValue: _draft.name,
-            onChanged: (v) => _draft.name = v,
-          ),
-          const SizedBox(height: 14),
-          Row(children: [
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const _FieldLabel('Catégorie'),
-                DropdownButtonFormField<String>(
-                  initialValue: kCategories.any((c) => c.key == _draft.cat) ? _draft.cat : kCategories.first.key,
-                  items: [for (final c in kCategories) DropdownMenuItem(value: c.key, child: Text(c.label, overflow: TextOverflow.ellipsis))],
-                  onChanged: (v) => setState(() => _draft.cat = v ?? _draft.cat),
-                ),
-              ]),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const _FieldLabel('Temps (min)'),
-                TextFormField(
-                  initialValue: '${_draft.time}',
-                  keyboardType: TextInputType.number,
-                  onChanged: (v) => _draft.time = int.tryParse(v) ?? _draft.time,
-                ),
-              ]),
-            ),
-          ]),
-          const SizedBox(height: 14),
-          Row(children: [
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const _FieldLabel('Difficulté'),
-                DropdownButtonFormField<String>(
-                  initialValue: kDifficulties.contains(_draft.diff) ? _draft.diff : kDifficulties.first,
-                  items: [for (final d in kDifficulties) DropdownMenuItem(value: d, child: Text(d))],
-                  onChanged: (v) => setState(() => _draft.diff = v ?? _draft.diff),
-                ),
-              ]),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const _FieldLabel('Personnes'),
-                TextFormField(
-                  initialValue: '${_draft.servings}',
-                  keyboardType: TextInputType.number,
-                  onChanged: (v) => _draft.servings = int.tryParse(v) ?? _draft.servings,
-                ),
-              ]),
-            ),
-          ]),
-          const SizedBox(height: 10),
-          StatefulBuilder(builder: (context, setLocal) {
-            return CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              value: _draft.veg,
-              onChanged: (v) => setLocal(() => _draft.veg = v ?? false),
-              title: const Text('Recette végétarienne'),
-              controlAffinity: ListTileControlAffinity.leading,
-            );
-          }),
-          const SizedBox(height: 8),
-          const _FieldLabel('Ingrédients'),
-          _IngredientList(draft: _draft, onChanged: () => setState(() {})),
+          RecipeCoreFields(draft: _draft, onChanged: () => setState(() {})),
           const SizedBox(height: 18),
-          const _FieldLabel('Étapes'),
-          _StepList(draft: _draft, onChanged: () => setState(() {})),
-          const SizedBox(height: 18),
-          const _FieldLabel('Photo (optionnel)'),
+          const FieldLabel('Photo (optionnel)'),
           Row(
             children: [
               if (_photoFile != null || _suggestedPhoto != null)
@@ -322,128 +268,6 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _IngredientList extends StatelessWidget {
-  final RecipeDraft draft;
-  final VoidCallback onChanged;
-  const _IngredientList({required this.draft, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        for (var i = 0; i < draft.ingr.length; i++)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: TextFormField(
-                    initialValue: draft.ingr[i].name,
-                    decoration: const InputDecoration(hintText: 'ingrédient', isDense: true),
-                    onChanged: (v) => draft.ingr[i] = Ingredient(name: v, qty: draft.ingr[i].qty),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextFormField(
-                    initialValue: draft.ingr[i].qty,
-                    decoration: const InputDecoration(hintText: 'quantité', isDense: true),
-                    onChanged: (v) => draft.ingr[i] = Ingredient(name: draft.ingr[i].name, qty: v),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    draft.ingr.removeAt(i);
-                    onChanged();
-                  },
-                  icon: const Icon(Icons.close, size: 18),
-                ),
-              ],
-            ),
-          ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            onPressed: () {
-              draft.ingr.add(const Ingredient(name: '', qty: ''));
-              onChanged();
-            },
-            icon: const Icon(Icons.add, size: 16),
-            label: const Text('ajouter un ingrédient'),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _StepList extends StatelessWidget {
-  final RecipeDraft draft;
-  final VoidCallback onChanged;
-  const _StepList({required this.draft, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        for (var i = 0; i < draft.steps.length; i++)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Text('${i + 1}', style: const TextStyle(color: AppColors.inkSoft, fontFamily: 'monospace')),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextFormField(
-                    initialValue: draft.steps[i],
-                    maxLines: null,
-                    decoration: const InputDecoration(hintText: 'étape de préparation', isDense: true),
-                    onChanged: (v) => draft.steps[i] = v,
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    draft.steps.removeAt(i);
-                    onChanged();
-                  },
-                  icon: const Icon(Icons.close, size: 18),
-                ),
-              ],
-            ),
-          ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            onPressed: () {
-              draft.steps.add('');
-              onChanged();
-            },
-            icon: const Icon(Icons.add, size: 16),
-            label: const Text('ajouter une étape'),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _FieldLabel extends StatelessWidget {
-  final String text;
-  const _FieldLabel(this.text);
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(text.toUpperCase(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.inkSoft, letterSpacing: .4)),
     );
   }
 }

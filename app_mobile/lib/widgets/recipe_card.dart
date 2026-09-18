@@ -41,6 +41,22 @@ class RecipeCard extends StatelessWidget {
                     )
                   else
                     Center(child: Icon(cat.icon, color: Colors.white, size: 32)),
+                  if (recipe.ownerName != null)
+                    Positioned(
+                      left: 6,
+                      top: 6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.28),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          recipe.ownerName!,
+                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ),
                   Positioned(
                     right: 6,
                     top: 6,

@@ -12,25 +12,44 @@ class RecipeService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  Stream<List<Recipe>> streamRecipes() {
+  /// `householdId` scopes the query to the signed-in user's current shared
+  /// library (their own, or one they joined — see household_service.dart).
+  Stream<List<Recipe>> streamRecipes(String householdId) {
     return _db
         .collection(_collection)
+        .where('householdId', isEqualTo: householdId)
         .orderBy('createdAt', descending: false)
         .snapshots()
         .map((snap) => snap.docs.map((d) => Recipe.fromMap(d.id, d.data())).toList());
   }
 
-  Future<String> addRecipe(RecipeDraft draft, {String? source, String? photoUrl}) async {
+  Future<String> addRecipe(
+    RecipeDraft draft, {
+    String? source,
+    String? photoUrl,
+    required String ownerUid,
+    required String ownerName,
+    required String householdId,
+  }) async {
     final data = {
       ...draft.toMap(),
       'source': source,
       'photoUrl': photoUrl,
       'notes': '',
       'createdAt': DateTime.now().toIso8601String(),
+      'householdId': householdId,
+      'ownerId': ownerUid,
+      'ownerName': ownerName,
     };
     final ref = await _db.collection(_collection).add(data);
     return ref.id;
   }
+
+  /// Full content replacement for the "edit recipe" flow (manual or
+  /// AI-assisted) — everything except ownership/notes/photo/eaten dates,
+  /// which are managed by their own dedicated methods.
+  Future<void> updateRecipeContent(String id, RecipeDraft draft) =>
+      _db.collection(_collection).doc(id).update(draft.toMap());
 
   Future<void> saveNotes(String id, String text) =>
       _db.collection(_collection).doc(id).update({'notes': text});

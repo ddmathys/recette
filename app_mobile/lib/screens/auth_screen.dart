@@ -10,6 +10,7 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   final _auth = AuthService();
+  final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _signUpMode = false;
@@ -19,6 +20,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   void dispose() {
+    _nameCtrl.dispose();
     _emailCtrl.dispose();
     _passCtrl.dispose();
     super.dispose();
@@ -32,7 +34,7 @@ class _AuthScreenState extends State<AuthScreen> {
     });
     try {
       if (_signUpMode) {
-        await _auth.signUp(_emailCtrl.text, _passCtrl.text);
+        await _auth.signUp(_emailCtrl.text, _passCtrl.text, _nameCtrl.text);
       } else {
         await _auth.signIn(_emailCtrl.text, _passCtrl.text);
       }
@@ -106,6 +108,15 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                       ),
                       const SizedBox(height: 18),
+                      if (_signUpMode) ...[
+                        const Text('PRÉNOM', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.inkSoft, letterSpacing: .5)),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: _nameCtrl,
+                          autocorrect: false,
+                        ),
+                        const SizedBox(height: 14),
+                      ],
                       const Text('E-MAIL', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.inkSoft, letterSpacing: .5)),
                       const SizedBox(height: 6),
                       TextField(

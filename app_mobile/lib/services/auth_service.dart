@@ -1,23 +1,29 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'household_service.dart';
 
 /// Thin wrapper around FirebaseAuth — mirrors ../../src/lib/useAuth.ts.
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final HouseholdService _household = HouseholdService();
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
   User? get currentUser => _auth.currentUser;
 
   Future<void> signIn(String email, String password) async {
     try {
-      await _auth.signInWithEmailAndPassword(email: email.trim(), password: password);
+      final cred = await _auth.signInWithEmailAndPassword(email: email.trim(), password: password);
+      // Defensive: covers accounts created before profiles/households
+      // existed. ensureUserProfile no-ops if both already exist.
+      await _household.ensureUserProfile(cred.user!);
     } on FirebaseAuthException catch (e) {
       throw AuthFailure(_message(e.code));
     }
   }
 
-  Future<void> signUp(String email, String password) async {
+  Future<void> signUp(String email, String password, String displayName) async {
     try {
-      await _auth.createUserWithEmailAndPassword(email: email.trim(), password: password);
+      final cred = await _auth.createUserWithEmailAndPassword(email: email.trim(), password: password);
+      await _household.ensureUserProfile(cred.user!, displayName: displayName);
     } on FirebaseAuthException catch (e) {
       throw AuthFailure(_message(e.code));
     }

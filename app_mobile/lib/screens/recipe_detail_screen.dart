@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../models.dart';
 import '../services/recipe_service.dart';
 import '../theme.dart';
+import 'edit_recipe_screen.dart';
 
 class RecipeDetailScreen extends StatefulWidget {
   final Recipe recipe;
@@ -125,7 +126,20 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(_recipe.name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+              title: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(child: Text(_recipe.name, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold))),
+                  if (_recipe.ownerName != null) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.28), borderRadius: BorderRadius.circular(999)),
+                      child: Text(_recipe.ownerName!, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700)),
+                    ),
+                  ],
+                ],
+              ),
               background: _recipe.photoUrl != null
                   ? Image.network(_recipe.photoUrl!, fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(color: cat.color))
@@ -155,11 +169,27 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 const SizedBox(height: 18),
                 Row(
                   children: [
-                    _Badge(value: '${_recipe.time} min', label: 'Préparation'),
-                    const SizedBox(width: 22),
-                    _Badge(value: '${_recipe.servings}', label: 'Personnes'),
-                    const SizedBox(width: 22),
-                    _Badge(value: _recipe.diff, label: 'Difficulté'),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          _Badge(value: '${_recipe.time} min', label: 'Préparation'),
+                          const SizedBox(width: 22),
+                          _Badge(value: '${_recipe.servings}', label: 'Personnes'),
+                          const SizedBox(width: 22),
+                          _Badge(value: _recipe.diff, label: 'Difficulté'),
+                        ],
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        final updated = await Navigator.of(context).push<Recipe>(
+                          MaterialPageRoute(builder: (_) => EditRecipeScreen(recipe: _recipe)),
+                        );
+                        if (updated != null) setState(() => _recipe = updated);
+                      },
+                      icon: const Icon(Icons.edit_outlined, size: 15),
+                      label: const Text('Modifier'),
+                    ),
                   ],
                 ),
                 if (_recipe.note != null) ...[

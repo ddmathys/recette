@@ -29,6 +29,13 @@ class Recipe {
   final String notes;
   final String? createdAt;
   final List<String> eatenDates;
+  /// Shared-library scope — see services/household_service.dart. Recipes
+  /// are only visible to members of this household.
+  final String? householdId;
+  final String? ownerId;
+  /// Denormalized at write time so the "created by" badge doesn't need a
+  /// lookup per recipe.
+  final String? ownerName;
 
   const Recipe({
     required this.id,
@@ -46,7 +53,35 @@ class Recipe {
     this.notes = '',
     this.createdAt,
     this.eatenDates = const [],
+    this.householdId,
+    this.ownerId,
+    this.ownerName,
   });
+
+  /// Merges an edited draft's content fields back onto this recipe,
+  /// keeping ownership/household/notes/photo/eatenDates/createdAt as-is —
+  /// used to refresh the detail screen immediately after a manual/AI edit
+  /// without waiting for the next Firestore snapshot.
+  Recipe copyWithDraft(RecipeDraft draft) => Recipe(
+        id: id,
+        name: draft.name,
+        cat: draft.cat,
+        time: draft.time,
+        diff: draft.diff,
+        servings: draft.servings,
+        veg: draft.veg,
+        ingr: draft.ingr,
+        steps: draft.steps,
+        note: note,
+        source: source,
+        photoUrl: photoUrl,
+        notes: notes,
+        createdAt: createdAt,
+        eatenDates: eatenDates,
+        householdId: householdId,
+        ownerId: ownerId,
+        ownerName: ownerName,
+      );
 
   Recipe copyWith({String? photoUrl, List<String>? eatenDates}) => Recipe(
         id: id,
@@ -64,6 +99,9 @@ class Recipe {
         notes: notes,
         createdAt: createdAt,
         eatenDates: eatenDates ?? this.eatenDates,
+        householdId: householdId,
+        ownerId: ownerId,
+        ownerName: ownerName,
       );
 
   factory Recipe.fromMap(String id, Map<String, dynamic> m) => Recipe(
@@ -84,6 +122,39 @@ class Recipe {
         notes: (m['notes'] ?? '').toString(),
         createdAt: m['createdAt']?.toString(),
         eatenDates: ((m['eatenDates'] as List?) ?? []).map((e) => e.toString()).toList(),
+        householdId: m['householdId']?.toString(),
+        ownerId: m['ownerId']?.toString(),
+        ownerName: m['ownerName']?.toString(),
+      );
+}
+
+/// users/{uid} — one per account. householdId points at the shared pool
+/// this account currently sees (its own uid by default, or another
+/// member's uid once "sharing" is activated).
+class UserProfile {
+  final String email;
+  final String displayName;
+  final String householdId;
+  const UserProfile({required this.email, required this.displayName, required this.householdId});
+
+  factory UserProfile.fromMap(Map<String, dynamic> m) => UserProfile(
+        email: (m['email'] ?? '').toString(),
+        displayName: (m['displayName'] ?? '').toString(),
+        householdId: (m['householdId'] ?? '').toString(),
+      );
+}
+
+/// households/{ownerId} — one per household, keyed by its creator's uid.
+class Household {
+  final String ownerId;
+  final String ownerEmail;
+  final List<String> members;
+  const Household({required this.ownerId, required this.ownerEmail, required this.members});
+
+  factory Household.fromMap(Map<String, dynamic> m) => Household(
+        ownerId: (m['ownerId'] ?? '').toString(),
+        ownerEmail: (m['ownerEmail'] ?? '').toString(),
+        members: ((m['members'] as List?) ?? []).map((e) => e.toString()).toList(),
       );
 }
 

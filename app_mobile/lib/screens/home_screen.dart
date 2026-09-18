@@ -1,14 +1,18 @@
+import 'dart:async';
 import 'dart:math';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../models.dart';
 import '../services/auth_service.dart';
 import '../services/favorites_service.dart';
+import '../services/household_service.dart';
 import '../services/recipe_service.dart';
 import '../theme.dart';
 import '../widgets/recipe_card.dart';
 import 'add_recipe_screen.dart';
 import 'recipe_detail_screen.dart';
+import 'share_screen.dart';
 
 const _timeBuckets = <(String, String, int?, int?)>[
   ('all', 'Tous', null, null),
@@ -29,6 +33,13 @@ class _HomeScreenState extends State<HomeScreen> {
   final _recipeService = RecipeService();
   final _favService = FavoritesService();
   final _authService = AuthService();
+  final _householdService = HouseholdService();
+  final String _uid = FirebaseAuth.instance.currentUser!.uid;
+
+  UserProfile? _profile;
+  Household? _household;
+  StreamSubscription<Household?>? _householdSub;
+  StreamSubscription<List<Recipe>>? _recipesSub;
 
   List<Recipe> _recipes = [];
   Set<String> _favs = {};
@@ -42,7 +53,22 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _favService.load().then((f) => setState(() => _favs = f));
-    _recipeService.streamRecipes().listen((r) => setState(() => _recipes = r));
+    _householdService.streamProfile(_uid).listen((profile) {
+      setState(() => _profile = profile);
+      final householdId = profile?.householdId;
+      _householdSub?.cancel();
+      _recipesSub?.cancel();
+      if (householdId == null) return;
+      _householdSub = _householdService.streamHousehold(householdId).listen((h) => setState(() => _household = h));
+      _recipesSub = _recipeService.streamRecipes(householdId).listen((r) => setState(() => _recipes = r));
+    });
+  }
+
+  @override
+  void dispose() {
+    _householdSub?.cancel();
+    _recipesSub?.cancel();
+    super.dispose();
   }
 
   void _toggleFav(String id) {
@@ -94,6 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final filtered = _filtered;
+    final profile = _profile;
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -117,6 +144,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text('${_recipes.length} recette${_recipes.length > 1 ? "s" : ""}',
                           style: const TextStyle(fontSize: 12, color: AppColors.inkSoft, fontWeight: FontWeight.w600)),
                       const Spacer(),
+                      if (profile != null)
+                        IconButton(
+                          tooltip: 'Partage',
+                          onPressed: () async {
+                            await Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => ShareScreen(uid: _uid, profile: profile, household: _household),
+                            ));
+                          },
+                          icon: const Icon(Icons.group_outlined, size: 20, color: AppColors.inkSoft),
+                        ),
                       IconButton(
                         tooltip: 'Déconnexion',
                         onPressed: () => _authService.signOut(),
@@ -148,9 +185,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 8),
                       IconButton.filled(
                         style: IconButton.styleFrom(backgroundColor: AppColors.accent),
-                        onPressed: () async {
-                          await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddRecipeScreen()));
-                        },
+                        onPressed: profile == null
+                            ? null
+                            : () async {
+                                await Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (_) => AddRecipeScreen(
+                                    ownerUid: _uid,
+                                    ownerName: profile.displayName,
+                                    householdId: profile.householdId,
+                                  ),
+                                ));
+                              },
                         icon: const Icon(Icons.add, color: Colors.white),
                       ),
                     ],

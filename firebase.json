@@ -3,6 +3,7 @@
     "rules": "firestore.rules"
   },
   "storage": {
+    "bucket": "recette-37d50.firebasestorage.app",
     "rules": "storage.rules"
   }
 }

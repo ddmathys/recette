@@ -1,13 +1,17 @@
 rules_version = '2';
 
-// No Firebase Auth wired up yet (family app, v1) — anyone with the deployed
-// URL can read/write the recipes collection. Recipes aren't sensitive data,
-// so this is an intentional MVP trade-off, not an oversight. Revisit before
-// sharing this link beyond close family, or before adding real accounts.
+// Bibliothèque familiale : accès réservé aux comptes connectés (Firebase Auth
+// email/mot de passe). Toute personne avec un compte peut lire/écrire — pas
+// de rôles distincts en v1, ce n'est pas nécessaire pour un usage familial.
 service cloud.firestore {
   match /databases/{database}/documents {
     match /recipes/{recipeId} {
-      allow read, write: if true;
+      allow read, write: if request.auth != null;
+    }
+    match /rateLimits/{uid} {
+      // Écrit uniquement par le serveur (Admin SDK, contourne ces règles) —
+      // fermé aux clients.
+      allow read, write: if false;
     }
     match /{document=**} {
       allow read, write: if false;

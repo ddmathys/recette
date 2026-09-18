@@ -1,5 +1,5 @@
 /**
- * One-time seed: pushes the 60 built-in recipes into Firestore so the app
+ * One-time seed: pushes the 64 built-in recipes into Firestore so the app
  * switches from its read-only local fallback to the real shared library.
  *
  * Usage:

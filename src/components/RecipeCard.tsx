@@ -1,6 +1,6 @@
 "use client";
 
-import { CATEGORY_BY_KEY } from "@/lib/categories";
+import { getCategoryMeta } from "@/lib/categories";
 import { CategoryIcon } from "./CategoryIcon";
 import type { Recipe } from "@/lib/types";
 
@@ -15,7 +15,7 @@ export function RecipeCard({
   onOpen: () => void;
   onToggleFav: () => void;
 }) {
-  const cat = CATEGORY_BY_KEY[recipe.cat];
+  const cat = getCategoryMeta(recipe.cat);
 
   return (
     <button

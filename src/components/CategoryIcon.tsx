@@ -1,4 +1,4 @@
-import { CATEGORY_BY_KEY } from "@/lib/categories";
+import { getCategoryMeta } from "@/lib/categories";
 import type { CategoryKey } from "@/lib/types";
 
 export function CategoryIcon({
@@ -8,7 +8,7 @@ export function CategoryIcon({
   cat: CategoryKey;
   className?: string;
 }) {
-  const meta = CATEGORY_BY_KEY[cat];
+  const meta = getCategoryMeta(cat);
   return (
     <svg
       viewBox="0 0 24 24"

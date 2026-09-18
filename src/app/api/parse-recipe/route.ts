@@ -1,13 +1,72 @@
 import { NextRequest, NextResponse } from "next/server";
+import { lookup } from "node:dns/promises";
 import { CATEGORIES } from "@/lib/categories";
+import { adminDb, requireUser } from "@/lib/firebaseAdmin";
 
 export const runtime = "nodejs";
+// Vercel Node.js function budget: fetch (6s) + DeepSeek (25s) with margin.
+export const maxDuration = 35;
+
+const DAILY_LIMIT = 40;
+const MAX_PAGE_BYTES = 2 * 1024 * 1024; // 2 MB cap on fetched page content
+
+/** Blocks requests aimed at private/loopback/link-local addresses so the
+ * "paste a link" feature can't be used to probe internal network hosts
+ * from the Vercel function (SSRF). */
+function isPrivateAddress(ip: string): boolean {
+  if (ip === "::1" || ip === "127.0.0.1") return true;
+  if (ip.startsWith("127.") || ip.startsWith("10.") || ip.startsWith("169.254.")) return true;
+  if (ip.startsWith("192.168.")) return true;
+  if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(ip)) return true;
+  if (ip.startsWith("fc") || ip.startsWith("fd") || ip.startsWith("fe80")) return true; // IPv6 ULA/link-local
+  return false;
+}
+
+async function isSafeUrl(url: string): Promise<boolean> {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+  try {
+    const results = await lookup(parsed.hostname, { all: true });
+    if (!results.length) return false;
+    return results.every((r) => !isPrivateAddress(r.address));
+  } catch {
+    return false; // unresolvable host — treat as unsafe rather than guess
+  }
+}
+
+async function readCapped(res: Response, maxBytes: number): Promise<string> {
+  const reader = res.body?.getReader();
+  if (!reader) return "";
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) {
+      total += value.byteLength;
+      if (total > maxBytes) {
+        await reader.cancel().catch(() => {});
+        break;
+      }
+      chunks.push(value);
+    }
+  }
+  return Buffer.concat(chunks.map((c) => Buffer.from(c))).toString("utf8");
+}
 
 async function fetchPageText(url: string): Promise<{ text: string; ogImage: string | null }> {
   try {
+    if (!(await isSafeUrl(url))) return { text: "", ogImage: null };
+
     const res = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; RecettesDuTiroir/1.0)" },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(6000),
+      redirect: "follow",
     });
 
     // Some sites bounce non-browser requests to an unrelated page (home,
@@ -21,19 +80,25 @@ async function fetchPageText(url: string): Promise<{ text: string; ogImage: stri
       if (requestedPath && finalPath !== requestedPath) {
         return { text: "", ogImage: null };
       }
+      // The final URL (after redirects) must still resolve away from
+      // internal hosts, in case the redirect target itself points inward.
+      if (!(await isSafeUrl(res.url))) return { text: "", ogImage: null };
     } catch {
       /* if URL parsing fails, fall through and try to use the content anyway */
     }
 
-    const html = await res.text();
+    const html = await readCapped(res, MAX_PAGE_BYTES);
 
     const ogMatch =
       html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
       html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i) ||
       html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i);
-    const ogImage = ogMatch
+    let ogImage = ogMatch
       ? ogMatch[1].replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'")
       : null;
+    // Only ever hand back an http(s) image URL — never let extracted markup
+    // leak a javascript:/data: URI back to the client.
+    if (ogImage && !/^https?:\/\//i.test(ogImage)) ogImage = null;
 
     const text = html
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
@@ -49,6 +114,26 @@ async function fetchPageText(url: string): Promise<{ text: string; ogImage: stri
   }
 }
 
+/** Simple per-user daily quota so a stray loop (or a shared link) can't run
+ * up the DeepSeek bill. Firestore-backed since Vercel functions don't share
+ * memory between invocations. */
+async function checkRateLimit(uid: string): Promise<boolean> {
+  if (!adminDb) return true; // no admin creds configured (shouldn't happen once auth is required) — fail open rather than break the feature
+  const today = new Date().toISOString().slice(0, 10);
+  const ref = adminDb.collection("rateLimits").doc(uid);
+  return adminDb.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const data = snap.data();
+    if (!data || data.day !== today) {
+      tx.set(ref, { day: today, count: 1 });
+      return true;
+    }
+    if (data.count >= DAILY_LIMIT) return false;
+    tx.update(ref, { count: data.count + 1 });
+    return true;
+  });
+}
+
 export async function POST(req: NextRequest) {
   const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) {
@@ -56,6 +141,22 @@ export async function POST(req: NextRequest) {
       { error: "DEEPSEEK_API_KEY n'est pas configurée côté serveur." },
       { status: 500 },
     );
+  }
+
+  const uid = await requireUser(req);
+  if (!uid) {
+    return NextResponse.json({ error: "Connecte-toi pour utiliser la génération IA." }, { status: 401 });
+  }
+  try {
+    if (!(await checkRateLimit(uid))) {
+      return NextResponse.json(
+        { error: `Limite de ${DAILY_LIMIT} générations IA par jour atteinte, réessaie demain.` },
+        { status: 429 },
+      );
+    }
+  } catch (e) {
+    console.error("[parse-recipe] rate limit check failed:", e);
+    return NextResponse.json({ error: "Vérification du quota impossible, réessaie." }, { status: 500 });
   }
 
   const body = await req.json().catch(() => null);
@@ -104,7 +205,7 @@ ${linkText || "(aucun, ou page illisible)"}`;
         response_format: { type: "json_object" },
         temperature: 0.4,
       }),
-      signal: AbortSignal.timeout(60000),
+      signal: AbortSignal.timeout(25000),
     });
 
     if (!resp.ok) {

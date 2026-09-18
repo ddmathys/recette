@@ -9,9 +9,30 @@ import { AddRecipeDialog } from "@/components/AddRecipeDialog";
 import { useRecipes, saveNotes, uploadRecipePhoto, deleteRecipe, addEatenDate, removeEatenDate } from "@/lib/useRecipes";
 import { useFavorites } from "@/lib/useFavorites";
 import { firebaseEnabled } from "@/lib/firebase";
+import { useAuth, signOut } from "@/lib/useAuth";
+import { AuthLanding } from "@/components/AuthGate";
 import type { CategoryKey } from "@/lib/types";
 
 export default function Home() {
+  const { user, checking } = useAuth();
+
+  // Firebase pas configuré : mode démo en lecture seule, pas de mur de
+  // connexion (rien à protéger). Firebase configuré : compte obligatoire.
+  if (firebaseEnabled && checking) {
+    return (
+      <div className="flex min-h-full flex-1 items-center justify-center">
+        <span className="h-6 w-6 animate-spin rounded-full border-2 border-line border-t-accent" />
+      </div>
+    );
+  }
+  if (firebaseEnabled && !user) {
+    return <AuthLanding />;
+  }
+
+  return <RecipeLibrary />;
+}
+
+function RecipeLibrary() {
   const { recipes, readOnly } = useRecipes();
   const { favs, toggle: toggleFav } = useFavorites();
 
@@ -101,6 +122,14 @@ export default function Home() {
             </div>
             <h1 className="text-[1.15rem] font-extrabold tracking-tight text-ink">Recettes du Tiroir</h1>
             <span className="text-[0.78rem] font-semibold text-ink-soft">{recipes.length} recette{recipes.length > 1 ? "s" : ""}</span>
+            {firebaseEnabled && (
+              <button
+                onClick={() => signOut()}
+                className="ml-auto shrink-0 rounded-full border border-line bg-surface px-3 py-1.5 text-[0.76rem] font-semibold text-ink-soft hover:border-accent hover:text-accent"
+              >
+                Déconnexion
+              </button>
+            )}
           </div>
 
           <Toolbar

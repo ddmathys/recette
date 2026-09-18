@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CATEGORIES } from "@/lib/categories";
 import { compressImageIfNeeded } from "@/lib/compressImage";
+import { auth } from "@/lib/firebase";
 import type { CategoryKey, Difficulty, Ingredient, RecipeDraft } from "@/lib/types";
 import { addRecipe, uploadRecipePhoto } from "@/lib/useRecipes";
 
@@ -36,6 +37,11 @@ export function AddRecipeDialog({ onClose }: { onClose: () => void }) {
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  // Set once the recipe doc itself is safely created — from that point on,
+  // a photo-upload failure is a warning to show, never a reason to let the
+  // user "retry" and create a second recipe.
+  const [savedRecipeName, setSavedRecipeName] = useState<string | null>(null);
+  const [photoWarning, setPhotoWarning] = useState<string | null>(null);
 
   async function handlePhotoInput(f: File) {
     setPhotoError(null);
@@ -78,9 +84,13 @@ export function AddRecipeDialog({ onClose }: { onClose: () => void }) {
     setAiBusy(true);
     setAiError(null);
     try {
+      const idToken = await auth?.currentUser?.getIdToken();
       const res = await fetch("/api/parse-recipe", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+        },
         body: JSON.stringify({ text, name, link }),
       });
       const data = await res.json();
@@ -126,36 +136,33 @@ export function AddRecipeDialog({ onClose }: { onClose: () => void }) {
     }
     setSaving(true);
     setSaveError(null);
+    let newId: string;
     try {
       const finalDraft: RecipeDraft = { ...draft, name: name2, ingr, steps };
-      if (photoFile) {
-        // Save first without photo, then upload (needs a doc id); simplest: upload after add.
-        await addRecipeWithPhoto(finalDraft, link.trim() || null, photoFile);
-      } else {
-        await addRecipe(finalDraft, link.trim() || null, suggestedPhoto);
-      }
-      onClose();
+      // Toujours créer le document d'abord (sans la photo si on en a une à
+      // uploader) : c'est la seule étape qui doit pouvoir être réessayée.
+      newId = await addRecipe(finalDraft, link.trim() || null, photoFile ? null : suggestedPhoto);
     } catch {
       setSaveError("L'enregistrement a échoué, réessaie.");
-    } finally {
       setSaving(false);
+      return;
     }
-  }
 
-  async function addRecipeWithPhoto(d: RecipeDraft, source: string | null, file: File) {
-    // addRecipe returns void; re-fetch not needed since onSnapshot will pick it up.
-    // We add first, then rely on Firestore's addDoc id via a small wrapper below.
-    const { db } = await import("@/lib/firebase");
-    const { addDoc, collection } = await import("firebase/firestore");
-    if (!db) throw new Error("Firebase non configuré");
-    const ref = await addDoc(collection(db, "recipes"), {
-      ...d,
-      source,
-      photoUrl: null,
-      notes: "",
-      createdAt: new Date().toISOString(),
-    });
-    await uploadRecipePhoto(ref.id, file);
+    // La recette existe maintenant. Un échec d'upload photo à partir d'ici
+    // n'est plus une raison de réessayer (ça créerait un doublon) — juste un
+    // avertissement, et on ferme quand même.
+    if (photoFile) {
+      try {
+        await uploadRecipePhoto(newId, photoFile);
+      } catch {
+        setSavedRecipeName(name2);
+        setPhotoWarning("La recette a bien été enregistrée, mais l'envoi de la photo a échoué. Tu peux la rajouter depuis la fiche de la recette.");
+        setSaving(false);
+        return;
+      }
+    }
+    setSaving(false);
+    onClose();
   }
 
   return (
@@ -172,7 +179,20 @@ export function AddRecipeDialog({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="flex flex-col gap-3.5 px-5 pb-6.5 pt-4.5">
-          {stage === "intro" && (
+          {savedRecipeName ? (
+            <>
+              <p className="text-[0.9rem] text-ink">
+                <strong>{savedRecipeName}</strong> a été ajoutée à la bibliothèque.
+              </p>
+              <p className="text-[0.83rem] text-gold">{photoWarning}</p>
+              <button
+                onClick={onClose}
+                className="self-start rounded-xl bg-accent px-3.5 py-2.5 text-[0.85rem] font-medium text-accent-ink"
+              >
+                Fermer
+              </button>
+            </>
+          ) : stage === "intro" && (
             <>
               <Field label="Ta recette, en texte libre">
                 <textarea
@@ -213,7 +233,7 @@ export function AddRecipeDialog({ onClose }: { onClose: () => void }) {
                   className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-3.5 py-2.5 text-[0.85rem] font-medium text-accent-ink disabled:opacity-60"
                 >
                   {aiBusy && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-line border-t-accent-ink" />}
-                  {aiBusy ? "Claude réfléchit…" : "Générer avec l'IA (DeepSeek)"}
+                  {aiBusy ? "DeepSeek réfléchit…" : "Générer avec l'IA (DeepSeek)"}
                 </button>
                 <button
                   onClick={() => openForm(null)}
@@ -226,7 +246,7 @@ export function AddRecipeDialog({ onClose }: { onClose: () => void }) {
             </>
           )}
 
-          {stage === "form" && (
+          {!savedRecipeName && stage === "form" && (
             <form
               onSubmit={(e) => {
                 e.preventDefault();

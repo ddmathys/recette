@@ -78,3 +78,18 @@ export const CATEGORY_BY_KEY: Record<CategoryKey, CategoryMeta> = CATEGORIES.red
   },
   {} as Record<CategoryKey, CategoryMeta>,
 );
+
+/** Fallback used when a recipe's `cat` doesn't match a known category —
+ * data comes from Firestore, which isn't statically typed, so a stale
+ * client, a manual edit, or a future renamed category key must not crash
+ * the whole page. */
+const DEFAULT_CATEGORY: CategoryMeta = {
+  key: "viande",
+  label: "Autre",
+  color: "#8A8577",
+  icon: '<circle cx="12" cy="12" r="8"/>',
+};
+
+export function getCategoryMeta(key: string): CategoryMeta {
+  return CATEGORY_BY_KEY[key as CategoryKey] ?? DEFAULT_CATEGORY;
+}

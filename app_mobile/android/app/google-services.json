@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "744435253449",
+    "project_id": "recette-37d50",
+    "storage_bucket": "recette-37d50.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:744435253449:android:47ef6ced879e5b67f40d18",
+        "android_client_info": {
+          "package_name": "com.davidmathys.recettes_du_tiroir"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKNhCJ3oKov79GQlv4tJ9PIl5NWMWe3wY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

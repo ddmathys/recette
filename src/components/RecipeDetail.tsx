@@ -1,12 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CATEGORY_BY_KEY } from "@/lib/categories";
+import { getCategoryMeta } from "@/lib/categories";
 import { CategoryIcon } from "./CategoryIcon";
 import { compressImageIfNeeded } from "@/lib/compressImage";
 import type { Recipe } from "@/lib/types";
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+
+/** Only accept http(s) URLs as a CSS `background-image`, and reject anything
+ * containing a quote — `photoUrl` can come from Firestore (any account can
+ * write it) or from a third-party site's og:image, so it must never be
+ * trusted enough to interpolate raw into `url('...')`. */
+function safeBackgroundUrl(url: string | null | undefined): string | undefined {
+  if (!url) return undefined;
+  if (!/^https:\/\//i.test(url)) return undefined;
+  if (/['"()\\]/.test(url)) return undefined;
+  return url;
+}
 
 export function RecipeDetail({
   recipe,
@@ -31,7 +42,8 @@ export function RecipeDetail({
   onRemoveEatenDate: (date: string) => Promise<unknown>;
   readOnly: boolean;
 }) {
-  const cat = CATEGORY_BY_KEY[recipe.cat];
+  const cat = getCategoryMeta(recipe.cat);
+  const bgUrl = safeBackgroundUrl(recipe.photoUrl);
   // Keyed by recipe.id in the parent, so this instance remounts (and re-runs
   // this initializer) whenever the open recipe changes.
   const [notes, setNotes] = useState(recipe.notes ?? "");
@@ -114,10 +126,10 @@ export function RecipeDetail({
           className="relative flex h-[110px] shrink-0 items-end bg-cover bg-center p-4 text-white"
           style={{
             backgroundColor: cat.color,
-            backgroundImage: recipe.photoUrl ? `url('${recipe.photoUrl}')` : undefined,
+            backgroundImage: bgUrl ? `url('${bgUrl}')` : undefined,
           }}
         >
-          {recipe.photoUrl && (
+          {bgUrl && (
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
           )}
           <button
@@ -129,7 +141,7 @@ export function RecipeDetail({
               <path d="M6 6l12 12M18 6 6 18" />
             </svg>
           </button>
-          {!recipe.photoUrl && (
+          {!bgUrl && (
             <CategoryIcon cat={recipe.cat} className="absolute right-4 top-4 z-10 h-9 w-9 opacity-85" />
           )}
           <div className="relative z-10">

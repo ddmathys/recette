@@ -52,6 +52,8 @@ export function useRecipes() {
   return { recipes, loading, readOnly };
 }
 
+/** Returns the new document's id so callers can attach a photo afterwards
+ * without risking a duplicate recipe if that second step fails. */
 export async function addRecipe(draft: RecipeDraft, source: string | null, photoUrl: string | null) {
   if (!db) throw new Error("Firebase n'est pas configuré.");
   const data: Omit<Recipe, "id"> = {
@@ -61,7 +63,8 @@ export async function addRecipe(draft: RecipeDraft, source: string | null, photo
     notes: "",
     createdAt: new Date().toISOString(),
   };
-  await addDoc(collection(db, COLLECTION), data);
+  const ref = await addDoc(collection(db, COLLECTION), data);
+  return ref.id;
 }
 
 export async function saveNotes(id: string, text: string) {

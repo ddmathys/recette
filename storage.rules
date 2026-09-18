@@ -1,10 +1,16 @@
 rules_version = '2';
 
-// Même politique que firestore.rules : réservé aux comptes connectés.
-// Delete est une règle à part de write — auparavant `write` seul couvrait
-// aussi delete mais testait `request.resource.size`, qui est toujours null
-// sur un delete, donc la condition échouait et les suppressions étaient
-// refusées en silence (photos orphelines qui restaient dans le bucket).
+// Réservé aux comptes connectés — pas scopé par foyer comme firestore.rules
+// (voir src/lib/useHousehold.ts). Une tentative de scoping via
+// firestore.get() en croisé (Storage -> Firestore) a été testée et
+// abandonnée : elle refusait aussi les accès légitimes en pratique,
+// probablement une limitation de cette fonctionnalité pour ce projet —
+// risque trop élevé de casser l'upload de photos pour tout le monde plutôt
+// que de resserrer un accès déjà correctement protégé côté Firestore (les
+// recettes elles-mêmes ne sont lisibles que par les membres du foyer ; une
+// personne extérieure ne peut de toute façon jamais découvrir un recipeId
+// pour cibler sa photo). À revisiter si besoin d'un cloisonnement plus
+// strict.
 service firebase.storage {
   match /b/{bucket}/o {
     match /recipes/{recipeId}/{fileName} {
@@ -12,6 +18,11 @@ service firebase.storage {
       allow create, update: if request.auth != null
                    && request.resource.size < 10 * 1024 * 1024
                    && request.resource.contentType.matches('image/.*');
+      // Delete is a rule of its own — `write` alone used to also cover it,
+      // but its condition read request.resource.size, which is always null
+      // on a delete, so the condition silently failed and deletes were
+      // refused (photos stayed orphaned in the bucket after a recipe was
+      // deleted).
       allow delete: if request.auth != null;
     }
     match /{allPaths=**} {

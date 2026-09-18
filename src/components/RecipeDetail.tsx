@@ -29,6 +29,7 @@ export function RecipeDetail({
   onDelete,
   onAddEatenDate,
   onRemoveEatenDate,
+  onEdit,
   readOnly,
 }: {
   recipe: Recipe;
@@ -40,6 +41,7 @@ export function RecipeDetail({
   onDelete: () => Promise<unknown>;
   onAddEatenDate: (date: string) => Promise<unknown>;
   onRemoveEatenDate: (date: string) => Promise<unknown>;
+  onEdit: () => void;
   readOnly: boolean;
 }) {
   const cat = getCategoryMeta(recipe.cat);
@@ -145,7 +147,14 @@ export function RecipeDetail({
             <CategoryIcon cat={recipe.cat} className="absolute right-4 top-4 z-10 h-9 w-9 opacity-85" />
           )}
           <div className="relative z-10">
-            <p className="mb-0.5 text-[0.72rem] font-semibold uppercase tracking-wide opacity-90">{cat.label}</p>
+            <p className="mb-0.5 flex items-center gap-1.5 text-[0.72rem] font-semibold uppercase tracking-wide opacity-90">
+              {cat.label}
+              {recipe.ownerName && (
+                <span className="rounded-full bg-black/25 px-1.5 py-0.5 text-[0.65rem] normal-case tracking-normal">
+                  {recipe.ownerName}
+                </span>
+              )}
+            </p>
             <h2 className="text-[1.2rem] font-extrabold text-white">{recipe.name}</h2>
           </div>
         </div>
@@ -201,10 +210,24 @@ export function RecipeDetail({
             )}
           </div>
 
-          <div className="flex flex-wrap gap-3.5">
-            <Badge value={`${recipe.time} min`} label="Préparation" />
-            <Badge value={String(recipe.servings)} label="Personnes" />
-            <Badge value={recipe.diff} label="Difficulté" />
+          <div className="flex flex-wrap items-center justify-between gap-3.5">
+            <div className="flex flex-wrap gap-3.5">
+              <Badge value={`${recipe.time} min`} label="Préparation" />
+              <Badge value={String(recipe.servings)} label="Personnes" />
+              <Badge value={recipe.diff} label="Difficulté" />
+            </div>
+            {!readOnly && (
+              <button
+                onClick={onEdit}
+                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-3.5 py-1.5 text-[0.78rem] font-semibold text-ink hover:border-accent hover:text-accent"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+                Modifier
+              </button>
+            )}
           </div>
 
           {recipe.note && (

@@ -6,10 +6,20 @@ import { FilterDrawer } from "@/components/FilterDrawer";
 import { RecipeCard } from "@/components/RecipeCard";
 import { RecipeDetail } from "@/components/RecipeDetail";
 import { AddRecipeDialog } from "@/components/AddRecipeDialog";
-import { useRecipes, saveNotes, uploadRecipePhoto, deleteRecipe, addEatenDate, removeEatenDate } from "@/lib/useRecipes";
+import { EditRecipeDialog } from "@/components/EditRecipeDialog";
+import { ShareSettings } from "@/components/ShareSettings";
+import {
+  useRecipes,
+  saveNotes,
+  uploadRecipePhoto,
+  deleteRecipe,
+  addEatenDate,
+  removeEatenDate,
+} from "@/lib/useRecipes";
 import { useFavorites } from "@/lib/useFavorites";
 import { firebaseEnabled } from "@/lib/firebase";
 import { useAuth, signOut } from "@/lib/useAuth";
+import { useHousehold } from "@/lib/useHousehold";
 import { AuthLanding } from "@/components/AuthGate";
 import type { CategoryKey } from "@/lib/types";
 
@@ -29,11 +39,12 @@ export default function Home() {
     return <AuthLanding />;
   }
 
-  return <RecipeLibrary />;
+  return <RecipeLibrary uid={user?.uid ?? null} />;
 }
 
-function RecipeLibrary() {
-  const { recipes, readOnly } = useRecipes();
+function RecipeLibrary({ uid }: { uid: string | null }) {
+  const { profile, household, loading: householdLoading } = useHousehold(uid);
+  const { recipes, readOnly } = useRecipes(profile?.householdId ?? null);
   const { favs, toggle: toggleFav } = useFavorites();
 
   const [search, setSearch] = useState("");
@@ -44,6 +55,8 @@ function RecipeLibrary() {
   const [ingredients, setIngredients] = useState<Set<string>>(new Set());
   const [openId, setOpenId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const freq = useMemo(() => {
@@ -109,6 +122,8 @@ function RecipeLibrary() {
   const activeFilterCount =
     (cat !== "all" ? 1 : 0) + (time !== "all" ? 1 : 0) + (vegOnly ? 1 : 0) + (favOnly ? 1 : 0) + (ingredients.size ? 1 : 0);
 
+  const canAdd = firebaseEnabled && Boolean(uid && profile);
+
   return (
     <div className="flex min-h-full flex-col">
       <header className="sticky top-0 z-30 bg-bg pb-2.5 pt-3" style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top, 0px))" }}>
@@ -123,12 +138,22 @@ function RecipeLibrary() {
             <h1 className="text-[1.15rem] font-extrabold tracking-tight text-ink">Recettes du Tiroir</h1>
             <span className="text-[0.78rem] font-semibold text-ink-soft">{recipes.length} recette{recipes.length > 1 ? "s" : ""}</span>
             {firebaseEnabled && (
-              <button
-                onClick={() => signOut()}
-                className="ml-auto shrink-0 rounded-full border border-line bg-surface px-3 py-1.5 text-[0.76rem] font-semibold text-ink-soft hover:border-accent hover:text-accent"
-              >
-                Déconnexion
-              </button>
+              <div className="ml-auto flex shrink-0 items-center gap-2">
+                {profile && (
+                  <button
+                    onClick={() => setShareOpen(true)}
+                    className="rounded-full border border-line bg-surface px-3 py-1.5 text-[0.76rem] font-semibold text-ink-soft hover:border-accent hover:text-accent"
+                  >
+                    {profile.householdId === uid ? "Partage" : "Bibliothèque partagée"}
+                  </button>
+                )}
+                <button
+                  onClick={() => signOut()}
+                  className="rounded-full border border-line bg-surface px-3 py-1.5 text-[0.76rem] font-semibold text-ink-soft hover:border-accent hover:text-accent"
+                >
+                  Déconnexion
+                </button>
+              </div>
             )}
           </div>
 
@@ -138,14 +163,14 @@ function RecipeLibrary() {
             onOpenFilters={() => setFiltersOpen(true)}
             activeFilterCount={activeFilterCount}
             onAdd={() => setAddOpen(true)}
-            addAvailable={firebaseEnabled}
+            addAvailable={canAdd}
           />
           {!firebaseEnabled && (
             <p className="mt-2 text-[0.76rem] text-ink-soft">
               Firebase n&apos;est pas configuré — bibliothèque en lecture seule avec les recettes de base.
             </p>
           )}
-          {firebaseEnabled && readOnly && (
+          {firebaseEnabled && !householdLoading && readOnly && (
             <p className="mt-2 text-[0.76rem] text-ink-soft">
               Bibliothèque pas encore initialisée (lance <code>npm run seed</code>) — les recettes de base sont affichées en lecture seule.
             </p>
@@ -238,11 +263,23 @@ function RecipeLibrary() {
           }}
           onAddEatenDate={(date) => addEatenDate(openRecipe.id, date)}
           onRemoveEatenDate={(date) => removeEatenDate(openRecipe.id, date)}
+          onEdit={() => setEditOpen(true)}
           readOnly={readOnly}
         />
       )}
 
-      {addOpen && <AddRecipeDialog onClose={() => setAddOpen(false)} />}
+      {editOpen && openRecipe && <EditRecipeDialog recipe={openRecipe} onClose={() => setEditOpen(false)} />}
+
+      {addOpen && uid && profile && (
+        <AddRecipeDialog
+          owner={{ uid, name: profile.displayName, householdId: profile.householdId }}
+          onClose={() => setAddOpen(false)}
+        />
+      )}
+
+      {shareOpen && uid && profile && (
+        <ShareSettings uid={uid} profile={profile} household={household} onClose={() => setShareOpen(false)} />
+      )}
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
   type User,
 } from "firebase/auth";
 import { auth, firebaseEnabled } from "./firebase";
+import { ensureUserProfile } from "./useHousehold";
 
 export function useAuth() {
   // Tant que Firebase n'est pas configuré, on ne bloque personne (mode
@@ -22,6 +23,9 @@ export function useAuth() {
     return onAuthStateChanged(auth, (u) => {
       setUser(u);
       setChecking(false);
+      // Defensive: covers accounts created before profiles/households
+      // existed. ensureUserProfile no-ops if both already exist.
+      if (u) void ensureUserProfile(u);
     });
   }, []);
 
@@ -57,10 +61,11 @@ export async function signIn(email: string, password: string) {
   }
 }
 
-export async function signUp(email: string, password: string) {
+export async function signUp(email: string, password: string, displayName: string) {
   if (!auth) throw new Error("Firebase n'est pas configuré.");
   try {
-    await createUserWithEmailAndPassword(auth, email, password);
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await ensureUserProfile(cred.user, displayName);
   } catch (e) {
     throw new Error(authErrorMessage(e));
   }

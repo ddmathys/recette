@@ -15,6 +15,7 @@ export function AuthLanding() {
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resetSent, setResetSent] = useState(false);
@@ -25,7 +26,7 @@ export function AuthLanding() {
     setBusy(true);
     try {
       if (mode === "signin") await signIn(email.trim(), password);
-      else await signUp(email.trim(), password);
+      else await signUp(email.trim(), password, name.trim());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur inconnue.");
     } finally {
@@ -87,6 +88,20 @@ export function AuthLanding() {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          {mode === "signup" && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[0.76rem] font-semibold uppercase tracking-wide text-ink-soft">Prénom</label>
+              <input
+                type="text"
+                required
+                autoComplete="given-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Affiché sur tes recettes"
+                className="w-full rounded-lg border border-line bg-surface-2 px-2.5 py-2 text-[0.9rem] text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent"
+              />
+            </div>
+          )}
           <div className="flex flex-col gap-1.5">
             <label className="text-[0.76rem] font-semibold uppercase tracking-wide text-ink-soft">E-mail</label>
             <input

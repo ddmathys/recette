@@ -1,18 +1,49 @@
 rules_version = '2';
 
-// Bibliothèque familiale : accès réservé aux comptes connectés (Firebase Auth
-// email/mot de passe). Toute personne avec un compte peut lire/écrire — pas
-// de rôles distincts en v1, ce n'est pas nécessaire pour un usage familial.
+// Bibliothèque familiale, scopée par foyer ("household") — voir
+// src/lib/useHousehold.ts. Chaque compte a un profil (users/{uid}) qui
+// pointe vers le foyer dont il voit les recettes (le sien par défaut, ou
+// celui d'un autre membre une fois le partage activé). Les recettes ne
+// sont visibles/modifiables que par les membres du même foyer.
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /recipes/{recipeId} {
-      allow read, write: if request.auth != null;
+    function myHouseholdId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.householdId;
     }
+
+    match /users/{uid} {
+      // Lecture ouverte à tout compte connecté : nécessaire pour chercher
+      // un profil par e-mail (rejoindre le foyer de quelqu'un). Ne contient
+      // rien de sensible (e-mail, prénom, id de foyer).
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    match /households/{ownerId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == ownerId;
+      // Rejoindre/quitter un foyer ne touche que `members` — jamais
+      // `ownerId`/`ownerEmail`.
+      allow update: if request.auth != null
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+                    && request.resource.data.ownerId == resource.data.ownerId;
+      allow delete: if false;
+    }
+
+    match /recipes/{recipeId} {
+      allow read: if request.auth != null && resource.data.householdId == myHouseholdId();
+      allow create: if request.auth != null
+                    && request.resource.data.ownerId == request.auth.uid
+                    && request.resource.data.householdId == myHouseholdId();
+      allow update, delete: if request.auth != null && resource.data.householdId == myHouseholdId();
+    }
+
     match /rateLimits/{uid} {
       // Écrit uniquement par le serveur (Admin SDK, contourne ces règles) —
       // fermé aux clients.
       allow read, write: if false;
     }
+
     match /{document=**} {
       allow read, write: if false;
     }

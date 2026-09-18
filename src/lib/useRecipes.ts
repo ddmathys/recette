@@ -13,6 +13,7 @@ import {
   orderBy,
   query,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { db, storage, firebaseEnabled } from "./firebase";
@@ -21,14 +22,22 @@ import type { Recipe, RecipeDraft } from "./types";
 
 const COLLECTION = "recipes";
 
-export function useRecipes() {
+/** `householdId` scopes the query to the signed-in user's current shared
+ * library (their own, or one they joined — see useHousehold.ts). Pass
+ * null while that's still loading to avoid a flash of someone else's
+ * data or a permission-denied query. */
+export function useRecipes(householdId: string | null) {
   const [recipes, setRecipes] = useState<Recipe[]>(SEED_RECIPES);
   const [loading, setLoading] = useState(firebaseEnabled);
   const [usingSeedFallback, setUsingSeedFallback] = useState(true);
 
   useEffect(() => {
-    if (!firebaseEnabled || !db) return;
-    const q = query(collection(db, COLLECTION), orderBy("createdAt", "asc"));
+    if (!firebaseEnabled || !db || !householdId) return;
+    const q = query(
+      collection(db, COLLECTION),
+      where("householdId", "==", householdId),
+      orderBy("createdAt", "asc"),
+    );
     const unsub = onSnapshot(
       q,
       (snap) => {
@@ -46,7 +55,7 @@ export function useRecipes() {
       () => setLoading(false),
     );
     return unsub;
-  }, []);
+  }, [householdId]);
 
   const readOnly = !firebaseEnabled || usingSeedFallback;
   return { recipes, loading, readOnly };
@@ -54,7 +63,12 @@ export function useRecipes() {
 
 /** Returns the new document's id so callers can attach a photo afterwards
  * without risking a duplicate recipe if that second step fails. */
-export async function addRecipe(draft: RecipeDraft, source: string | null, photoUrl: string | null) {
+export async function addRecipe(
+  draft: RecipeDraft,
+  source: string | null,
+  photoUrl: string | null,
+  owner: { uid: string; name: string; householdId: string },
+) {
   if (!db) throw new Error("Firebase n'est pas configuré.");
   const data: Omit<Recipe, "id"> = {
     ...draft,
@@ -62,9 +76,20 @@ export async function addRecipe(draft: RecipeDraft, source: string | null, photo
     photoUrl: photoUrl || null,
     notes: "",
     createdAt: new Date().toISOString(),
+    householdId: owner.householdId,
+    ownerId: owner.uid,
+    ownerName: owner.name,
   };
   const ref = await addDoc(collection(db, COLLECTION), data);
   return ref.id;
+}
+
+/** Full content replacement for the "edit recipe" flow (manual or
+ * AI-assisted) — everything except ownership/notes/photo/eaten dates,
+ * which are managed by their own dedicated functions. */
+export async function updateRecipeContent(id: string, draft: RecipeDraft) {
+  if (!db) throw new Error("Firebase n'est pas configuré.");
+  await updateDoc(doc(db, COLLECTION, id), { ...draft });
 }
 
 export async function saveNotes(id: string, text: string) {

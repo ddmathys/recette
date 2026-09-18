@@ -32,6 +32,14 @@ export function RecipeCard({
         ) : (
           <CategoryIcon cat={recipe.cat} className="h-8 w-8 text-white opacity-95" />
         )}
+        {recipe.ownerName && (
+          <span
+            title={`Créé par ${recipe.ownerName}`}
+            className="absolute left-1.5 top-1.5 rounded-full bg-black/25 px-1.5 py-0.5 text-[0.62rem] font-bold text-white backdrop-blur-[2px]"
+          >
+            {recipe.ownerName}
+          </span>
+        )}
         <span
           role="button"
           tabIndex={0}

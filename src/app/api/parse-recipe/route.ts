@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { lookup } from "node:dns/promises";
 import { CATEGORIES } from "@/lib/categories";
-import { adminDb, requireUser } from "@/lib/firebaseAdmin";
+import { requireUser } from "@/lib/firebaseAdmin";
+import { AI_DAILY_LIMIT, checkAiRateLimit } from "@/lib/aiRateLimit";
 
 export const runtime = "nodejs";
 // Vercel Node.js function budget: fetch (6s) + DeepSeek (25s) with margin.
 export const maxDuration = 35;
 
-const DAILY_LIMIT = 40;
 const MAX_PAGE_BYTES = 2 * 1024 * 1024; // 2 MB cap on fetched page content
 
 /** Blocks requests aimed at private/loopback/link-local addresses so the
@@ -114,26 +114,6 @@ async function fetchPageText(url: string): Promise<{ text: string; ogImage: stri
   }
 }
 
-/** Simple per-user daily quota so a stray loop (or a shared link) can't run
- * up the DeepSeek bill. Firestore-backed since Vercel functions don't share
- * memory between invocations. */
-async function checkRateLimit(uid: string): Promise<boolean> {
-  if (!adminDb) return true; // no admin creds configured (shouldn't happen once auth is required) — fail open rather than break the feature
-  const today = new Date().toISOString().slice(0, 10);
-  const ref = adminDb.collection("rateLimits").doc(uid);
-  return adminDb.runTransaction(async (tx) => {
-    const snap = await tx.get(ref);
-    const data = snap.data();
-    if (!data || data.day !== today) {
-      tx.set(ref, { day: today, count: 1 });
-      return true;
-    }
-    if (data.count >= DAILY_LIMIT) return false;
-    tx.update(ref, { count: data.count + 1 });
-    return true;
-  });
-}
-
 export async function POST(req: NextRequest) {
   const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) {
@@ -148,9 +128,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Connecte-toi pour utiliser la génération IA." }, { status: 401 });
   }
   try {
-    if (!(await checkRateLimit(uid))) {
+    if (!(await checkAiRateLimit(uid))) {
       return NextResponse.json(
-        { error: `Limite de ${DAILY_LIMIT} générations IA par jour atteinte, réessaie demain.` },
+        { error: `Limite de ${AI_DAILY_LIMIT} générations IA par jour atteinte, réessaie demain.` },
         { status: 429 },
       );
     }

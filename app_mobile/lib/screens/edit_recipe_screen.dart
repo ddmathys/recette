@@ -15,6 +15,7 @@ RecipeDraft _draftFromRecipe(Recipe r) => RecipeDraft(
       veg: r.veg,
       ingr: r.ingr.isNotEmpty ? [...r.ingr] : null,
       steps: r.steps.isNotEmpty ? [...r.steps] : null,
+      nutrition: r.nutrition,
     );
 
 /// Edit an existing recipe: manually, or via a free-text AI instruction
@@ -92,6 +93,7 @@ class _EditRecipeScreenState extends State<EditRecipeScreen> {
       veg: _draft.veg,
       ingr: ingr,
       steps: steps,
+      nutrition: _draft.nutrition,
     );
     try {
       await _recipeService.updateRecipeContent(widget.recipe.id, finalDraft);

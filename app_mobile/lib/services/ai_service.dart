@@ -57,6 +57,40 @@ class AiService {
     return _draftFromJson(Map<String, dynamic>.from(body['draft'] as Map), fallback: current);
   }
 
+  /// Sends an already-uploaded meal photo (Storage download URL) to Gemini
+  /// for identification + nutrition estimate. Mirrors LogMealDialog.tsx's
+  /// analyzePhoto() on the web. `recipes` is the household's recipe list,
+  /// passed as a matching hint.
+  Future<MealPhotoAnalysis> analyzeMealPhoto(String photoUrl, List<Recipe> recipes) async {
+    final res = await http
+        .post(
+          Uri.parse('$_baseUrl/api/analyze-meal-photo'),
+          headers: await _authHeaders(),
+          body: jsonEncode({
+            'photoUrl': photoUrl,
+            'recipes': recipes.map((r) => {'id': r.id, 'name': r.name}).toList(),
+          }),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final body = jsonDecode(res.body) as Map<String, dynamic>;
+    if (res.statusCode != 200) {
+      throw Exception(body['error']?.toString() ?? 'La reconnaissance photo a échoué.');
+    }
+    final d = Map<String, dynamic>.from(body['draft'] as Map);
+    num? asNum(dynamic v) => v is num ? v : num.tryParse('$v');
+    return MealPhotoAnalysis(
+      label: d['label']?.toString(),
+      portionGrams: asNum(d['portionGrams']),
+      kcal: asNum(d['kcal']),
+      proteinG: asNum(d['proteinG']),
+      carbsG: asNum(d['carbsG']),
+      fatG: asNum(d['fatG']),
+      mealType: d['mealType']?.toString(),
+      matchedRecipeId: d['matchedRecipeId']?.toString(),
+    );
+  }
+
   RecipeDraft _draftFromJson(Map<String, dynamic> d, {String? fallbackName, RecipeDraft? fallback}) {
     final validCat = kCategories.any((c) => c.key == d['cat']) ? d['cat'].toString() : (fallback?.cat ?? 'viande');
     final validDiff = kDifficulties.contains(d['diff']) ? d['diff'].toString() : (fallback?.diff ?? 'Facile');
@@ -75,6 +109,7 @@ class AiService {
       steps: (d['steps'] is List && (d['steps'] as List).isNotEmpty)
           ? (d['steps'] as List).map((e) => e.toString()).toList()
           : (fallback?.steps ?? ['']),
+      nutrition: NutritionEstimate.fromLoose(d['nutrition']) ?? fallback?.nutrition,
     );
   }
 }
@@ -83,4 +118,29 @@ class AiResult {
   final RecipeDraft draft;
   final String? ogImage;
   AiResult({required this.draft, this.ogImage});
+}
+
+/// Result of a photo analysis — a draft, not yet saved. Any field can be
+/// null if Gemini omitted it or returned something unusable; the caller
+/// falls back to whatever the form already had.
+class MealPhotoAnalysis {
+  final String? label;
+  final num? portionGrams;
+  final num? kcal;
+  final num? proteinG;
+  final num? carbsG;
+  final num? fatG;
+  final String? mealType;
+  final String? matchedRecipeId;
+
+  MealPhotoAnalysis({
+    this.label,
+    this.portionGrams,
+    this.kcal,
+    this.proteinG,
+    this.carbsG,
+    this.fatG,
+    this.mealType,
+    this.matchedRecipeId,
+  });
 }

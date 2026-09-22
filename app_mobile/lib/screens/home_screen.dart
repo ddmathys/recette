@@ -11,6 +11,7 @@ import '../services/recipe_service.dart';
 import '../theme.dart';
 import '../widgets/recipe_card.dart';
 import 'add_recipe_screen.dart';
+import 'nutrition_screen.dart';
 import 'recipe_detail_screen.dart';
 import 'share_screen.dart';
 
@@ -108,11 +109,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openRecipe(Recipe r) {
+    final profile = _profile;
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => RecipeDetailScreen(
         recipe: r,
         isFav: _favs.contains(r.id),
         onToggleFav: () => _toggleFav(r.id),
+        allRecipes: _recipes,
+        ownerUid: _uid,
+        ownerName: profile?.displayName ?? '',
+        householdId: profile?.householdId ?? _uid,
       ),
     ));
   }
@@ -144,6 +150,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text('${_recipes.length} recette${_recipes.length > 1 ? "s" : ""}',
                           style: const TextStyle(fontSize: 12, color: AppColors.inkSoft, fontWeight: FontWeight.w600)),
                       const Spacer(),
+                      if (profile != null)
+                        IconButton(
+                          tooltip: 'Journal',
+                          onPressed: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => NutritionScreen(
+                                householdId: profile.householdId,
+                                ownerUid: _uid,
+                                ownerName: profile.displayName,
+                                recipes: _recipes,
+                              ),
+                            ));
+                          },
+                          icon: const Icon(Icons.menu_book_outlined, size: 20, color: AppColors.inkSoft),
+                        ),
                       if (profile != null)
                         IconButton(
                           tooltip: 'Partage',

@@ -13,6 +13,71 @@ class Ingredient {
   Map<String, dynamic> toMap() => {'name': name, 'qty': qty};
 }
 
+/// Per-serving nutrition estimate. Mirrors NutritionEstimate in
+/// ../../src/lib/types.ts — computed by DeepSeek at parse/edit time,
+/// always editable by hand (`estimatedBy` is purely informational).
+class NutritionEstimate {
+  final num kcal;
+  final num proteinG;
+  final num carbsG;
+  final num fatG;
+  final num gramsPerServing;
+  final String estimatedBy; // "ai" | "manual"
+
+  const NutritionEstimate({
+    required this.kcal,
+    required this.proteinG,
+    required this.carbsG,
+    required this.fatG,
+    required this.gramsPerServing,
+    this.estimatedBy = 'manual',
+  });
+
+  Map<String, dynamic> toMap() => {
+        'kcal': kcal,
+        'proteinG': proteinG,
+        'carbsG': carbsG,
+        'fatG': fatG,
+        'gramsPerServing': gramsPerServing,
+        'estimatedBy': estimatedBy,
+      };
+
+  /// Validates/coerces a loosely-typed map (AI response or Firestore data)
+  /// into a NutritionEstimate, or null if the shape is unusable — mirrors
+  /// sanitizeNutrition() in ../../src/lib/nutrition.ts.
+  static NutritionEstimate? fromLoose(dynamic m, {String estimatedBy = 'ai'}) {
+    if (m == null || m is! Map) return null;
+    num? asNum(dynamic v) => v is num ? v : num.tryParse('$v');
+    final kcal = asNum(m['kcal']);
+    final proteinG = asNum(m['proteinG']);
+    final carbsG = asNum(m['carbsG']);
+    final fatG = asNum(m['fatG']);
+    final gramsPerServing = asNum(m['gramsPerServing']);
+    if ([kcal, proteinG, carbsG, fatG, gramsPerServing].any((v) => v == null || v < 0)) return null;
+    return NutritionEstimate(
+      kcal: kcal!,
+      proteinG: proteinG!,
+      carbsG: carbsG!,
+      fatG: fatG!,
+      gramsPerServing: gramsPerServing!,
+      estimatedBy: (m['estimatedBy'] ?? estimatedBy).toString(),
+    );
+  }
+
+  /// Scales this per-serving estimate to an arbitrary portion size in
+  /// grams — used when logging a meal with a different portion than the
+  /// recipe's own gramsPerServing.
+  Map<String, num> scaledTo(num portionGrams) {
+    final ratio = gramsPerServing > 0 ? portionGrams / gramsPerServing : 1;
+    return {
+      'kcal': (kcal * ratio).round(),
+      'proteinG': (proteinG * ratio).round(),
+      'carbsG': (carbsG * ratio).round(),
+      'fatG': (fatG * ratio).round(),
+    };
+  }
+}
+
 class Recipe {
   final String id;
   final String name;
@@ -29,6 +94,7 @@ class Recipe {
   final String notes;
   final String? createdAt;
   final List<String> eatenDates;
+  final NutritionEstimate? nutrition;
   /// Shared-library scope — see services/household_service.dart. Recipes
   /// are only visible to members of this household.
   final String? householdId;
@@ -56,6 +122,7 @@ class Recipe {
     this.householdId,
     this.ownerId,
     this.ownerName,
+    this.nutrition,
   });
 
   /// Merges an edited draft's content fields back onto this recipe,
@@ -81,6 +148,7 @@ class Recipe {
         householdId: householdId,
         ownerId: ownerId,
         ownerName: ownerName,
+        nutrition: draft.nutrition,
       );
 
   Recipe copyWith({String? photoUrl, List<String>? eatenDates}) => Recipe(
@@ -102,6 +170,7 @@ class Recipe {
         householdId: householdId,
         ownerId: ownerId,
         ownerName: ownerName,
+        nutrition: nutrition,
       );
 
   factory Recipe.fromMap(String id, Map<String, dynamic> m) => Recipe(
@@ -125,6 +194,7 @@ class Recipe {
         householdId: m['householdId']?.toString(),
         ownerId: m['ownerId']?.toString(),
         ownerName: m['ownerName']?.toString(),
+        nutrition: NutritionEstimate.fromLoose(m['nutrition']),
       );
 }
 
@@ -169,6 +239,7 @@ class RecipeDraft {
   bool veg;
   List<Ingredient> ingr;
   List<String> steps;
+  NutritionEstimate? nutrition;
 
   RecipeDraft({
     this.name = '',
@@ -179,6 +250,7 @@ class RecipeDraft {
     this.veg = false,
     List<Ingredient>? ingr,
     List<String>? steps,
+    this.nutrition,
   })  : ingr = ingr ?? [const Ingredient(name: '', qty: '')],
         steps = steps ?? [''];
 
@@ -191,6 +263,103 @@ class RecipeDraft {
         'veg': veg,
         'ingr': ingr.map((e) => e.toMap()).toList(),
         'steps': steps,
+        if (nutrition != null) 'nutrition': nutrition!.toMap(),
+      };
+}
+
+/// mealLogs/{id} — a logged meal, independent of Recipe.eatenDates (which
+/// is just a per-recipe checked-date list with no quantity/macros). Mirrors
+/// MealLog in ../../src/lib/types.ts.
+class MealLog {
+  final String id;
+  final String householdId;
+  final String ownerId;
+  final String ownerName;
+  final String? recipeId;
+  final String label;
+  final String mealType; // "petit-dej" | "dejeuner" | "diner" | "collation"
+  final String eatenAt; // ISO datetime
+  final num portionGrams;
+  final num kcal;
+  final num proteinG;
+  final num carbsG;
+  final num fatG;
+  final String? photoUrl;
+  final String source; // "photo" | "recipe" | "manual"
+  final String createdAt;
+
+  const MealLog({
+    required this.id,
+    required this.householdId,
+    required this.ownerId,
+    required this.ownerName,
+    this.recipeId,
+    required this.label,
+    required this.mealType,
+    required this.eatenAt,
+    required this.portionGrams,
+    required this.kcal,
+    required this.proteinG,
+    required this.carbsG,
+    required this.fatG,
+    this.photoUrl,
+    required this.source,
+    required this.createdAt,
+  });
+
+  factory MealLog.fromMap(String id, Map<String, dynamic> m) => MealLog(
+        id: id,
+        householdId: (m['householdId'] ?? '').toString(),
+        ownerId: (m['ownerId'] ?? '').toString(),
+        ownerName: (m['ownerName'] ?? '').toString(),
+        recipeId: m['recipeId']?.toString(),
+        label: (m['label'] ?? '').toString(),
+        mealType: (m['mealType'] ?? 'dejeuner').toString(),
+        eatenAt: (m['eatenAt'] ?? '').toString(),
+        portionGrams: (m['portionGrams'] as num?) ?? 0,
+        kcal: (m['kcal'] as num?) ?? 0,
+        proteinG: (m['proteinG'] as num?) ?? 0,
+        carbsG: (m['carbsG'] as num?) ?? 0,
+        fatG: (m['fatG'] as num?) ?? 0,
+        photoUrl: m['photoUrl']?.toString(),
+        source: (m['source'] ?? 'manual').toString(),
+        createdAt: (m['createdAt'] ?? '').toString(),
+      );
+}
+
+class MealLogDraft {
+  String? recipeId;
+  String label;
+  String mealType;
+  DateTime eatenAt;
+  num portionGrams;
+  num kcal;
+  num proteinG;
+  num carbsG;
+  num fatG;
+
+  MealLogDraft({
+    this.recipeId,
+    this.label = '',
+    required this.mealType,
+    required this.eatenAt,
+    this.portionGrams = 250,
+    this.kcal = 0,
+    this.proteinG = 0,
+    this.carbsG = 0,
+    this.fatG = 0,
+  });
+
+  Map<String, dynamic> toMap() => {
+        'recipeId': recipeId,
+        'label': label,
+        'mealType': mealType,
+        'eatenAt': eatenAt.toUtc().toIso8601String(),
+        'portionGrams': portionGrams,
+        'kcal': kcal,
+        'proteinG': proteinG,
+        'carbsG': carbsG,
+        'fatG': fatG,
       };
 }
 

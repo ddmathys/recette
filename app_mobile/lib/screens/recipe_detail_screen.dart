@@ -6,17 +6,26 @@ import '../models.dart';
 import '../services/recipe_service.dart';
 import '../theme.dart';
 import 'edit_recipe_screen.dart';
+import 'log_meal_screen.dart';
 
 class RecipeDetailScreen extends StatefulWidget {
   final Recipe recipe;
   final bool isFav;
   final VoidCallback onToggleFav;
+  final List<Recipe> allRecipes;
+  final String ownerUid;
+  final String ownerName;
+  final String householdId;
 
   const RecipeDetailScreen({
     super.key,
     required this.recipe,
     required this.isFav,
     required this.onToggleFav,
+    required this.allRecipes,
+    required this.ownerUid,
+    required this.ownerName,
+    required this.householdId,
   });
 
   @override
@@ -177,6 +186,10 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                           _Badge(value: '${_recipe.servings}', label: 'Personnes'),
                           const SizedBox(width: 22),
                           _Badge(value: _recipe.diff, label: 'Difficulté'),
+                          if (_recipe.nutrition != null) ...[
+                            const SizedBox(width: 22),
+                            _Badge(value: '${_recipe.nutrition!.kcal} kcal', label: 'Par portion'),
+                          ],
                         ],
                       ),
                     ),
@@ -191,6 +204,38 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       label: const Text('Modifier'),
                     ),
                   ],
+                ),
+                if (_recipe.nutrition != null) ...[
+                  const SizedBox(height: 14),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(color: AppColors.surface2, borderRadius: BorderRadius.circular(12)),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _Badge(value: '${_recipe.nutrition!.gramsPerServing} g', label: 'Poids'),
+                        _Badge(value: '${_recipe.nutrition!.proteinG} g', label: 'Protéines'),
+                        _Badge(value: '${_recipe.nutrition!.carbsG} g', label: 'Glucides'),
+                        _Badge(value: '${_recipe.nutrition!.fatG} g', label: 'Lipides'),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 14),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => LogMealScreen(
+                        recipes: widget.allRecipes,
+                        initialRecipe: _recipe,
+                        ownerUid: widget.ownerUid,
+                        ownerName: widget.ownerName,
+                        householdId: widget.householdId,
+                      ),
+                    ));
+                  },
+                  icon: const Icon(Icons.restaurant, size: 16),
+                  label: const Text('Manger ce repas'),
                 ),
                 if (_recipe.note != null) ...[
                   const SizedBox(height: 14),

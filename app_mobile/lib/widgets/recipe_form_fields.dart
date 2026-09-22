@@ -106,6 +106,75 @@ class RecipeCoreFields extends StatelessWidget {
         const SizedBox(height: 18),
         const FieldLabel('Étapes'),
         _StepList(draft: draft, onChanged: onChanged),
+        const SizedBox(height: 18),
+        NutritionFields(draft: draft, onChanged: onChanged),
+      ],
+    );
+  }
+}
+
+/// Kcal/macros/weight per serving — editable estimate, mirrors the
+/// "Nutrition (par portion)" section in ../../src/components/RecipeCoreFields.tsx.
+class NutritionFields extends StatelessWidget {
+  final RecipeDraft draft;
+  final VoidCallback onChanged;
+  const NutritionFields({super.key, required this.draft, required this.onChanged});
+
+  void _update(String field, num value) {
+    final n = draft.nutrition;
+    draft.nutrition = NutritionEstimate(
+      kcal: field == 'kcal' ? value : (n?.kcal ?? 0),
+      proteinG: field == 'proteinG' ? value : (n?.proteinG ?? 0),
+      carbsG: field == 'carbsG' ? value : (n?.carbsG ?? 0),
+      fatG: field == 'fatG' ? value : (n?.fatG ?? 0),
+      gramsPerServing: field == 'gramsPerServing' ? value : (n?.gramsPerServing ?? 0),
+      estimatedBy: 'manual',
+    );
+    onChanged();
+  }
+
+  Widget _field(String label, num? value, String key) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        FieldLabel(label),
+        TextFormField(
+          key: ValueKey('nutrition-$key-${draft.hashCode}'),
+          initialValue: '${value ?? ''}',
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(isDense: true),
+          onChanged: (v) => _update(key, num.tryParse(v) ?? 0),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final n = draft.nutrition;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            FieldLabel('Nutrition (par portion)'),
+            if (n?.estimatedBy == 'ai') ...[
+              const SizedBox(width: 6),
+              const Text('— estimation IA, modifiable', style: TextStyle(fontSize: 10.5, color: AppColors.inkSoft)),
+            ],
+          ],
+        ),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            SizedBox(width: 90, child: _field('Poids (g)', n?.gramsPerServing, 'gramsPerServing')),
+            SizedBox(width: 90, child: _field('Kcal', n?.kcal, 'kcal')),
+            SizedBox(width: 90, child: _field('Protéines (g)', n?.proteinG, 'proteinG')),
+            SizedBox(width: 90, child: _field('Glucides (g)', n?.carbsG, 'carbsG')),
+            SizedBox(width: 90, child: _field('Lipides (g)', n?.fatG, 'fatG')),
+          ],
+        ),
       ],
     );
   }

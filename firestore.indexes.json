@@ -7,6 +7,14 @@
         { "fieldPath": "householdId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "mealLogs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "householdId", "order": "ASCENDING" },
+        { "fieldPath": "eatenAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

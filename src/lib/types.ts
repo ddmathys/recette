@@ -17,6 +17,19 @@ export interface Ingredient {
   qty: string;
 }
 
+/** Estimation nutritionnelle pour une portion (une part servie, pas toute la
+ * recette). Calculée par DeepSeek au moment du parse/edit — approximative
+ * par nature, donc toujours éditable à la main (`estimatedBy` distingue
+ * les deux origines, purement informatif). */
+export interface NutritionEstimate {
+  kcal: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+  gramsPerServing: number;
+  estimatedBy: "ai" | "manual";
+}
+
 export interface Recipe {
   id: string;
   name: string;
@@ -33,6 +46,7 @@ export interface Recipe {
   notes?: string;
   createdAt?: string;
   eatenDates?: string[];
+  nutrition?: NutritionEstimate | null;
   /** Shared-library scope — see src/lib/useHousehold.ts. Recipes are only
    * visible to members of this household. Optional in the type only to
    * cover pre-migration data read by old cached code; every doc has it. */
@@ -68,4 +82,43 @@ export interface RecipeDraft {
   veg: boolean;
   ingr: Ingredient[];
   steps: string[];
+  nutrition?: NutritionEstimate | null;
+}
+
+/** Repas mangé, éventuellement lié à une recette — journal alimentaire
+ * indépendant de `Recipe.eatenDates` (qui n'est qu'une case à cocher par
+ * recette, sans quantité ni valeurs nutritionnelles). Collection Firestore
+ * top-level `mealLogs`, scopée par householdId comme `recipes`. */
+export type MealType = "petit-dej" | "dejeuner" | "diner" | "collation";
+export type MealSource = "manual" | "recipe" | "photo";
+
+export interface MealLog {
+  id: string;
+  householdId: string;
+  ownerId: string;
+  ownerName: string;
+  recipeId?: string | null;
+  label: string;
+  mealType: MealType;
+  eatenAt: string;
+  portionGrams: number;
+  kcal: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+  photoUrl?: string | null;
+  source: MealSource;
+  createdAt: string;
+}
+
+export interface MealLogDraft {
+  recipeId?: string | null;
+  label: string;
+  mealType: MealType;
+  eatenAt: string;
+  portionGrams: number;
+  kcal: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
 }

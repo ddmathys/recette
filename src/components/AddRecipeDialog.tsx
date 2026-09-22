@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CATEGORIES } from "@/lib/categories";
 import { compressImageIfNeeded } from "@/lib/compressImage";
 import { auth } from "@/lib/firebase";
+import { sanitizeNutrition } from "@/lib/nutrition";
 import type { CategoryKey, Difficulty, Ingredient, RecipeDraft } from "@/lib/types";
 import { addRecipe, uploadRecipePhoto } from "@/lib/useRecipes";
 import { Field } from "./RecipeFormFields";
@@ -38,6 +39,7 @@ export function AddRecipeDialog({
     veg: false,
     ingr: [{ name: "", qty: "" }],
     steps: [""],
+    nutrition: null,
   });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -79,6 +81,7 @@ export function AddRecipeDialog({
         veg: false,
         ingr: [{ name: "", qty: "" }],
         steps: [""],
+        nutrition: null,
       },
     );
     setStage("form");
@@ -115,6 +118,7 @@ export function AddRecipeDialog({
         veg: Boolean(d.veg),
         ingr: Array.isArray(d.ingr) && d.ingr.length ? (d.ingr as Ingredient[]) : [{ name: "", qty: "" }],
         steps: Array.isArray(d.steps) && d.steps.length ? (d.steps as string[]) : [""],
+        nutrition: sanitizeNutrition(d.nutrition, "ai"),
       });
       if (data.ogImage) setSuggestedPhoto(data.ogImage);
     } catch (e) {

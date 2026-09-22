@@ -38,6 +38,17 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && resource.data.householdId == myHouseholdId();
     }
 
+    // Journal alimentaire — voir src/lib/useMealLogs.ts. Même scoping que
+    // recipes : visible/modifiable par les membres du foyer, création
+    // forcée sur son propre uid et le foyer courant.
+    match /mealLogs/{logId} {
+      allow read: if request.auth != null && resource.data.householdId == myHouseholdId();
+      allow create: if request.auth != null
+                    && request.resource.data.ownerId == request.auth.uid
+                    && request.resource.data.householdId == myHouseholdId();
+      allow update, delete: if request.auth != null && resource.data.householdId == myHouseholdId();
+    }
+
     match /rateLimits/{uid} {
       // Écrit uniquement par le serveur (Admin SDK, contourne ces règles) —
       // fermé aux clients.

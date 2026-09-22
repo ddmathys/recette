@@ -25,6 +25,15 @@ service firebase.storage {
       // deleted).
       allow delete: if request.auth != null;
     }
+    // Photos de repas (journal alimentaire) — même compromis d'accès que
+    // recipes/ ci-dessus (authentifié seulement, pas de scoping par foyer).
+    match /mealPhotos/{uid}/{fileName} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null;
+    }
     match /{allPaths=**} {
       allow read, write: if false;
     }

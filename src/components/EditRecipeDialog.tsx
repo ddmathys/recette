@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CATEGORIES } from "@/lib/categories";
 import { auth } from "@/lib/firebase";
+import { sanitizeNutrition } from "@/lib/nutrition";
 import type { Difficulty, CategoryKey, Recipe, RecipeDraft } from "@/lib/types";
 import { updateRecipeContent } from "@/lib/useRecipes";
 import { Field } from "./RecipeFormFields";
@@ -20,6 +21,7 @@ function draftFromRecipe(r: Recipe): RecipeDraft {
     veg: r.veg,
     ingr: r.ingr.length ? r.ingr : [{ name: "", qty: "" }],
     steps: r.steps.length ? r.steps : [""],
+    nutrition: r.nutrition ?? null,
   };
 }
 
@@ -62,6 +64,7 @@ export function EditRecipeDialog({ recipe, onClose }: { recipe: Recipe; onClose:
         veg: typeof d.veg === "boolean" ? d.veg : draft.veg,
         ingr: Array.isArray(d.ingr) && d.ingr.length ? d.ingr : draft.ingr,
         steps: Array.isArray(d.steps) && d.steps.length ? d.steps : draft.steps,
+        nutrition: sanitizeNutrition(d.nutrition, "ai") ?? draft.nutrition,
       });
       setInstruction("");
     } catch (e) {

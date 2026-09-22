@@ -8,6 +8,8 @@ import { RecipeDetail } from "@/components/RecipeDetail";
 import { AddRecipeDialog } from "@/components/AddRecipeDialog";
 import { EditRecipeDialog } from "@/components/EditRecipeDialog";
 import { ShareSettings } from "@/components/ShareSettings";
+import { LogMealDialog } from "@/components/LogMealDialog";
+import { NutritionPanel } from "@/components/NutritionPanel";
 import {
   useRecipes,
   saveNotes,
@@ -16,6 +18,7 @@ import {
   addEatenDate,
   removeEatenDate,
 } from "@/lib/useRecipes";
+import { useMealLogs } from "@/lib/useMealLogs";
 import { useFavorites } from "@/lib/useFavorites";
 import { firebaseEnabled } from "@/lib/firebase";
 import { useAuth, signOut } from "@/lib/useAuth";
@@ -45,6 +48,7 @@ export default function Home() {
 function RecipeLibrary({ uid }: { uid: string | null }) {
   const { profile, household, loading: householdLoading } = useHousehold(uid);
   const { recipes, readOnly } = useRecipes(profile?.householdId ?? null);
+  const { logs: mealLogs } = useMealLogs(profile?.householdId ?? null);
   const { favs, toggle: toggleFav } = useFavorites();
 
   const [search, setSearch] = useState("");
@@ -58,6 +62,8 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
   const [editOpen, setEditOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [journalOpen, setJournalOpen] = useState(false);
+  const [logMealFor, setLogMealFor] = useState<"none" | "blank" | "open">("none");
 
   const freq = useMemo(() => {
     const f: Record<string, number> = {};
@@ -139,6 +145,14 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
             <span className="text-[0.78rem] font-semibold text-ink-soft">{recipes.length} recette{recipes.length > 1 ? "s" : ""}</span>
             {firebaseEnabled && (
               <div className="ml-auto flex shrink-0 items-center gap-2">
+                {profile && (
+                  <button
+                    onClick={() => setJournalOpen(true)}
+                    className="rounded-full border border-line bg-surface px-3 py-1.5 text-[0.76rem] font-semibold text-ink-soft hover:border-accent hover:text-accent"
+                  >
+                    Journal
+                  </button>
+                )}
                 {profile && (
                   <button
                     onClick={() => setShareOpen(true)}
@@ -264,6 +278,7 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
           onAddEatenDate={(date) => addEatenDate(openRecipe.id, date)}
           onRemoveEatenDate={(date) => removeEatenDate(openRecipe.id, date)}
           onEdit={() => setEditOpen(true)}
+          onLogMeal={() => setLogMealFor("open")}
           readOnly={readOnly}
         />
       )}
@@ -279,6 +294,24 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
 
       {shareOpen && uid && profile && (
         <ShareSettings uid={uid} profile={profile} household={household} onClose={() => setShareOpen(false)} />
+      )}
+
+      {journalOpen && (
+        <NutritionPanel
+          logs={mealLogs}
+          onClose={() => setJournalOpen(false)}
+          onAddMeal={() => setLogMealFor("blank")}
+          readOnly={readOnly}
+        />
+      )}
+
+      {logMealFor !== "none" && uid && profile && (
+        <LogMealDialog
+          recipes={recipes}
+          initialRecipe={logMealFor === "open" ? openRecipe : null}
+          owner={{ uid, name: profile.displayName, householdId: profile.householdId }}
+          onClose={() => setLogMealFor("none")}
+        />
       )}
     </div>
   );

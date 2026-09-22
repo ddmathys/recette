@@ -58,7 +58,8 @@ L'utilisateur demande la modification suivante : "${instruction}"
 
 Applique cette modification à la recette. Garde tout le reste identique (mêmes ingrédients, mêmes étapes, mêmes quantités) sauf si la demande implique explicitement un changement plus large. Ajuste temps/personnes/difficulté/végétarien si la modification les affecte.
 Réponds UNIQUEMENT avec un objet JSON valide (aucun texte autour, pas de balises markdown) représentant la recette mise à jour, au format exact :
-{"name": string, "cat": une valeur parmi [${catList}], "time": nombre entier de minutes de préparation active, "diff": "Facile" ou "Moyen" ou "Avancé", "servings": nombre entier de personnes, "veg": true si la recette ne contient ni viande ni poisson sinon false, "ingr": tableau de paires {"name": string, "qty": string}, "steps": tableau de 3 à 6 étapes concises en français}`;
+{"name": string, "cat": une valeur parmi [${catList}], "time": nombre entier de minutes de préparation active, "diff": "Facile" ou "Moyen" ou "Avancé", "servings": nombre entier de personnes, "veg": true si la recette ne contient ni viande ni poisson sinon false, "ingr": tableau de paires {"name": string, "qty": string}, "steps": tableau de 3 à 6 étapes concises en français, "nutrition": {"kcal": nombre, "proteinG": nombre, "carbsG": nombre, "fatG": nombre, "gramsPerServing": nombre entier}}
+Recalcule "nutrition" (valeurs pour UNE portion) si la modification change les ingrédients, les quantités ou le nombre de personnes ; sinon reprends l'estimation existante si elle est cohérente.`;
 
   try {
     const resp = await fetch("https://api.deepseek.com/chat/completions", {

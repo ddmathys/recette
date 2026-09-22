@@ -30,6 +30,7 @@ export function RecipeDetail({
   onAddEatenDate,
   onRemoveEatenDate,
   onEdit,
+  onLogMeal,
   readOnly,
 }: {
   recipe: Recipe;
@@ -42,6 +43,7 @@ export function RecipeDetail({
   onAddEatenDate: (date: string) => Promise<unknown>;
   onRemoveEatenDate: (date: string) => Promise<unknown>;
   onEdit: () => void;
+  onLogMeal: () => void;
   readOnly: boolean;
 }) {
   const cat = getCategoryMeta(recipe.cat);
@@ -215,6 +217,7 @@ export function RecipeDetail({
               <Badge value={`${recipe.time} min`} label="Préparation" />
               <Badge value={String(recipe.servings)} label="Personnes" />
               <Badge value={recipe.diff} label="Difficulté" />
+              {recipe.nutrition && <Badge value={`${recipe.nutrition.kcal} kcal`} label="Par portion" />}
             </div>
             {!readOnly && (
               <button
@@ -229,6 +232,27 @@ export function RecipeDetail({
               </button>
             )}
           </div>
+
+          {recipe.nutrition && (
+            <div className="flex flex-wrap gap-3.5 rounded-xl border border-line bg-surface-2 px-3.5 py-2.5">
+              <Badge value={`${recipe.nutrition.gramsPerServing} g`} label="Poids" />
+              <Badge value={`${recipe.nutrition.proteinG} g`} label="Protéines" />
+              <Badge value={`${recipe.nutrition.carbsG} g`} label="Glucides" />
+              <Badge value={`${recipe.nutrition.fatG} g`} label="Lipides" />
+            </div>
+          )}
+
+          {!readOnly && (
+            <button
+              onClick={onLogMeal}
+              className="inline-flex items-center justify-center gap-1.5 self-start rounded-full bg-accent px-3.5 py-2 text-[0.82rem] font-bold text-accent-ink"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              Manger ce repas
+            </button>
+          )}
 
           {recipe.note && (
             <p className="inline-block rounded-lg bg-gold/15 px-2.5 py-1.5 text-[0.8rem] text-gold">{recipe.note}</p>

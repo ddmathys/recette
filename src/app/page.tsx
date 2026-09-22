@@ -5,11 +5,10 @@ import { Toolbar, TIME_BUCKETS, type TimeBucketKey } from "@/components/Toolbar"
 import { FilterDrawer } from "@/components/FilterDrawer";
 import { RecipeCard } from "@/components/RecipeCard";
 import { RecipeDetail } from "@/components/RecipeDetail";
-import { AddRecipeDialog } from "@/components/AddRecipeDialog";
 import { EditRecipeDialog } from "@/components/EditRecipeDialog";
 import { ShareSettings } from "@/components/ShareSettings";
-import { LogMealDialog } from "@/components/LogMealDialog";
-import { NutritionPanel } from "@/components/NutritionPanel";
+import { CaptureDialog } from "@/components/CaptureDialog";
+import { Dashboard } from "@/components/Dashboard";
 import {
   useRecipes,
   saveNotes,
@@ -22,7 +21,7 @@ import { useMealLogs } from "@/lib/useMealLogs";
 import { useFavorites } from "@/lib/useFavorites";
 import { firebaseEnabled } from "@/lib/firebase";
 import { useAuth, signOut } from "@/lib/useAuth";
-import { useHousehold } from "@/lib/useHousehold";
+import { useHousehold, setDailyKcalGoal } from "@/lib/useHousehold";
 import { AuthLanding } from "@/components/AuthGate";
 import type { CategoryKey } from "@/lib/types";
 
@@ -58,12 +57,10 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
   const [favOnly, setFavOnly] = useState(false);
   const [ingredients, setIngredients] = useState<Set<string>>(new Set());
   const [openId, setOpenId] = useState<string | null>(null);
-  const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [journalOpen, setJournalOpen] = useState(false);
-  const [logMealFor, setLogMealFor] = useState<"none" | "blank" | "open">("none");
+  const [captureFor, setCaptureFor] = useState<"none" | "dashboard" | "library" | "recipe">("none");
 
   const freq = useMemo(() => {
     const f: Record<string, number> = {};
@@ -147,14 +144,6 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
               <div className="ml-auto flex shrink-0 items-center gap-2">
                 {profile && (
                   <button
-                    onClick={() => setJournalOpen(true)}
-                    className="rounded-full border border-line bg-surface px-3 py-1.5 text-[0.76rem] font-semibold text-ink-soft hover:border-accent hover:text-accent"
-                  >
-                    Journal
-                  </button>
-                )}
-                {profile && (
-                  <button
                     onClick={() => setShareOpen(true)}
                     className="rounded-full border border-line bg-surface px-3 py-1.5 text-[0.76rem] font-semibold text-ink-soft hover:border-accent hover:text-accent"
                   >
@@ -176,7 +165,7 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
             onSearch={setSearch}
             onOpenFilters={() => setFiltersOpen(true)}
             activeFilterCount={activeFilterCount}
-            onAdd={() => setAddOpen(true)}
+            onAdd={() => setCaptureFor("library")}
             addAvailable={canAdd}
           />
           {!firebaseEnabled && (
@@ -213,6 +202,18 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
       </header>
 
       <main className="mx-auto w-full max-w-[1180px] flex-1 px-4">
+        {firebaseEnabled && profile && (
+          <div className="pt-3">
+            <Dashboard
+              logs={mealLogs}
+              dailyKcalGoal={profile.dailyKcalGoal}
+              onSetGoal={(v) => setDailyKcalGoal(uid!, v)}
+              onAddMeal={() => setCaptureFor("dashboard")}
+              readOnly={readOnly}
+            />
+          </div>
+        )}
+
         <div className="flex flex-wrap items-baseline justify-between gap-2.5 py-3">
           <span className="text-[0.8rem] font-semibold text-ink-soft">
             <strong className="text-ink">{filtered.length}</strong> recette{filtered.length > 1 ? "s" : ""}
@@ -278,39 +279,25 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
           onAddEatenDate={(date) => addEatenDate(openRecipe.id, date)}
           onRemoveEatenDate={(date) => removeEatenDate(openRecipe.id, date)}
           onEdit={() => setEditOpen(true)}
-          onLogMeal={() => setLogMealFor("open")}
+          onLogMeal={() => setCaptureFor("recipe")}
           readOnly={readOnly}
         />
       )}
 
       {editOpen && openRecipe && <EditRecipeDialog recipe={openRecipe} onClose={() => setEditOpen(false)} />}
 
-      {addOpen && uid && profile && (
-        <AddRecipeDialog
-          owner={{ uid, name: profile.displayName, householdId: profile.householdId }}
-          onClose={() => setAddOpen(false)}
-        />
-      )}
-
       {shareOpen && uid && profile && (
         <ShareSettings uid={uid} profile={profile} household={household} onClose={() => setShareOpen(false)} />
       )}
 
-      {journalOpen && (
-        <NutritionPanel
-          logs={mealLogs}
-          onClose={() => setJournalOpen(false)}
-          onAddMeal={() => setLogMealFor("blank")}
-          readOnly={readOnly}
-        />
-      )}
-
-      {logMealFor !== "none" && uid && profile && (
-        <LogMealDialog
+      {captureFor !== "none" && uid && profile && (
+        <CaptureDialog
           recipes={recipes}
-          initialRecipe={logMealFor === "open" ? openRecipe : null}
           owner={{ uid, name: profile.displayName, householdId: profile.householdId }}
-          onClose={() => setLogMealFor("none")}
+          initialRecipe={captureFor === "recipe" ? openRecipe : null}
+          defaultLogMeal={captureFor !== "library"}
+          defaultAddToLibrary={captureFor === "library"}
+          onClose={() => setCaptureFor("none")}
         />
       )}
     </div>

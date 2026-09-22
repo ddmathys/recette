@@ -3,11 +3,12 @@
 import { CATEGORIES } from "@/lib/categories";
 import type { CategoryKey, Difficulty, RecipeDraft } from "@/lib/types";
 import { AddRowButton, Field, RemoveButton } from "./RecipeFormFields";
+import { NutritionFields } from "./NutritionFields";
 
 const DIFFICULTIES: Difficulty[] = ["Facile", "Moyen", "Avancé"];
 
 /** Name/category/time/difficulty/servings/veg/ingredients/steps — the part
- * of the recipe form shared between AddRecipeDialog and EditRecipeDialog.
+ * of the recipe form shared between CaptureDialog and EditRecipeDialog.
  * Photo handling stays in each caller since the two flows attach it
  * differently (new doc vs. existing one). */
 export function RecipeCoreFields({
@@ -25,20 +26,6 @@ export function RecipeCoreFields({
   }
   function updateStep(idx: number, value: string) {
     setDraft((d) => ({ ...d, steps: d.steps.map((s, i) => (i === idx ? value : s)) }));
-  }
-  function updateNutrition(field: "kcal" | "proteinG" | "carbsG" | "fatG" | "gramsPerServing", value: number) {
-    setDraft((d) => ({
-      ...d,
-      nutrition: {
-        kcal: d.nutrition?.kcal ?? 0,
-        proteinG: d.nutrition?.proteinG ?? 0,
-        carbsG: d.nutrition?.carbsG ?? 0,
-        fatG: d.nutrition?.fatG ?? 0,
-        gramsPerServing: d.nutrition?.gramsPerServing ?? 0,
-        [field]: value,
-        estimatedBy: "manual",
-      },
-    }));
   }
 
   return (
@@ -163,61 +150,7 @@ export function RecipeCoreFields({
         </AddRowButton>
       </div>
 
-      <div>
-        <p className="mb-2.5 text-[0.72rem] font-semibold uppercase tracking-wider text-ink-soft">
-          Nutrition (par portion)
-          {draft.nutrition?.estimatedBy === "ai" && (
-            <span className="ml-1.5 normal-case tracking-normal text-ink-soft/80">— estimation IA, modifiable</span>
-          )}
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <Field label="Poids (g)" className="flex-1 basis-24">
-            <input
-              type="number"
-              min={0}
-              value={draft.nutrition?.gramsPerServing ?? ""}
-              onChange={(e) => updateNutrition("gramsPerServing", Number(e.target.value) || 0)}
-              className="w-full rounded-lg border border-line bg-surface-2 px-2.5 py-1.5 text-[0.86rem] text-ink outline-none"
-            />
-          </Field>
-          <Field label="Kcal" className="flex-1 basis-24">
-            <input
-              type="number"
-              min={0}
-              value={draft.nutrition?.kcal ?? ""}
-              onChange={(e) => updateNutrition("kcal", Number(e.target.value) || 0)}
-              className="w-full rounded-lg border border-line bg-surface-2 px-2.5 py-1.5 text-[0.86rem] text-ink outline-none"
-            />
-          </Field>
-          <Field label="Protéines (g)" className="flex-1 basis-24">
-            <input
-              type="number"
-              min={0}
-              value={draft.nutrition?.proteinG ?? ""}
-              onChange={(e) => updateNutrition("proteinG", Number(e.target.value) || 0)}
-              className="w-full rounded-lg border border-line bg-surface-2 px-2.5 py-1.5 text-[0.86rem] text-ink outline-none"
-            />
-          </Field>
-          <Field label="Glucides (g)" className="flex-1 basis-24">
-            <input
-              type="number"
-              min={0}
-              value={draft.nutrition?.carbsG ?? ""}
-              onChange={(e) => updateNutrition("carbsG", Number(e.target.value) || 0)}
-              className="w-full rounded-lg border border-line bg-surface-2 px-2.5 py-1.5 text-[0.86rem] text-ink outline-none"
-            />
-          </Field>
-          <Field label="Lipides (g)" className="flex-1 basis-24">
-            <input
-              type="number"
-              min={0}
-              value={draft.nutrition?.fatG ?? ""}
-              onChange={(e) => updateNutrition("fatG", Number(e.target.value) || 0)}
-              className="w-full rounded-lg border border-line bg-surface-2 px-2.5 py-1.5 text-[0.86rem] text-ink outline-none"
-            />
-          </Field>
-        </div>
-      </div>
+      <NutritionFields draft={draft} setDraft={setDraft} />
     </>
   );
 }

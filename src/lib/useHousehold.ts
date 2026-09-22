@@ -101,6 +101,11 @@ export async function joinHousehold(myUid: string, targetEmail: string): Promise
   await updateDoc(doc(db, "users", myUid), { householdId: target.uid });
 }
 
+export async function setDailyKcalGoal(uid: string, goal: number): Promise<void> {
+  if (!db) throw new Error("Firebase n'est pas configuré.");
+  await updateDoc(doc(db, "users", uid), { dailyKcalGoal: goal });
+}
+
 export async function leaveHousehold(myUid: string, currentHouseholdId: string): Promise<void> {
   if (!db) throw new Error("Firebase n'est pas configuré.");
   if (currentHouseholdId !== myUid) {

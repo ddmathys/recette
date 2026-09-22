@@ -64,6 +64,10 @@ export interface UserProfile {
   email: string;
   displayName: string;
   householdId: string;
+  /** Objectif de kilocalories par jour, affiché sur le dashboard. Absent
+   * pour les profils créés avant cette feature — 2000 est utilisé comme
+   * valeur par défaut côté client dans ce cas (voir Dashboard.tsx). */
+  dailyKcalGoal?: number;
 }
 
 /** households/{ownerId} — one per household, keyed by its creator's uid. */

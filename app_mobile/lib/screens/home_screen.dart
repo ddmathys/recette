@@ -7,11 +7,12 @@ import '../models.dart';
 import '../services/auth_service.dart';
 import '../services/favorites_service.dart';
 import '../services/household_service.dart';
+import '../services/meal_log_service.dart';
 import '../services/recipe_service.dart';
 import '../theme.dart';
+import '../widgets/dashboard_card.dart';
 import '../widgets/recipe_card.dart';
-import 'add_recipe_screen.dart';
-import 'nutrition_screen.dart';
+import 'capture_screen.dart';
 import 'recipe_detail_screen.dart';
 import 'share_screen.dart';
 
@@ -37,12 +38,15 @@ class _HomeScreenState extends State<HomeScreen> {
   final _householdService = HouseholdService();
   final String _uid = FirebaseAuth.instance.currentUser!.uid;
 
+  final _mealLogService = MealLogService();
   UserProfile? _profile;
   Household? _household;
   StreamSubscription<Household?>? _householdSub;
   StreamSubscription<List<Recipe>>? _recipesSub;
+  StreamSubscription<List<MealLog>>? _mealLogsSub;
 
   List<Recipe> _recipes = [];
+  List<MealLog> _mealLogs = [];
   Set<String> _favs = {};
   String _search = '';
   String _cat = 'all';
@@ -59,9 +63,11 @@ class _HomeScreenState extends State<HomeScreen> {
       final householdId = profile?.householdId;
       _householdSub?.cancel();
       _recipesSub?.cancel();
+      _mealLogsSub?.cancel();
       if (householdId == null) return;
       _householdSub = _householdService.streamHousehold(householdId).listen((h) => setState(() => _household = h));
       _recipesSub = _recipeService.streamRecipes(householdId).listen((r) => setState(() => _recipes = r));
+      _mealLogsSub = _mealLogService.streamMealLogs(householdId).listen((l) => setState(() => _mealLogs = l));
     });
   }
 
@@ -69,7 +75,24 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _householdSub?.cancel();
     _recipesSub?.cancel();
+    _mealLogsSub?.cancel();
     super.dispose();
+  }
+
+  void _openCapture({required bool defaultLogMeal, required bool defaultAddToLibrary, Recipe? initialRecipe}) {
+    final profile = _profile;
+    if (profile == null) return;
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => CaptureScreen(
+        recipes: _recipes,
+        initialRecipe: initialRecipe,
+        ownerUid: _uid,
+        ownerName: profile.displayName,
+        householdId: profile.householdId,
+        defaultLogMeal: defaultLogMeal,
+        defaultAddToLibrary: defaultAddToLibrary,
+      ),
+    ));
   }
 
   void _toggleFav(String id) {
@@ -152,21 +175,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       const Spacer(),
                       if (profile != null)
                         IconButton(
-                          tooltip: 'Journal',
-                          onPressed: () {
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (_) => NutritionScreen(
-                                householdId: profile.householdId,
-                                ownerUid: _uid,
-                                ownerName: profile.displayName,
-                                recipes: _recipes,
-                              ),
-                            ));
-                          },
-                          icon: const Icon(Icons.menu_book_outlined, size: 20, color: AppColors.inkSoft),
-                        ),
-                      if (profile != null)
-                        IconButton(
                           tooltip: 'Partage',
                           onPressed: () async {
                             await Navigator.of(context).push(MaterialPageRoute(
@@ -208,15 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: IconButton.styleFrom(backgroundColor: AppColors.accent),
                         onPressed: profile == null
                             ? null
-                            : () async {
-                                await Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (_) => AddRecipeScreen(
-                                    ownerUid: _uid,
-                                    ownerName: profile.displayName,
-                                    householdId: profile.householdId,
-                                  ),
-                                ));
-                              },
+                            : () => _openCapture(defaultLogMeal: false, defaultAddToLibrary: true),
                         icon: const Icon(Icons.add, color: Colors.white),
                       ),
                     ],
@@ -225,38 +225,60 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             Expanded(
-              child: filtered.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32),
-                        child: Text(
-                          _recipes.isEmpty
-                              ? "Aucune recette pour l'instant — ajoute la première !"
-                              : "Aucune recette ne correspond à ces filtres.",
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: AppColors.inkSoft),
+              child: CustomScrollView(
+                slivers: [
+                  if (profile != null)
+                    SliverToBoxAdapter(
+                      child: DashboardCard(
+                        logs: _mealLogs,
+                        dailyKcalGoal: profile.dailyKcalGoal,
+                        onSetGoal: (v) => _householdService.setDailyKcalGoal(_uid, v),
+                        onAddMeal: () => _openCapture(defaultLogMeal: true, defaultAddToLibrary: false),
+                        readOnly: false,
+                      ),
+                    ),
+                  if (filtered.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Text(
+                            _recipes.isEmpty
+                                ? "Aucune recette pour l'instant — ajoute la première !"
+                                : "Aucune recette ne correspond à ces filtres.",
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: AppColors.inkSoft),
+                          ),
                         ),
                       ),
                     )
-                  : GridView.builder(
+                  else
+                    SliverPadding(
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 190,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: 0.72,
+                      sliver: SliverGrid(
+                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 190,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 0.72,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, i) {
+                            final r = filtered[i];
+                            return RecipeCard(
+                              recipe: r,
+                              isFav: _favs.contains(r.id),
+                              onOpen: () => _openRecipe(r),
+                              onToggleFav: () => _toggleFav(r.id),
+                            );
+                          },
+                          childCount: filtered.length,
+                        ),
                       ),
-                      itemCount: filtered.length,
-                      itemBuilder: (context, i) {
-                        final r = filtered[i];
-                        return RecipeCard(
-                          recipe: r,
-                          isFav: _favs.contains(r.id),
-                          onOpen: () => _openRecipe(r),
-                          onToggleFav: () => _toggleFav(r.id),
-                        );
-                      },
                     ),
+                ],
+              ),
             ),
           ],
         ),

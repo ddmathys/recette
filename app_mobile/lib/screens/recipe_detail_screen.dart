@@ -5,8 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import '../models.dart';
 import '../services/recipe_service.dart';
 import '../theme.dart';
+import 'capture_screen.dart';
 import 'edit_recipe_screen.dart';
-import 'log_meal_screen.dart';
 
 class RecipeDetailScreen extends StatefulWidget {
   final Recipe recipe;
@@ -225,12 +225,14 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 ElevatedButton.icon(
                   onPressed: () {
                     Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => LogMealScreen(
+                      builder: (_) => CaptureScreen(
                         recipes: widget.allRecipes,
                         initialRecipe: _recipe,
                         ownerUid: widget.ownerUid,
                         ownerName: widget.ownerName,
                         householdId: widget.householdId,
+                        defaultLogMeal: true,
+                        defaultAddToLibrary: false,
                       ),
                     ));
                   },

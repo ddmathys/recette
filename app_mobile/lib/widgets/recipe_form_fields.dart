@@ -15,7 +15,7 @@ class FieldLabel extends StatelessWidget {
 }
 
 /// Name/category/time/difficulty/servings/veg/ingredients/steps — the part
-/// of the recipe form shared between AddRecipeScreen and EditRecipeScreen.
+/// of the recipe form shared between CaptureScreen and EditRecipeScreen.
 /// Photo handling stays in each caller since the two flows attach it
 /// differently (new doc vs. existing one).
 class RecipeCoreFields extends StatelessWidget {

@@ -52,6 +52,9 @@ class HouseholdService {
         );
   }
 
+  Future<void> setDailyKcalGoal(String uid, num goal) =>
+      _db.collection('users').doc(uid).update({'dailyKcalGoal': goal});
+
   Future<void> joinHousehold(String myUid, String targetEmail) async {
     final q = await _db
         .collection('users')

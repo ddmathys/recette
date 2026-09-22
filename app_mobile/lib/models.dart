@@ -205,12 +205,14 @@ class UserProfile {
   final String email;
   final String displayName;
   final String householdId;
-  const UserProfile({required this.email, required this.displayName, required this.householdId});
+  final num? dailyKcalGoal;
+  const UserProfile({required this.email, required this.displayName, required this.householdId, this.dailyKcalGoal});
 
   factory UserProfile.fromMap(Map<String, dynamic> m) => UserProfile(
         email: (m['email'] ?? '').toString(),
         displayName: (m['displayName'] ?? '').toString(),
         householdId: (m['householdId'] ?? '').toString(),
+        dailyKcalGoal: m['dailyKcalGoal'] as num?,
       );
 }
 

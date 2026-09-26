@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -11,20 +10,14 @@ import '../services/meal_log_service.dart';
 import '../services/recipe_service.dart';
 import '../theme.dart';
 import '../widgets/dashboard_card.dart';
-import '../widgets/recipe_card.dart';
-import 'capture_screen.dart';
+import 'add_meal_screen.dart';
 import 'recipe_detail_screen.dart';
+import 'recipes_screen.dart';
 import 'share_screen.dart';
 
-const _timeBuckets = <(String, String, int?, int?)>[
-  ('all', 'Tous', null, null),
-  ('15', '≤ 15 min', null, 15),
-  ('30', '≤ 30 min', null, 30),
-  ('45', '≤ 45 min', null, 45),
-  ('60', '≤ 60 min', null, 60),
-  ('60+', '60 min +', 61, null),
-];
-
+/// Accueil : état du jour (anneau kcal + macros + repas) et deux grosses
+/// actions — "Ajouter un repas" et "Mes recettes". Mirrors la vue "home" de
+/// page.tsx. Possède les streams Firestore et les expose aux écrans enfants.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
   @override
@@ -45,19 +38,15 @@ class _HomeScreenState extends State<HomeScreen> {
   StreamSubscription<List<Recipe>>? _recipesSub;
   StreamSubscription<List<MealLog>>? _mealLogsSub;
 
-  List<Recipe> _recipes = [];
+  // ValueNotifier pour que RecipesScreen (route séparée) reste à jour.
+  final _recipes = ValueNotifier<List<Recipe>>([]);
+  final _favs = ValueNotifier<Set<String>>({});
   List<MealLog> _mealLogs = [];
-  Set<String> _favs = {};
-  String _search = '';
-  String _cat = 'all';
-  String _timeBucket = 'all';
-  bool _vegOnly = false;
-  bool _favOnly = false;
 
   @override
   void initState() {
     super.initState();
-    _favService.load().then((f) => setState(() => _favs = f));
+    _favService.load().then((f) => _favs.value = f);
     _householdService.streamProfile(_uid).listen((profile) {
       setState(() => _profile = profile);
       final householdId = profile?.householdId;
@@ -66,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _mealLogsSub?.cancel();
       if (householdId == null) return;
       _householdSub = _householdService.streamHousehold(householdId).listen((h) => setState(() => _household = h));
-      _recipesSub = _recipeService.streamRecipes(householdId).listen((r) => setState(() => _recipes = r));
+      _recipesSub = _recipeService.streamRecipes(householdId).listen((r) => _recipes.value = r);
       _mealLogsSub = _mealLogService.streamMealLogs(householdId).listen((l) => setState(() => _mealLogs = l));
     });
   }
@@ -76,59 +65,40 @@ class _HomeScreenState extends State<HomeScreen> {
     _householdSub?.cancel();
     _recipesSub?.cancel();
     _mealLogsSub?.cancel();
+    _recipes.dispose();
+    _favs.dispose();
     super.dispose();
   }
 
-  void _openCapture({required bool defaultLogMeal, required bool defaultAddToLibrary, Recipe? initialRecipe}) {
+  void _openAddMeal() {
     final profile = _profile;
     if (profile == null) return;
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => CaptureScreen(
-        recipes: _recipes,
-        initialRecipe: initialRecipe,
+      builder: (_) => AddMealScreen(
+        recipes: _recipes.value,
         ownerUid: _uid,
         ownerName: profile.displayName,
         householdId: profile.householdId,
-        defaultLogMeal: defaultLogMeal,
-        defaultAddToLibrary: defaultAddToLibrary,
+      ),
+    ));
+  }
+
+  void _openRecipes() {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => RecipesScreen(
+        recipes: _recipes,
+        favs: _favs,
+        onToggleFav: _toggleFav,
+        onOpenRecipe: _openRecipe,
       ),
     ));
   }
 
   void _toggleFav(String id) {
-    setState(() {
-      if (_favs.contains(id)) {
-        _favs.remove(id);
-      } else {
-        _favs.add(id);
-      }
-    });
-    _favService.save(_favs);
-  }
-
-  List<Recipe> get _filtered {
-    final q = _search.trim().toLowerCase();
-    final bucket = _timeBuckets.firstWhere((b) => b.$1 == _timeBucket);
-    return _recipes.where((r) {
-      if (q.isNotEmpty) {
-        final inName = r.name.toLowerCase().contains(q);
-        final inIngr = r.ingr.any((i) => i.name.toLowerCase().contains(q));
-        if (!inName && !inIngr) return false;
-      }
-      if (_cat != 'all' && r.cat != _cat) return false;
-      if (_vegOnly && !r.veg) return false;
-      if (_favOnly && !_favs.contains(r.id)) return false;
-      if (bucket.$4 != null && r.time > bucket.$4!) return false;
-      if (bucket.$3 != null && r.time < bucket.$3!) return false;
-      return true;
-    }).toList();
-  }
-
-  void _surprise() {
-    final pool = _filtered.isNotEmpty ? _filtered : _recipes;
-    if (pool.isEmpty) return;
-    final pick = pool[Random().nextInt(pool.length)];
-    _openRecipe(pick);
+    final next = {..._favs.value};
+    if (!next.remove(id)) next.add(id);
+    _favs.value = next;
+    _favService.save(next);
   }
 
   void _openRecipe(Recipe r) {
@@ -136,9 +106,9 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => RecipeDetailScreen(
         recipe: r,
-        isFav: _favs.contains(r.id),
+        isFav: _favs.value.contains(r.id),
         onToggleFav: () => _toggleFav(r.id),
-        allRecipes: _recipes,
+        allRecipes: _recipes.value,
         ownerUid: _uid,
         ownerName: profile?.displayName ?? '',
         householdId: profile?.householdId ?? _uid,
@@ -148,268 +118,110 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _filtered;
     final profile = _profile;
     return Scaffold(
       body: SafeArea(
-        child: Column(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 32),
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const CircleAvatar(
-                        backgroundColor: AppColors.accent,
-                        radius: 14,
-                        child: Icon(Icons.kitchen, color: Colors.white, size: 15),
-                      ),
-                      const SizedBox(width: 8),
-                      const Text('Recettes du Tiroir',
-                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: AppColors.ink)),
-                      const SizedBox(width: 8),
-                      Text('${_recipes.length} recette${_recipes.length > 1 ? "s" : ""}',
-                          style: const TextStyle(fontSize: 12, color: AppColors.inkSoft, fontWeight: FontWeight.w600)),
-                      const Spacer(),
-                      if (profile != null)
-                        IconButton(
-                          tooltip: 'Partage',
-                          onPressed: () async {
-                            await Navigator.of(context).push(MaterialPageRoute(
-                              builder: (_) => ShareScreen(uid: _uid, profile: profile, household: _household),
-                            ));
-                          },
-                          icon: const Icon(Icons.group_outlined, size: 20, color: AppColors.inkSoft),
-                        ),
-                      IconButton(
-                        tooltip: 'Déconnexion',
-                        onPressed: () => _authService.signOut(),
-                        icon: const Icon(Icons.logout, size: 20, color: AppColors.inkSoft),
-                      ),
-                    ],
+            Row(
+              children: [
+                const CircleAvatar(
+                  backgroundColor: AppColors.accent,
+                  radius: 14,
+                  child: Icon(Icons.kitchen, color: Colors.white, size: 15),
+                ),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text('Recettes du Tiroir', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: AppColors.ink)),
+                ),
+                if (profile != null)
+                  IconButton(
+                    tooltip: 'Partage',
+                    onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => ShareScreen(uid: _uid, profile: profile, household: _household),
+                    )),
+                    icon: const Icon(Icons.group_outlined, size: 20, color: AppColors.inkSoft),
                   ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          decoration: const InputDecoration(
-                            hintText: 'Chercher une recette, un ingrédient…',
-                            prefixIcon: Icon(Icons.search, size: 20, color: AppColors.accent),
-                            isDense: true,
-                          ),
-                          onChanged: (v) => setState(() => _search = v),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      _FilterButton(
-                        activeCount: (_cat != 'all' ? 1 : 0) +
-                            (_timeBucket != 'all' ? 1 : 0) +
-                            (_vegOnly ? 1 : 0) +
-                            (_favOnly ? 1 : 0),
-                        onTap: _openFilters,
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton.filled(
-                        style: IconButton.styleFrom(backgroundColor: AppColors.accent),
-                        onPressed: profile == null
-                            ? null
-                            : () => _openCapture(defaultLogMeal: false, defaultAddToLibrary: true),
-                        icon: const Icon(Icons.add, color: Colors.white),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                IconButton(
+                  tooltip: 'Déconnexion',
+                  onPressed: () => _authService.signOut(),
+                  icon: const Icon(Icons.logout, size: 20, color: AppColors.inkSoft),
+                ),
+              ],
             ),
-            Expanded(
-              child: CustomScrollView(
-                slivers: [
-                  if (profile != null)
-                    SliverToBoxAdapter(
-                      child: DashboardCard(
-                        logs: _mealLogs,
-                        dailyKcalGoal: profile.dailyKcalGoal,
-                        onSetGoal: (v) => _householdService.setDailyKcalGoal(_uid, v),
-                        onAddMeal: () => _openCapture(defaultLogMeal: true, defaultAddToLibrary: false),
-                        readOnly: false,
+            const SizedBox(height: 8),
+            if (profile == null)
+              const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator()))
+            else
+              DashboardCard(
+                logs: _mealLogs,
+                dailyKcalGoal: profile.dailyKcalGoal,
+                onSetGoal: (v) => _householdService.setDailyKcalGoal(_uid, v),
+                readOnly: false,
+                actions: Row(
+                  children: [
+                    Expanded(
+                      child: _ActionTile(
+                        emoji: '🍽️',
+                        title: 'Ajouter un repas',
+                        subtitle: 'Photo ou texte',
+                        primary: true,
+                        onTap: _openAddMeal,
                       ),
                     ),
-                  if (filtered.isEmpty)
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(32),
-                          child: Text(
-                            _recipes.isEmpty
-                                ? "Aucune recette pour l'instant — ajoute la première !"
-                                : "Aucune recette ne correspond à ces filtres.",
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: AppColors.inkSoft),
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                      sliver: SliverGrid(
-                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 190,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 0.72,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, i) {
-                            final r = filtered[i];
-                            return RecipeCard(
-                              recipe: r,
-                              isFav: _favs.contains(r.id),
-                              onOpen: () => _openRecipe(r),
-                              onToggleFav: () => _toggleFav(r.id),
-                            );
-                          },
-                          childCount: filtered.length,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ValueListenableBuilder(
+                        valueListenable: _recipes,
+                        builder: (_, recipes, _) => _ActionTile(
+                          emoji: '📖',
+                          title: 'Mes recettes',
+                          subtitle: '${recipes.length} recette${recipes.length > 1 ? "s" : ""}',
+                          onTap: _openRecipes,
                         ),
                       ),
                     ),
-                ],
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),
     );
   }
-
-  void _openFilters() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        return StatefulBuilder(builder: (sheetContext, setSheetState) {
-          void applyAndRefresh(VoidCallback fn) {
-            setState(fn);
-            setSheetState(() {});
-          }
-
-          return Padding(
-            padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Filtres', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
-                      IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close)),
-                    ],
-                  ),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      FilterChip(
-                        label: const Text('Végétarien'),
-                        selected: _vegOnly,
-                        onSelected: (v) => applyAndRefresh(() => _vegOnly = v),
-                        selectedColor: AppColors.herb,
-                        labelStyle: TextStyle(color: _vegOnly ? Colors.white : AppColors.ink),
-                      ),
-                      FilterChip(
-                        label: const Text('Favoris'),
-                        selected: _favOnly,
-                        onSelected: (v) => applyAndRefresh(() => _favOnly = v),
-                        selectedColor: AppColors.accent,
-                        labelStyle: TextStyle(color: _favOnly ? Colors.white : AppColors.ink),
-                      ),
-                      ActionChip(
-                        label: const Text('🎲 Surprends-moi'),
-                        onPressed: () {
-                          Navigator.pop(sheetContext);
-                          _surprise();
-                        },
-                        backgroundColor: AppColors.gold,
-                        labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('CATÉGORIE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.inkSoft)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      ChoiceChip(
-                        label: const Text('Toutes'),
-                        selected: _cat == 'all',
-                        onSelected: (_) => applyAndRefresh(() => _cat = 'all'),
-                      ),
-                      for (final c in kCategories)
-                        ChoiceChip(
-                          label: Text(c.label),
-                          selected: _cat == c.key,
-                          selectedColor: c.color,
-                          labelStyle: TextStyle(color: _cat == c.key ? Colors.white : AppColors.ink, fontSize: 12.5),
-                          onSelected: (_) => applyAndRefresh(() => _cat = c.key),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('TEMPS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.inkSoft)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final b in _timeBuckets)
-                        ChoiceChip(
-                          label: Text(b.$2),
-                          selected: _timeBucket == b.$1,
-                          onSelected: (_) => applyAndRefresh(() => _timeBucket = b.$1),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          );
-        });
-      },
-    );
-  }
 }
 
-class _FilterButton extends StatelessWidget {
-  final int activeCount;
+class _ActionTile extends StatelessWidget {
+  final String emoji;
+  final String title;
+  final String subtitle;
+  final bool primary;
   final VoidCallback onTap;
-  const _FilterButton({required this.activeCount, required this.onTap});
+  const _ActionTile({required this.emoji, required this.title, required this.subtitle, required this.onTap, this.primary = false});
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-        decoration: BoxDecoration(color: AppColors.accent2, borderRadius: BorderRadius.circular(24)),
-        child: Row(
-          children: [
-            const Icon(Icons.tune, size: 16, color: Colors.white),
-            if (activeCount > 0) ...[
-              const SizedBox(width: 4),
-              CircleAvatar(radius: 8, backgroundColor: Colors.white, child: Text('$activeCount', style: const TextStyle(fontSize: 10, color: AppColors.accent2, fontWeight: FontWeight.bold))),
+    return Material(
+      color: primary ? AppColors.accent : AppColors.surface2,
+      borderRadius: BorderRadius.circular(18),
+      elevation: primary ? 3 : 0,
+      shadowColor: AppColors.accent.withValues(alpha: 0.5),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 28)),
+              const SizedBox(height: 6),
+              Text(title, style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, color: primary ? Colors.white : AppColors.ink)),
+              const SizedBox(height: 2),
+              Text(subtitle, style: TextStyle(fontSize: 12, color: primary ? Colors.white70 : AppColors.inkSoft)),
             ],
-          ],
+          ),
         ),
       ),
     );

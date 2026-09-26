@@ -19,12 +19,19 @@ class AiService {
     return {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'};
   }
 
-  Future<AiResult> generate({String? name, String? text, String? link}) async {
+  /// `servings` = nombre de personnes choisi avant la recherche : le
+  /// serveur calcule toutes les quantités pour ce nombre.
+  Future<AiResult> generate({String? name, String? text, String? link, int? servings}) async {
     final res = await http
         .post(
           Uri.parse('$_baseUrl/api/parse-recipe'),
           headers: await _authHeaders(),
-          body: jsonEncode({'name': name ?? '', 'text': text ?? '', 'link': link ?? ''}),
+          body: jsonEncode({
+            'name': name ?? '',
+            'text': text ?? '',
+            'link': link ?? '',
+            'servings': ?servings,
+          }),
         )
         .timeout(const Duration(seconds: 40));
 
@@ -41,12 +48,13 @@ class AiService {
   /// AI-assisted edit of an existing recipe: `instruction` is a free-text
   /// change request ("remplace le poulet par du tofu"). Mirrors
   /// EditRecipeDialog.tsx on the web.
-  Future<RecipeDraft> edit(RecipeDraft current, String instruction) async {
+  /// `meal: true` = assiette photographiée (pas d'étapes, 1 personne).
+  Future<RecipeDraft> edit(RecipeDraft current, String instruction, {bool meal = false}) async {
     final res = await http
         .post(
           Uri.parse('$_baseUrl/api/edit-recipe'),
           headers: await _authHeaders(),
-          body: jsonEncode({'recipe': current.toMap(), 'instruction': instruction}),
+          body: jsonEncode({'recipe': current.toMap(), 'instruction': instruction, 'kind': meal ? 'meal' : 'recipe'}),
         )
         .timeout(const Duration(seconds: 35));
 
@@ -88,6 +96,15 @@ class AiService {
       fatG: asNum(d['fatG']),
       mealType: d['mealType']?.toString(),
       matchedRecipeId: d['matchedRecipeId']?.toString(),
+      ingr: d['ingr'] is List
+          ? (d['ingr'] as List)
+              .whereType<Map>()
+              .map((e) => Ingredient.fromMap(Map<String, dynamic>.from(e)))
+              .where((i) => i.name.trim().isNotEmpty)
+              .toList()
+          : const [],
+      cat: kCategories.any((c) => c.key == d['cat']) ? d['cat'].toString() : null,
+      veg: d['veg'] is bool ? d['veg'] as bool : false,
     );
   }
 
@@ -106,8 +123,8 @@ class AiService {
       ingr: (d['ingr'] is List && (d['ingr'] as List).isNotEmpty)
           ? (d['ingr'] as List).map((e) => Ingredient.fromMap(Map<String, dynamic>.from(e as Map))).toList()
           : (fallback?.ingr ?? [const Ingredient(name: '', qty: '')]),
-      steps: (d['steps'] is List && (d['steps'] as List).isNotEmpty)
-          ? (d['steps'] as List).map((e) => e.toString()).toList()
+      steps: d['steps'] is List
+          ? (d['steps'] as List).map((e) => e.toString().trim()).where((e) => e.isNotEmpty).toList()
           : (fallback?.steps ?? ['']),
       nutrition: NutritionEstimate.fromLoose(d['nutrition']) ?? fallback?.nutrition,
     );
@@ -132,8 +149,14 @@ class MealPhotoAnalysis {
   final num? fatG;
   final String? mealType;
   final String? matchedRecipeId;
+  final List<Ingredient> ingr;
+  final String? cat;
+  final bool veg;
 
   MealPhotoAnalysis({
+    this.ingr = const [],
+    this.cat,
+    this.veg = false,
     this.label,
     this.portionGrams,
     this.kcal,

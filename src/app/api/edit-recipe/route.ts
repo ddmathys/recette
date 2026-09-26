@@ -42,6 +42,9 @@ export async function POST(req: NextRequest) {
   }
   const recipe = body.recipe;
   const instruction = typeof body.instruction === "string" ? body.instruction.trim() : "";
+  // "meal" = assiette analysée depuis une photo (pas une recette à cuisiner) :
+  // pas d'étapes, nutrition = l'assiette entière.
+  const isMeal = body.kind === "meal";
   if (!recipe || typeof recipe !== "object") {
     return NextResponse.json({ error: "Recette manquante." }, { status: 400 });
   }
@@ -59,7 +62,12 @@ L'utilisateur demande la modification suivante : "${instruction}"
 Applique cette modification à la recette. Garde tout le reste identique (mêmes ingrédients, mêmes étapes, mêmes quantités) sauf si la demande implique explicitement un changement plus large. Ajuste temps/personnes/difficulté/végétarien si la modification les affecte.
 Réponds UNIQUEMENT avec un objet JSON valide (aucun texte autour, pas de balises markdown) représentant la recette mise à jour, au format exact :
 {"name": string, "cat": une valeur parmi [${catList}], "time": nombre entier de minutes de préparation active, "diff": "Facile" ou "Moyen" ou "Avancé", "servings": nombre entier de personnes, "veg": true si la recette ne contient ni viande ni poisson sinon false, "ingr": tableau de paires {"name": string, "qty": string}, "steps": tableau de 3 à 6 étapes concises en français, "nutrition": {"kcal": nombre, "proteinG": nombre, "carbsG": nombre, "fatG": nombre, "gramsPerServing": nombre entier}}
-Recalcule "nutrition" (valeurs pour UNE portion) si la modification change les ingrédients, les quantités ou le nombre de personnes ; sinon reprends l'estimation existante si elle est cohérente.`;
+Recalcule "nutrition" (valeurs pour UNE portion) si la modification change les ingrédients, les quantités ou le nombre de personnes ; sinon reprends l'estimation existante si elle est cohérente.${
+    isMeal
+      ? `
+ATTENTION : ce n'est pas une recette à cuisiner mais une assiette déjà mangée (analysée depuis une photo). "servings" vaut 1, "steps" est un tableau VIDE, "ingr" liste ce qu'il y a dans l'assiette avec les quantités estimées, et "nutrition" correspond à l'assiette entière (gramsPerServing = poids total de l'assiette).`
+      : ""
+  }`;
 
   try {
     const resp = await fetch("https://api.deepseek.com/chat/completions", {

@@ -146,6 +146,10 @@ export async function POST(req: NextRequest) {
   const text = typeof body.text === "string" ? body.text.trim() : "";
   const name = typeof body.name === "string" ? body.name.trim() : "";
   const link = typeof body.link === "string" ? body.link.trim() : "";
+  // Nombre de personnes choisi avant la recherche — optionnel (anciens
+  // clients ne l'envoient pas), borné pour éviter des quantités absurdes.
+  const rawServings = Math.round(Number(body.servings));
+  const servings = Number.isFinite(rawServings) && rawServings > 0 ? Math.min(rawServings, 20) : null;
 
   if (!text && !name && !link) {
     return NextResponse.json({ error: "Donne au moins un nom de plat, un texte ou un lien." }, { status: 400 });
@@ -164,7 +168,8 @@ export async function POST(req: NextRequest) {
 On te donne des informations sur un plat : un nom, un texte libre (ingrédients/étapes dans le désordre, ou juste des notes), et éventuellement le contenu extrait d'une page web source. Structure tout ça.
 Réponds UNIQUEMENT avec un objet JSON valide (aucun texte autour, pas de balises markdown), au format exact :
 {"name": string, "cat": une valeur parmi [${catList}], "time": nombre entier de minutes de préparation active, "diff": "Facile" ou "Moyen" ou "Avancé", "servings": nombre entier de personnes, "veg": true si la recette ne contient ni viande ni poisson sinon false, "ingr": tableau de paires {"name": string, "qty": string}, "steps": tableau de 3 à 6 étapes concises en français, "nutrition": {"kcal": nombre, "proteinG": nombre, "carbsG": nombre, "fatG": nombre, "gramsPerServing": nombre entier}}
-Si le texte ou la page donnent déjà des ingrédients/étapes précis, reprends-les fidèlement (range-les, complète les quantités manquantes de façon plausible). Si le contenu extrait de la page ne correspond visiblement pas à une recette du plat demandé (page d'accueil, contenu sans rapport), ignore-le et base-toi uniquement sur le nom du plat et le texte libre. S'il ne reste qu'un nom de plat, base-toi sur une recette classique et réaliste, adaptée au nombre de personnes.
+Si le texte ou la page donnent déjà des ingrédients/étapes précis, reprends-les fidèlement (range-les, complète les quantités manquantes de façon plausible). Si le contenu extrait de la page ne correspond visiblement pas à une recette du plat demandé (page d'accueil, contenu sans rapport), ignore-le et base-toi uniquement sur le nom du plat et le texte libre. S'il ne reste qu'un nom de plat, base-toi sur une recette classique et réaliste, adaptée au nombre de personnes.${servings ? `
+La recette doit être prévue pour EXACTEMENT ${servings} personne(s) : "servings" vaut ${servings} et toutes les quantités d'ingrédients sont calculées pour ${servings} personne(s).` : ""}
 Pour "nutrition", estime les valeurs moyennes d'UNE SEULE portion (pas toute la recette) à partir des ingrédients, de leurs quantités et du nombre de personnes : poids approximatif de l'assiette en grammes, kilocalories, protéines/glucides/lipides en grammes. Reste réaliste, une estimation approchée suffit — ce n'est pas une donnée médicale.
 
 Nom du plat indiqué : ${name || "(aucun)"}

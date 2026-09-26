@@ -19,16 +19,3 @@ export function sanitizeNutrition(
   }
   return { kcal, proteinG, carbsG, fatG, gramsPerServing, estimatedBy };
 }
-
-/** Scales a per-serving nutrition estimate to an arbitrary portion size in
- * grams — used when logging a meal eaten from a recipe with a different
- * portion than the recipe's own `gramsPerServing`. */
-export function scaleNutritionToGrams(nutrition: NutritionEstimate, portionGrams: number) {
-  const ratio = nutrition.gramsPerServing > 0 ? portionGrams / nutrition.gramsPerServing : 1;
-  return {
-    kcal: Math.round(nutrition.kcal * ratio),
-    proteinG: Math.round(nutrition.proteinG * ratio),
-    carbsG: Math.round(nutrition.carbsG * ratio),
-    fatG: Math.round(nutrition.fatG * ratio),
-  };
-}

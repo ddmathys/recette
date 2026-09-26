@@ -14,22 +14,19 @@ export type TimeBucketKey = (typeof TIME_BUCKETS)[number]["key"];
 /**
  * Compact top bar — always visible, on phone and desktop alike: search,
  * a "Filtres" button that opens the drawer on phone (hidden at md+, where
- * the drawer content renders inline instead), and the add-recipe action.
+ * the drawer content renders inline instead). L'ajout passe par le
+ * parcours "Ajouter un repas" de l'accueil, plus de bouton ici.
  */
 export function Toolbar({
   search,
   onSearch,
   onOpenFilters,
   activeFilterCount,
-  onAdd,
-  addAvailable,
 }: {
   search: string;
   onSearch: (v: string) => void;
   onOpenFilters: () => void;
   activeFilterCount: number;
-  onAdd: () => void;
-  addAvailable: boolean;
 }) {
   return (
     <div className="flex items-center gap-2">
@@ -62,18 +59,6 @@ export function Toolbar({
         )}
       </button>
 
-      {addAvailable && (
-        <button
-          onClick={onAdd}
-          className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-accent px-4 py-2.5 text-[0.85rem] font-bold text-accent-ink shadow-[0_2px_10px_-2px_rgba(255,90,54,.65)] transition hover:brightness-105 active:scale-95"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" className="h-4 w-4">
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-          <span className="hidden sm:inline">Ajouter une recette</span>
-          <span className="sm:hidden">Ajouter</span>
-        </button>
-      )}
     </div>
   );
 }

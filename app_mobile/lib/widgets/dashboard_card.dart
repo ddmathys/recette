@@ -24,22 +24,22 @@ String _formatTime(String iso) {
 
 /// Dashboard du jour : anneau de calories + petit personnage qui réagit à
 /// la progression, macros vs objectif, liste des repas du jour, navigation
-/// jour précédent/suivant. Mirrors Dashboard.tsx on the web — replaces the
-/// old NutritionScreen hidden behind a "Journal" icon.
+/// jour précédent/suivant. Mirrors Dashboard.tsx on the web.
 class DashboardCard extends StatefulWidget {
   final List<MealLog> logs;
   final num? dailyKcalGoal;
   final ValueChanged<num> onSetGoal;
-  final VoidCallback onAddMeal;
   final bool readOnly;
+  /// Actions affichées entre l'anneau et la liste des repas (accueil).
+  final Widget? actions;
 
   const DashboardCard({
     super.key,
     required this.logs,
     required this.dailyKcalGoal,
     required this.onSetGoal,
-    required this.onAddMeal,
     required this.readOnly,
+    this.actions,
   });
 
   @override
@@ -217,13 +217,9 @@ class _DashboardCardState extends State<DashboardCard> {
               ),
             ],
           ),
-          if (!widget.readOnly) ...[
-            const SizedBox(height: 10),
-            ElevatedButton.icon(
-              onPressed: widget.onAddMeal,
-              icon: const Icon(Icons.add, size: 16),
-              label: const Text('Ajouter un repas'),
-            ),
+          if (widget.actions != null) ...[
+            const SizedBox(height: 14),
+            widget.actions!,
           ],
           const SizedBox(height: 10),
           if (dayLogs.isEmpty)

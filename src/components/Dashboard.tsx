@@ -23,22 +23,22 @@ function moodFor(pct: number): { emoji: string; caption: string; color: string }
   return { emoji: "😅", caption: "Un peu au-dessus aujourd'hui", color: "#F2A600" };
 }
 
-/** Dashboard du jour : anneau de calories + petit personnage qui réagit à
+/** Indicateur du jour : anneau de calories + petit personnage qui réagit à
  * la progression, macros vs objectif, liste des repas du jour, navigation
- * jour précédent/suivant. Remplace l'ancien panneau "Journal" caché
- * derrière un bouton — c'est maintenant le haut de la page d'accueil. */
+ * jour précédent/suivant. Les actions (ajouter un repas, recettes) sont
+ * passées en `children` et s'affichent entre l'anneau et la liste. */
 export function Dashboard({
   logs,
   dailyKcalGoal,
   onSetGoal,
-  onAddMeal,
   readOnly,
+  children,
 }: {
   logs: MealLog[];
   dailyKcalGoal: number | undefined;
   onSetGoal: (goal: number) => void;
-  onAddMeal: () => void;
   readOnly: boolean;
+  children?: React.ReactNode;
 }) {
   const goal = dailyKcalGoal && dailyKcalGoal > 0 ? dailyKcalGoal : DEFAULT_GOAL;
   const [dayOffset, setDayOffset] = useState(0);
@@ -173,17 +173,7 @@ export function Dashboard({
         </div>
       </div>
 
-      {!readOnly && (
-        <button
-          onClick={onAddMeal}
-          className="mt-4 inline-flex items-center justify-center gap-1.5 rounded-full bg-accent px-4 py-2.5 text-[0.85rem] font-bold text-accent-ink shadow-[0_2px_10px_-2px_rgba(255,90,54,.65)] transition hover:brightness-105 active:scale-95"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" className="h-4 w-4">
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-          Ajouter un repas
-        </button>
-      )}
+      {children}
 
       <div className="mt-4">
         {dayLogs.length === 0 ? (

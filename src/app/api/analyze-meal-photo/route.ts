@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/firebaseAdmin";
 import { checkAiRateLimit, VISION_DAILY_LIMIT } from "@/lib/aiRateLimit";
 import { MEAL_TYPES } from "@/lib/mealTypes";
+import { CATEGORIES } from "@/lib/categories";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -81,13 +82,14 @@ export async function POST(req: NextRequest) {
   }
 
   const mealTypeList = MEAL_TYPES.map((m) => m.key).join(", ");
+  const catList = CATEGORIES.map((c) => c.key).join(", ");
   const recipeList = recipes.length
     ? recipes.map((r: { id: string; name: string }) => `- ${r.name} (id: ${r.id})`).join("\n")
     : "(aucune recette connue)";
   const prompt = `Tu es un assistant nutrition pour une appli de recettes familiales. On te montre la photo d'un repas mangé.
 Réponds UNIQUEMENT avec un objet JSON valide (aucun texte autour, pas de balises markdown), au format exact :
-{"label": string (nom court et concret du plat identifié), "portionGrams": nombre entier (poids total estimé de l'assiette en grammes), "kcal": nombre, "proteinG": nombre, "carbsG": nombre, "fatG": nombre, "mealType": une valeur parmi [${mealTypeList}], "matchedRecipeId": string ou null}
-Estime les valeurs nutritionnelles à partir de ce que tu vois (types d'aliments, quantités visibles à l'oeil). Reste réaliste, une estimation approchée suffit — ce n'est pas une donnée médicale.
+{"label": string (nom court et concret du plat identifié), "portionGrams": nombre entier (poids total estimé de l'assiette en grammes), "kcal": nombre, "proteinG": nombre, "carbsG": nombre, "fatG": nombre, "ingr": tableau de paires {"name": string, "qty": string} (chaque aliment visible dans l'assiette avec sa quantité estimée, ex. {"name": "Riz basmati", "qty": "150 g"}), "cat": une valeur parmi [${catList}], "veg": true si l'assiette ne contient ni viande ni poisson sinon false, "mealType": une valeur parmi [${mealTypeList}], "matchedRecipeId": string ou null}
+L'assiette est la portion d'UNE personne. Estime les valeurs nutritionnelles de l'assiette entière à partir de ce que tu vois (types d'aliments, quantités visibles à l'oeil) ; la somme des ingrédients doit être cohérente avec "portionGrams" et "kcal". Reste réaliste, une estimation approchée suffit — ce n'est pas une donnée médicale.
 Devine "mealType" à partir de l'apparence du plat.
 Si le plat correspond clairement à l'une de ces recettes connues du foyer, renvoie son id exact dans "matchedRecipeId" ; sinon renvoie null. Recettes connues :
 ${recipeList}`;

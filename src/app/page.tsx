@@ -7,7 +7,7 @@ import { RecipeCard } from "@/components/RecipeCard";
 import { RecipeDetail } from "@/components/RecipeDetail";
 import { EditRecipeDialog } from "@/components/EditRecipeDialog";
 import { ShareSettings } from "@/components/ShareSettings";
-import { CaptureDialog } from "@/components/CaptureDialog";
+import { AddMealFlow } from "@/components/AddMealFlow";
 import { Dashboard } from "@/components/Dashboard";
 import {
   useRecipes,
@@ -60,7 +60,10 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
   const [editOpen, setEditOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [captureFor, setCaptureFor] = useState<"none" | "dashboard" | "library" | "recipe">("none");
+  // Accueil (état du jour + 2 actions) ou écran bibliothèque. Le parcours
+  // "Ajouter un repas" s'ouvre par-dessus en plein écran.
+  const [view, setView] = useState<"home" | "recipes">("home");
+  const [addFlow, setAddFlow] = useState<"none" | "new" | "recipe">("none");
 
   const freq = useMemo(() => {
     const f: Record<string, number> = {};
@@ -131,43 +134,57 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
     <div className="flex min-h-full flex-col">
       <header className="sticky top-0 z-30 bg-bg pb-2.5 pt-3" style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top, 0px))" }}>
         <div className="mx-auto max-w-[1180px] px-4">
-          <div className="mb-2.5 flex items-center gap-2">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                <path d="M18 8h1a4 4 0 0 1 0 8h-1M6 8h12v9a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V8Z" />
-                <path d="M6 1v3M10 1v3M14 1v3" />
-              </svg>
-            </div>
-            <h1 className="text-[1.15rem] font-extrabold tracking-tight text-ink">Recettes du Tiroir</h1>
-            <span className="text-[0.78rem] font-semibold text-ink-soft">{recipes.length} recette{recipes.length > 1 ? "s" : ""}</span>
-            {firebaseEnabled && (
-              <div className="ml-auto flex shrink-0 items-center gap-2">
-                {profile && (
+          {view === "home" ? (
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                  <path d="M18 8h1a4 4 0 0 1 0 8h-1M6 8h12v9a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V8Z" />
+                  <path d="M6 1v3M10 1v3M14 1v3" />
+                </svg>
+              </div>
+              <h1 className="text-[1.15rem] font-extrabold tracking-tight text-ink">Recettes du Tiroir</h1>
+              {firebaseEnabled && (
+                <div className="ml-auto flex shrink-0 items-center gap-2">
+                  {profile && (
+                    <button
+                      onClick={() => setShareOpen(true)}
+                      className="rounded-full border border-line bg-surface px-3 py-1.5 text-[0.76rem] font-semibold text-ink-soft hover:border-accent hover:text-accent"
+                    >
+                      {profile.householdId === uid ? "Partage" : "Bibliothèque partagée"}
+                    </button>
+                  )}
                   <button
-                    onClick={() => setShareOpen(true)}
+                    onClick={() => signOut()}
                     className="rounded-full border border-line bg-surface px-3 py-1.5 text-[0.76rem] font-semibold text-ink-soft hover:border-accent hover:text-accent"
                   >
-                    {profile.householdId === uid ? "Partage" : "Bibliothèque partagée"}
+                    Déconnexion
                   </button>
-                )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="mb-2.5 flex items-center gap-3">
                 <button
-                  onClick={() => signOut()}
-                  className="rounded-full border border-line bg-surface px-3 py-1.5 text-[0.76rem] font-semibold text-ink-soft hover:border-accent hover:text-accent"
+                  onClick={() => setView("home")}
+                  aria-label="Retour à l'accueil"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface text-ink shadow-[0_1px_3px_rgba(43,42,38,.08)]"
                 >
-                  Déconnexion
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="h-4.5 w-4.5">
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
                 </button>
+                <h1 className="text-[1.15rem] font-extrabold tracking-tight text-ink">Mes recettes</h1>
+                <span className="text-[0.78rem] font-semibold text-ink-soft">{recipes.length}</span>
               </div>
-            )}
-          </div>
-
-          <Toolbar
-            search={search}
-            onSearch={setSearch}
-            onOpenFilters={() => setFiltersOpen(true)}
-            activeFilterCount={activeFilterCount}
-            onAdd={() => setCaptureFor("library")}
-            addAvailable={canAdd}
-          />
+              <Toolbar
+                search={search}
+                onSearch={setSearch}
+                onOpenFilters={() => setFiltersOpen(true)}
+                activeFilterCount={activeFilterCount}
+              />
+            </>
+          )}
           {!firebaseEnabled && (
             <p className="mt-2 text-[0.76rem] text-ink-soft">
               Firebase n&apos;est pas configuré — bibliothèque en lecture seule avec les recettes de base.
@@ -179,41 +196,76 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
             </p>
           )}
 
-          <FilterDrawer
-            open={filtersOpen}
-            onClose={() => setFiltersOpen(false)}
-            cat={cat}
-            onCat={setCat}
-            time={time}
-            onTime={setTime}
-            veg={vegOnly}
-            onVeg={() => setVegOnly((v) => !v)}
-            fav={favOnly}
-            onFav={() => setFavOnly((v) => !v)}
-            onSurprise={() => {
-              surprise();
-              setFiltersOpen(false);
-            }}
-            freq={freq}
-            ingredients={ingredients}
-            onToggleIngredient={toggleIngredient}
-          />
+          {view === "recipes" && (
+            <FilterDrawer
+              open={filtersOpen}
+              onClose={() => setFiltersOpen(false)}
+              cat={cat}
+              onCat={setCat}
+              time={time}
+              onTime={setTime}
+              veg={vegOnly}
+              onVeg={() => setVegOnly((v) => !v)}
+              fav={favOnly}
+              onFav={() => setFavOnly((v) => !v)}
+              onSurprise={() => {
+                surprise();
+                setFiltersOpen(false);
+              }}
+              freq={freq}
+              ingredients={ingredients}
+              onToggleIngredient={toggleIngredient}
+            />
+          )}
         </div>
       </header>
 
       <main className="mx-auto w-full max-w-[1180px] flex-1 px-4">
-        {firebaseEnabled && profile && (
-          <div className="pt-3">
-            <Dashboard
-              logs={mealLogs}
-              dailyKcalGoal={profile.dailyKcalGoal}
-              onSetGoal={(v) => setDailyKcalGoal(uid!, v)}
-              onAddMeal={() => setCaptureFor("dashboard")}
-              readOnly={readOnly}
-            />
+        {view === "home" && (
+          <div className="flex flex-col gap-3 pb-10 pt-3">
+            {firebaseEnabled && profile ? (
+              <Dashboard
+                logs={mealLogs}
+                dailyKcalGoal={profile.dailyKcalGoal}
+                onSetGoal={(v) => setDailyKcalGoal(uid!, v)}
+                readOnly={readOnly}
+              >
+                <div className="mt-4 grid grid-cols-2 gap-2.5">
+                  {canAdd && (
+                    <button
+                      onClick={() => setAddFlow("new")}
+                      className="flex flex-col items-start gap-1.5 rounded-2xl bg-accent p-4 text-left text-accent-ink shadow-[0_6px_20px_-6px_rgba(255,90,54,.7)] transition active:scale-[.98]"
+                    >
+                      <span className="text-[1.8rem] leading-none">🍽️</span>
+                      <span className="text-[1rem] font-extrabold">Ajouter un repas</span>
+                      <span className="text-[0.76rem] text-accent-ink/85">Photo ou texte</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setView("recipes")}
+                    className={`flex flex-col items-start gap-1.5 rounded-2xl bg-surface-2 p-4 text-left text-ink transition active:scale-[.98] ${canAdd ? "" : "col-span-2"}`}
+                  >
+                    <span className="text-[1.8rem] leading-none">📖</span>
+                    <span className="text-[1rem] font-extrabold">Mes recettes</span>
+                    <span className="text-[0.76rem] text-ink-soft">
+                      {recipes.length} recette{recipes.length > 1 ? "s" : ""}
+                    </span>
+                  </button>
+                </div>
+              </Dashboard>
+            ) : (
+              <button
+                onClick={() => setView("recipes")}
+                className="rounded-2xl bg-surface p-5 text-left text-[1rem] font-extrabold text-ink shadow-[0_1px_3px_rgba(43,42,38,.08)]"
+              >
+                📖 Voir les recettes ({recipes.length})
+              </button>
+            )}
           </div>
         )}
 
+        {view === "recipes" && (
+          <>
         <div className="flex flex-wrap items-baseline justify-between gap-2.5 py-3">
           <span className="text-[0.8rem] font-semibold text-ink-soft">
             <strong className="text-ink">{filtered.length}</strong> recette{filtered.length > 1 ? "s" : ""}
@@ -257,6 +309,8 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
             ))}
           </div>
         )}
+          </>
+        )}
       </main>
 
       <footer className="mx-auto w-full max-w-[1180px] px-4 py-6 text-center text-[0.76rem] text-ink-soft">
@@ -279,7 +333,7 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
           onAddEatenDate={(date) => addEatenDate(openRecipe.id, date)}
           onRemoveEatenDate={(date) => removeEatenDate(openRecipe.id, date)}
           onEdit={() => setEditOpen(true)}
-          onLogMeal={() => setCaptureFor("recipe")}
+          onLogMeal={() => setAddFlow("recipe")}
           readOnly={readOnly}
         />
       )}
@@ -290,14 +344,15 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
         <ShareSettings uid={uid} profile={profile} household={household} onClose={() => setShareOpen(false)} />
       )}
 
-      {captureFor !== "none" && uid && profile && (
-        <CaptureDialog
+      {addFlow !== "none" && uid && profile && (
+        <AddMealFlow
           recipes={recipes}
           owner={{ uid, name: profile.displayName, householdId: profile.householdId }}
-          initialRecipe={captureFor === "recipe" ? openRecipe : null}
-          defaultLogMeal={captureFor !== "library"}
-          defaultAddToLibrary={captureFor === "library"}
-          onClose={() => setCaptureFor("none")}
+          initialRecipe={addFlow === "recipe" ? openRecipe : null}
+          onClose={() => {
+            setAddFlow("none");
+            if (addFlow === "new") setView("home");
+          }}
         />
       )}
     </div>

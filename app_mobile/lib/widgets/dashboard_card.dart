@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../meal_types.dart';
 import '../models.dart';
-import '../services/meal_log_service.dart';
 import '../theme.dart';
 
 const _defaultGoal = 2000;
@@ -30,6 +29,13 @@ class DashboardCard extends StatefulWidget {
   final num? dailyKcalGoal;
   final ValueChanged<num> onSetGoal;
   final bool readOnly;
+
+  /// Jour affiché (0 = aujourd'hui, -1 = hier…), piloté par l'accueil pour
+  /// que les ajouts aillent sur ce jour-là.
+  final int dayOffset;
+  final ValueChanged<int> onDayOffset;
+  final ValueChanged<MealLog> onEditLog;
+
   /// Actions affichées entre l'anneau et la liste des repas (accueil).
   final Widget? actions;
 
@@ -39,6 +45,9 @@ class DashboardCard extends StatefulWidget {
     required this.dailyKcalGoal,
     required this.onSetGoal,
     required this.readOnly,
+    required this.dayOffset,
+    required this.onDayOffset,
+    required this.onEditLog,
     this.actions,
   });
 
@@ -47,11 +56,8 @@ class DashboardCard extends StatefulWidget {
 }
 
 class _DashboardCardState extends State<DashboardCard> {
-  final _service = MealLogService();
-  int _dayOffset = 0;
   bool _editingGoal = false;
   late final TextEditingController _goalCtrl;
-  String? _deletingId;
 
   num get _goal => (widget.dailyKcalGoal != null && widget.dailyKcalGoal! > 0) ? widget.dailyKcalGoal! : _defaultGoal;
 
@@ -73,15 +79,6 @@ class _DashboardCardState extends State<DashboardCard> {
     super.dispose();
   }
 
-  Future<void> _delete(MealLog l) async {
-    setState(() => _deletingId = l.id);
-    try {
-      await _service.deleteMealLog(l.id, l.photoUrl);
-    } finally {
-      if (mounted) setState(() => _deletingId = null);
-    }
-  }
-
   void _commitGoal() {
     final v = num.tryParse(_goalCtrl.text);
     if (v != null && v > 0) widget.onSetGoal(v.round());
@@ -90,19 +87,13 @@ class _DashboardCardState extends State<DashboardCard> {
 
   @override
   Widget build(BuildContext context) {
-    final day = DateTime.now().add(Duration(days: _dayOffset));
+    final day = DateTime.now().add(Duration(days: widget.dayOffset));
     final dayKey = _localDayKey(day);
-    final dayLabel = _dayOffset == 0
-        ? "Aujourd'hui"
-        : _dayOffset == -1
-            ? 'Hier'
-            : '${day.day}/${day.month}/${day.year}';
 
     final dayLogs = widget.logs.where((l) {
       final d = DateTime.tryParse(l.eatenAt)?.toLocal();
       return d != null && _localDayKey(d) == dayKey;
-    }).toList()
-      ..sort((a, b) => a.eatenAt.compareTo(b.eatenAt));
+    }).toList()..sort((a, b) => a.eatenAt.compareTo(b.eatenAt));
 
     num totalKcal = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0;
     for (final l in dayLogs) {
@@ -120,7 +111,7 @@ class _DashboardCardState extends State<DashboardCard> {
     final fatTarget = (_goal * 0.3 / 9).round();
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+      margin: const EdgeInsets.symmetric(vertical: 6),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(20)),
       child: Column(
@@ -129,10 +120,10 @@ class _DashboardCardState extends State<DashboardCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              IconButton(onPressed: () => setState(() => _dayOffset -= 1), icon: const Icon(Icons.chevron_left)),
-              Text(dayLabel, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+              IconButton(onPressed: () => widget.onDayOffset(widget.dayOffset - 1), icon: const Icon(Icons.chevron_left)),
+              Text(dayLabel(day), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
               IconButton(
-                onPressed: _dayOffset == 0 ? null : () => setState(() => _dayOffset += 1),
+                onPressed: widget.dayOffset == 0 ? null : () => widget.onDayOffset(widget.dayOffset + 1),
                 icon: const Icon(Icons.chevron_right),
               ),
             ],
@@ -149,11 +140,7 @@ class _DashboardCardState extends State<DashboardCard> {
                     SizedBox(
                       width: 110,
                       height: 110,
-                      child: CircularProgressIndicator(
-                        value: 1,
-                        strokeWidth: 9,
-                        color: AppColors.surface2,
-                      ),
+                      child: CircularProgressIndicator(value: 1, strokeWidth: 9, color: AppColors.surface2),
                     ),
                     SizedBox(
                       width: 110,
@@ -169,7 +156,10 @@ class _DashboardCardState extends State<DashboardCard> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(mood.$1, style: const TextStyle(fontSize: 28)),
-                        Text('${totalKcal.round()}', style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.w800, fontSize: 15)),
+                        Text(
+                          '${totalKcal.round()}',
+                          style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.w800, fontSize: 15),
+                        ),
                         Text('/ ${_goal.round()} kcal', style: const TextStyle(fontSize: 9, color: AppColors.inkSoft)),
                       ],
                     ),
@@ -198,7 +188,10 @@ class _DashboardCardState extends State<DashboardCard> {
                                   autofocus: true,
                                   keyboardType: TextInputType.number,
                                   style: const TextStyle(fontSize: 11),
-                                  decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 4)),
+                                  decoration: const InputDecoration(
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                  ),
                                   onSubmitted: (_) => _commitGoal(),
                                   onTapOutside: (_) => _commitGoal(),
                                 ),
@@ -217,39 +210,49 @@ class _DashboardCardState extends State<DashboardCard> {
               ),
             ],
           ),
-          if (widget.actions != null) ...[
-            const SizedBox(height: 14),
-            widget.actions!,
-          ],
+          if (widget.actions != null) ...[const SizedBox(height: 14), widget.actions!],
           const SizedBox(height: 10),
           if (dayLogs.isEmpty)
             const Text('Aucun repas enregistré ce jour-là.', style: TextStyle(color: AppColors.inkSoft, fontSize: 12.5))
           else
             for (final l in dayLogs)
-              Container(
-                margin: const EdgeInsets.only(bottom: 6),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                decoration: BoxDecoration(color: AppColors.surface2, borderRadius: BorderRadius.circular(12)),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Material(
+                  color: AppColors.surface2,
+                  borderRadius: BorderRadius.circular(12),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: widget.readOnly ? null : () => widget.onEditLog(l),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                      child: Row(
                         children: [
-                          Text(l.label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13), overflow: TextOverflow.ellipsis),
-                          Text('${mealTypeLabel(l.mealType)} · ${_formatTime(l.eatenAt)} · ${l.portionGrams} g',
-                              style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l.label,
+                                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  '${mealTypeLabel(l.mealType)} · ${_formatTime(l.eatenAt)} · ${l.portionGrams} g',
+                                  style: const TextStyle(fontSize: 11, color: AppColors.inkSoft),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text('${l.kcal} kcal', style: const TextStyle(fontFamily: 'monospace', fontSize: 12.5)),
+                          if (!widget.readOnly) ...[
+                            const SizedBox(width: 8),
+                            const Icon(Icons.edit_outlined, size: 16, color: AppColors.inkSoft),
+                          ],
                         ],
                       ),
                     ),
-                    Text('${l.kcal} kcal', style: const TextStyle(fontFamily: 'monospace', fontSize: 12.5)),
-                    if (!widget.readOnly)
-                      IconButton(
-                        onPressed: _deletingId == l.id ? null : () => _delete(l),
-                        icon: const Icon(Icons.close, size: 17),
-                        color: AppColors.inkSoft,
-                      ),
-                  ],
+                  ),
                 ),
               ),
         ],
@@ -272,7 +275,10 @@ class _MacroBar extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 3),
       child: Row(
         children: [
-          SizedBox(width: 58, child: Text(label, style: const TextStyle(fontSize: 10, color: AppColors.inkSoft))),
+          SizedBox(
+            width: 58,
+            child: Text(label, style: const TextStyle(fontSize: 10, color: AppColors.inkSoft)),
+          ),
           Expanded(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(4),
@@ -280,7 +286,10 @@ class _MacroBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          Text('${value.round()}/${target}g', style: const TextStyle(fontSize: 10, color: AppColors.inkSoft, fontFamily: 'monospace')),
+          Text(
+            '${value.round()}/${target}g',
+            style: const TextStyle(fontSize: 10, color: AppColors.inkSoft, fontFamily: 'monospace'),
+          ),
         ],
       ),
     );

@@ -12,9 +12,10 @@ import '../theme.dart';
 /// recette écrite ou existante (N personnes, étapes).
 enum _Kind { meal, recipe }
 
-enum _Stage { choose, text, loading, result }
+enum _Stage { choose, describe, text, loading, result }
 
 const _textSuggestions = ['Version plus légère', 'Sans gluten', 'Végétarien', 'Plus rapide'];
+const _snackIdeas = ['Une pomme', 'Un yaourt nature', 'Un carré de chocolat', "Une poignée d'amandes", 'Une banane', 'Un café au lait', 'Un biscuit', 'Une barre de céréales'];
 const _mealSuggestions = ['Portion plus petite', 'Sans la sauce', "J'en ai mangé 2", 'Il y avait aussi du pain'];
 
 Recipe? _recipeById(List<Recipe> recipes, String? id) {
@@ -30,14 +31,20 @@ Recipe? _recipeById(List<Recipe> recipes, String? id) {
 /// écrite) qu'on peut itérer par IA avant de le noter comme mangé et/ou de
 /// le garder dans la bibliothèque. Mirrors AddMealFlow.tsx on the web —
 /// remplace CaptureScreen. `initialRecipe` saute direct au résultat.
+/// `day` = jour affiché au dashboard (le repas est noté ce jour-là) ;
+/// `snack` ouvre directement "Décrire" avec le type Collation.
 class AddMealScreen extends StatefulWidget {
   final List<Recipe> recipes;
   final Recipe? initialRecipe;
   final String ownerUid;
   final String ownerName;
   final String householdId;
+  final DateTime day;
+  final bool snack;
 
   const AddMealScreen({
+    required this.day,
+    this.snack = false,
     super.key,
     required this.recipes,
     this.initialRecipe,
@@ -55,10 +62,12 @@ class _AddMealScreenState extends State<AddMealScreen> {
   final _mealLogs = MealLogService();
   final _recipeService = RecipeService();
   final _queryCtrl = TextEditingController();
+  final _describeCtrl = TextEditingController();
   final _instrCtrl = TextEditingController();
   final _scroll = ScrollController();
 
-  late _Stage _stage = widget.initialRecipe != null ? _Stage.result : _Stage.choose;
+  late _Stage _stage = widget.initialRecipe != null ? _Stage.result : (widget.snack ? _Stage.describe : _Stage.choose);
+  late final bool _isToday = isSameDay(widget.day, DateTime.now());
   _Kind _kind = _Kind.recipe;
   String? _error;
   String _loadingLabel = '';
@@ -74,7 +83,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
   String? _savedRecipeId;
   bool _iterating = false;
   String? _lastChange;
-  String _mealType = guessMealType();
+  late String _mealType = widget.snack ? 'collation' : guessMealType();
   double _portions = 1;
   bool _logged = false;
   String? _busy; // 'log' | 'save'
@@ -103,6 +112,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
   @override
   void dispose() {
     _queryCtrl.dispose();
+    _describeCtrl.dispose();
     _instrCtrl.dispose();
     _scroll.dispose();
     super.dispose();
@@ -211,6 +221,39 @@ class _AddMealScreenState extends State<AddMealScreen> {
     }
   }
 
+  Future<void> _describeMeal() async {
+    final q = _describeCtrl.text.trim();
+    if (q.isEmpty) {
+      setState(() => _error = widget.snack
+          ? 'Écris ce que tu as pris, par exemple « une pomme ».'
+          : 'Écris ce que tu as mangé, par exemple « crêpes et poulet sauce soja ».');
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _error = null;
+      _kind = _Kind.meal;
+      _stage = _Stage.loading;
+      _loadingLabel = "J'estime ce que tu as mangé…";
+    });
+    try {
+      final d = await _ai.describeMeal(q);
+      if (!mounted) return;
+      setState(() {
+        _draft = d;
+        _matchedRecipeId = null;
+        _savedRecipeId = null;
+        _stage = _Stage.result;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = _msg(e);
+        _stage = _Stage.describe;
+      });
+    }
+  }
+
   Future<void> _iterate(String text) async {
     final instr = text.trim();
     final draft = _draft;
@@ -258,7 +301,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
           recipeId: _savedRecipeId,
           label: draft.name,
           mealType: _mealType,
-          eatenAt: DateTime.now(),
+          eatenAt: eatenAtFor(widget.day, _mealType),
           portionGrams: scaled(n?.gramsPerServing),
           kcal: scaled(n?.kcal),
           proteinG: scaled(n?.proteinG),
@@ -315,17 +358,33 @@ class _AddMealScreenState extends State<AddMealScreen> {
   Widget build(BuildContext context) {
     final title = switch (_stage) {
       _Stage.choose => 'Ajouter un repas',
-      _Stage.text => 'Écrire le repas',
+      _Stage.describe => widget.snack ? 'Ajouter un en-cas' : "Ce que j'ai mangé",
+      _Stage.text => 'Trouver une recette',
       _Stage.loading => 'Un instant…',
       _Stage.result => _draft?.name ?? 'Résultat',
     };
+    final backToChoose = !widget.snack && (_stage == _Stage.text || _stage == _Stage.describe);
     return PopScope(
-      canPop: _stage != _Stage.text,
+      canPop: !backToChoose,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop && _stage == _Stage.text) setState(() => _stage = _Stage.choose);
+        if (!didPop && backToChoose) setState(() => _stage = _Stage.choose);
       },
       child: Scaffold(
-        appBar: AppBar(title: Text(title, overflow: TextOverflow.ellipsis)),
+        appBar: AppBar(
+          title: Text(title, overflow: TextOverflow.ellipsis),
+          actions: [
+            if (!_isToday)
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Chip(
+                  label: Text('📅 ${dayLabel(widget.day)}'),
+                  backgroundColor: AppColors.gold.withValues(alpha: 0.15),
+                  labelStyle: const TextStyle(color: AppColors.gold, fontWeight: FontWeight.w700),
+                  side: BorderSide.none,
+                ),
+              ),
+          ],
+        ),
         body: SafeArea(
           child: ListView(
             controller: _scroll,
@@ -341,6 +400,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
               ],
               ...switch (_stage) {
                 _Stage.choose => _buildChoose(),
+                _Stage.describe => _buildDescribe(),
                 _Stage.text => _buildText(),
                 _Stage.loading => _buildLoading(),
                 _Stage.result => _buildResult(),
@@ -363,12 +423,69 @@ class _AddMealScreenState extends State<AddMealScreen> {
         const SizedBox(height: 12),
         _BigChoice(
           emoji: '✍️',
-          title: 'Écrire le repas',
-          subtitle: 'Un plat, pour le nombre de personnes choisi → recette et ingrédients',
+          title: "Décrire ce que j'ai mangé",
+          subtitle: 'Un ou plusieurs plats, ex. « crêpes et poulet sauce soja » → calories et ingrédients',
+          onTap: () => setState(() {
+            _error = null;
+            _stage = _Stage.describe;
+          }),
+        ),
+        const SizedBox(height: 12),
+        _BigChoice(
+          emoji: '📖',
+          title: 'Trouver une recette',
+          subtitle: 'Un plat, pour le nombre de personnes choisi → recette complète et ingrédients',
           onTap: () => setState(() {
             _error = null;
             _stage = _Stage.text;
           }),
+        ),
+      ];
+
+  List<Widget> _buildDescribe() => [
+        Text(widget.snack ? "Qu'as-tu pris ?" : "Qu'as-tu mangé ?", style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _describeCtrl,
+          autofocus: true,
+          minLines: 2,
+          maxLines: 4,
+          style: const TextStyle(fontSize: 17),
+          decoration: InputDecoration(
+            hintText: widget.snack ? 'ex : une pomme et 3 carrés de chocolat' : 'ex : 2 crêpes et du poulet sauce soja avec du riz',
+          ),
+        ),
+        if (widget.snack) ...[
+          const SizedBox(height: 16),
+          const Text('Idées — touche pour ajouter', style: TextStyle(color: AppColors.inkSoft, fontWeight: FontWeight.w600, fontSize: 13)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final idea in _snackIdeas)
+                ActionChip(
+                  label: Text('+ $idea'),
+                  onPressed: () {
+                    final cur = _describeCtrl.text.trim();
+                    _describeCtrl.text = cur.isEmpty ? idea : '$cur, ${idea.toLowerCase()}';
+                  },
+                ),
+            ],
+          ),
+        ],
+        const SizedBox(height: 24),
+        SizedBox(
+          height: 54,
+          child: ElevatedButton(
+            onPressed: _describeMeal,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            child: const Text('Estimer les calories', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+          ),
         ),
       ];
 
@@ -453,7 +570,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
         ),
       const SizedBox(height: 12),
       Text(
-        isMeal ? 'TON ASSIETTE · 1 PERSONNE' : 'RECETTE POUR ${draft.servings} PERSONNE${draft.servings > 1 ? "S" : ""}',
+        isMeal ? 'CE QUE TU AS MANGÉ · 1 PERSONNE' : 'RECETTE POUR ${draft.servings} PERSONNE${draft.servings > 1 ? "S" : ""}',
         style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: AppColors.inkSoft, letterSpacing: 0.8),
       ),
       const SizedBox(height: 8),
@@ -468,7 +585,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
       _NutritionCard(nutrition: draft.nutrition, perLabel: isMeal ? 'dans ton assiette' : 'par personne'),
       const SizedBox(height: 12),
       _Section(
-        title: isMeal ? "CE QU'IL Y A DANS L'ASSIETTE" : 'INGRÉDIENTS',
+        title: isMeal ? 'CE QUE TU AS MANGÉ' : 'INGRÉDIENTS',
         child: draft.ingr.isEmpty
             ? const Text('Aucun ingrédient détecté.', style: TextStyle(color: AppColors.inkSoft))
             : Column(
@@ -600,7 +717,11 @@ class _AddMealScreenState extends State<AddMealScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 child: Text(
-                  _logged ? '✓ Ajouté à ta journée' : (_busy == 'log' ? 'Enregistrement…' : "J'ai mangé ça"),
+                  _logged
+                      ? '✓ Ajouté à ${_isToday ? 'ta journée' : dayLabel(widget.day).toLowerCase()}'
+                      : (_busy == 'log'
+                          ? 'Enregistrement…'
+                          : (_isToday ? "J'ai mangé ça" : "J'ai mangé ça ${dayLabel(widget.day).toLowerCase()}")),
                   style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800),
                 ),
               ),

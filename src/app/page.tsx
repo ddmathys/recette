@@ -17,13 +17,15 @@ import {
   addEatenDate,
   removeEatenDate,
 } from "@/lib/useRecipes";
-import { useMealLogs } from "@/lib/useMealLogs";
+import { addMealLog, useMealLogs } from "@/lib/useMealLogs";
+import { dayLabel, eatenAtFor, guessMealType, localDayKey } from "@/lib/mealTypes";
+import { EditMealLogDialog } from "@/components/EditMealLogDialog";
 import { useFavorites } from "@/lib/useFavorites";
 import { firebaseEnabled } from "@/lib/firebase";
 import { useAuth, signOut } from "@/lib/useAuth";
 import { useHousehold, setDailyKcalGoal } from "@/lib/useHousehold";
 import { AuthLanding } from "@/components/AuthGate";
-import type { CategoryKey } from "@/lib/types";
+import type { CategoryKey, MealLog, Recipe } from "@/lib/types";
 
 export default function Home() {
   const { user, checking } = useAuth();
@@ -63,7 +65,21 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
   // Accueil (état du jour + 2 actions) ou écran bibliothèque. Le parcours
   // "Ajouter un repas" s'ouvre par-dessus en plein écran.
   const [view, setView] = useState<"home" | "recipes">("home");
-  const [addFlow, setAddFlow] = useState<"none" | "new" | "recipe">("none");
+  const [addFlow, setAddFlow] = useState<"none" | "new" | "snack" | "recipe">("none");
+  // Jour affiché au dashboard — tous les ajouts (repas, en-cas, recette
+  // mangée) sont notés sur ce jour-là.
+  const [dayOffset, setDayOffset] = useState(0);
+  const [editingLog, setEditingLog] = useState<MealLog | null>(null);
+  const selectedDay = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + dayOffset);
+    return d;
+  }, [dayOffset]);
+  const isToday = dayOffset === 0;
+  const addedRecipeIds = useMemo(() => {
+    const key = localDayKey(selectedDay);
+    return new Set(mealLogs.filter((l) => l.recipeId && localDayKey(new Date(l.eatenAt)) === key).map((l) => l.recipeId as string));
+  }, [mealLogs, selectedDay]);
 
   const freq = useMemo(() => {
     const f: Record<string, number> = {};
@@ -102,6 +118,34 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
   }, [recipes, search, cat, time, vegOnly, favOnly, favs, ingredients]);
 
   const openRecipe = recipes.find((r) => r.id === openId) || null;
+
+  async function quickLog(r: Recipe) {
+    if (!uid || !profile) return;
+    const n = r.nutrition;
+    if (!n) {
+      // Pas d'estimation : on passe par l'écran résultat pour la compléter.
+      setOpenId(r.id);
+      setAddFlow("recipe");
+      return;
+    }
+    const mealType = guessMealType();
+    await addMealLog(
+      {
+        recipeId: r.id,
+        label: r.name,
+        mealType,
+        eatenAt: eatenAtFor(selectedDay, mealType).toISOString(),
+        portionGrams: Math.round(n.gramsPerServing),
+        kcal: Math.round(n.kcal),
+        proteinG: Math.round(n.proteinG),
+        carbsG: Math.round(n.carbsG),
+        fatG: Math.round(n.fatG),
+      },
+      null,
+      "recipe",
+      { uid, name: profile.displayName, householdId: profile.householdId },
+    );
+  }
 
   function toggleIngredient(name: string) {
     setIngredients((prev) => {
@@ -228,26 +272,41 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
                 logs={mealLogs}
                 dailyKcalGoal={profile.dailyKcalGoal}
                 onSetGoal={(v) => setDailyKcalGoal(uid!, v)}
+                dayOffset={dayOffset}
+                onDayOffset={setDayOffset}
+                onEditLog={setEditingLog}
                 readOnly={readOnly}
               >
                 <div className="mt-4 grid grid-cols-2 gap-2.5">
                   {canAdd && (
                     <button
                       onClick={() => setAddFlow("new")}
-                      className="flex flex-col items-start gap-1.5 rounded-2xl bg-accent p-4 text-left text-accent-ink shadow-[0_6px_20px_-6px_rgba(255,90,54,.7)] transition active:scale-[.98]"
+                      className="col-span-2 flex items-center gap-3.5 rounded-2xl bg-accent p-4 text-left text-accent-ink shadow-[0_6px_20px_-6px_rgba(255,90,54,.7)] transition active:scale-[.98]"
                     >
-                      <span className="text-[1.8rem] leading-none">🍽️</span>
-                      <span className="text-[1rem] font-extrabold">Ajouter un repas</span>
-                      <span className="text-[0.76rem] text-accent-ink/85">Photo ou texte</span>
+                      <span className="text-[2rem] leading-none">🍽️</span>
+                      <span className="flex flex-col">
+                        <span className="text-[1.05rem] font-extrabold">Ajouter un repas{isToday ? "" : ` · ${dayLabel(selectedDay).toLowerCase()}`}</span>
+                        <span className="text-[0.78rem] text-accent-ink/85">Photo, description ou recette</span>
+                      </span>
+                    </button>
+                  )}
+                  {canAdd && (
+                    <button
+                      onClick={() => setAddFlow("snack")}
+                      className="flex flex-col items-start gap-1.5 rounded-2xl bg-gold/15 p-4 text-left text-ink transition active:scale-[.98]"
+                    >
+                      <span className="text-[1.6rem] leading-none">🍎</span>
+                      <span className="text-[0.95rem] font-extrabold">Ajouter un en-cas</span>
+                      <span className="text-[0.74rem] text-ink-soft">Goûter, grignotage</span>
                     </button>
                   )}
                   <button
                     onClick={() => setView("recipes")}
                     className={`flex flex-col items-start gap-1.5 rounded-2xl bg-surface-2 p-4 text-left text-ink transition active:scale-[.98] ${canAdd ? "" : "col-span-2"}`}
                   >
-                    <span className="text-[1.8rem] leading-none">📖</span>
-                    <span className="text-[1rem] font-extrabold">Mes recettes</span>
-                    <span className="text-[0.76rem] text-ink-soft">
+                    <span className="text-[1.6rem] leading-none">📖</span>
+                    <span className="text-[0.95rem] font-extrabold">Mes recettes</span>
+                    <span className="text-[0.74rem] text-ink-soft">
                       {recipes.length} recette{recipes.length > 1 ? "s" : ""}
                     </span>
                   </button>
@@ -270,7 +329,10 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
           <span className="text-[0.8rem] font-semibold text-ink-soft">
             <strong className="text-ink">{filtered.length}</strong> recette{filtered.length > 1 ? "s" : ""}
           </span>
-          <span className="text-[0.8rem] text-ink-soft">{filterBits.join(" · ")}</span>
+          <span className="text-[0.8rem] text-ink-soft">
+            {!isToday && <strong className="text-gold">📅 Ajouts sur : {dayLabel(selectedDay).toLowerCase()} · </strong>}
+            {filterBits.join(" · ")}
+          </span>
         </div>
 
         {filtered.length === 0 ? (
@@ -305,6 +367,8 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
                 isFav={favs.has(r.id)}
                 onOpen={() => setOpenId(r.id)}
                 onToggleFav={() => toggleFav(r.id)}
+                added={addedRecipeIds.has(r.id)}
+                onQuickAdd={canAdd && !readOnly ? () => quickLog(r) : undefined}
               />
             ))}
           </div>
@@ -349,12 +413,16 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
           recipes={recipes}
           owner={{ uid, name: profile.displayName, householdId: profile.householdId }}
           initialRecipe={addFlow === "recipe" ? openRecipe : null}
+          day={selectedDay}
+          snack={addFlow === "snack"}
           onClose={() => {
             setAddFlow("none");
-            if (addFlow === "new") setView("home");
+            if (addFlow === "new" || addFlow === "snack") setView("home");
           }}
         />
       )}
+
+      {editingLog && <EditMealLogDialog key={editingLog.id} log={editingLog} onClose={() => setEditingLog(null)} />}
     </div>
   );
 }

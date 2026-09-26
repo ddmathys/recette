@@ -41,6 +41,9 @@ class MealLogService {
     return ref.id;
   }
 
+  Future<void> updateMealLog(String id, MealLogDraft draft) =>
+      _db.collection(_collection).doc(id).update(draft.toMap());
+
   Future<void> deleteMealLog(String id, String? photoUrl) async {
     if (photoUrl != null) {
       try {

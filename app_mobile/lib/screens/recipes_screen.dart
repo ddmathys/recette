@@ -25,7 +25,17 @@ class RecipesScreen extends StatefulWidget {
   final ValueChanged<String> onToggleFav;
   final ValueChanged<Recipe> onOpenRecipe;
 
+  /// Recettes déjà notées comme mangées le jour affiché au dashboard.
+  final ValueListenable<Set<String>> addedIds;
+  final ValueChanged<Recipe> onQuickAdd;
+
+  /// "Hier", etc. quand le dashboard n'est pas sur aujourd'hui (sinon null).
+  final String? dayNote;
+
   const RecipesScreen({
+    required this.addedIds,
+    required this.onQuickAdd,
+    this.dayNote,
     super.key,
     required this.recipes,
     required this.favs,
@@ -104,47 +114,61 @@ class _RecipesScreenState extends State<RecipesScreen> {
                 ],
               ),
             ),
+            if (widget.dayNote != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: Text(
+                  '📅 Les repas seront ajoutés sur : ${widget.dayNote!.toLowerCase()}',
+                  style: const TextStyle(color: AppColors.gold, fontWeight: FontWeight.w700, fontSize: 12.5),
+                ),
+              ),
             Expanded(
               child: ValueListenableBuilder(
                 valueListenable: widget.recipes,
                 builder: (context, recipes, _) => ValueListenableBuilder(
                   valueListenable: widget.favs,
-                  builder: (context, favs, _) {
-                    final filtered = _filter(recipes, favs);
-                    if (filtered.isEmpty) {
-                      return Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(32),
-                          child: Text(
-                            recipes.isEmpty
-                                ? "Aucune recette pour l'instant — ajoute un repas depuis l'accueil et garde-le !"
-                                : 'Aucune recette ne correspond à ces filtres.',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: AppColors.inkSoft),
+                  builder: (context, favs, _) => ValueListenableBuilder(
+                    valueListenable: widget.addedIds,
+                    builder: (context, addedIds, _) {
+                      final filtered = _filter(recipes, favs);
+                      if (filtered.isEmpty) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(32),
+                            child: Text(
+                              recipes.isEmpty
+                                  ? "Aucune recette pour l'instant — ajoute un repas depuis l'accueil et garde-le !"
+                                  : 'Aucune recette ne correspond à ces filtres.',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: AppColors.inkSoft),
+                            ),
                           ),
-                        ),
-                      );
-                    }
-                    return GridView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 190,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: 0.72,
-                      ),
-                      itemCount: filtered.length,
-                      itemBuilder: (context, i) {
-                        final r = filtered[i];
-                        return RecipeCard(
-                          recipe: r,
-                          isFav: favs.contains(r.id),
-                          onOpen: () => widget.onOpenRecipe(r),
-                          onToggleFav: () => widget.onToggleFav(r.id),
                         );
-                      },
-                    );
-                  },
+                      }
+                      return GridView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 190,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          // Hauteur fixe ajustée au contenu (photo 78 + titre 2 lignes + infos + bouton).
+                          mainAxisExtent: 222,
+                        ),
+                        itemCount: filtered.length,
+                        itemBuilder: (context, i) {
+                          final r = filtered[i];
+                          return RecipeCard(
+                            recipe: r,
+                            isFav: favs.contains(r.id),
+                            onOpen: () => widget.onOpenRecipe(r),
+                            onToggleFav: () => widget.onToggleFav(r.id),
+                            added: addedIds.contains(r.id),
+                            onQuickAdd: () => widget.onQuickAdd(r),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
@@ -161,97 +185,105 @@ class _RecipesScreenState extends State<RecipesScreen> {
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       isScrollControlled: true,
       builder: (sheetContext) {
-        return StatefulBuilder(builder: (sheetContext, setSheetState) {
-          void applyAndRefresh(VoidCallback fn) {
-            setState(fn);
-            setSheetState(() {});
-          }
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            void applyAndRefresh(VoidCallback fn) {
+              setState(fn);
+              setSheetState(() {});
+            }
 
-          return Padding(
-            padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Filtres', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
-                      IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close)),
-                    ],
-                  ),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      FilterChip(
-                        label: const Text('Végétarien'),
-                        selected: _vegOnly,
-                        onSelected: (v) => applyAndRefresh(() => _vegOnly = v),
-                        selectedColor: AppColors.herb,
-                        labelStyle: TextStyle(color: _vegOnly ? Colors.white : AppColors.ink),
-                      ),
-                      FilterChip(
-                        label: const Text('Favoris'),
-                        selected: _favOnly,
-                        onSelected: (v) => applyAndRefresh(() => _favOnly = v),
-                        selectedColor: AppColors.accent,
-                        labelStyle: TextStyle(color: _favOnly ? Colors.white : AppColors.ink),
-                      ),
-                      ActionChip(
-                        label: const Text('🎲 Surprends-moi'),
-                        onPressed: () {
-                          Navigator.pop(sheetContext);
-                          _surprise();
-                        },
-                        backgroundColor: AppColors.gold,
-                        labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('CATÉGORIE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.inkSoft)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      ChoiceChip(
-                        label: const Text('Toutes'),
-                        selected: _cat == 'all',
-                        onSelected: (_) => applyAndRefresh(() => _cat = 'all'),
-                      ),
-                      for (final c in kCategories)
-                        ChoiceChip(
-                          label: Text(c.label),
-                          selected: _cat == c.key,
-                          selectedColor: c.color,
-                          labelStyle: TextStyle(color: _cat == c.key ? Colors.white : AppColors.ink, fontSize: 12.5),
-                          onSelected: (_) => applyAndRefresh(() => _cat = c.key),
+            return Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Filtres', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+                        IconButton(onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close)),
+                      ],
+                    ),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        FilterChip(
+                          label: const Text('Végétarien'),
+                          selected: _vegOnly,
+                          onSelected: (v) => applyAndRefresh(() => _vegOnly = v),
+                          selectedColor: AppColors.herb,
+                          labelStyle: TextStyle(color: _vegOnly ? Colors.white : AppColors.ink),
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('TEMPS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.inkSoft)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final b in _timeBuckets)
-                        ChoiceChip(
-                          label: Text(b.$2),
-                          selected: _timeBucket == b.$1,
-                          onSelected: (_) => applyAndRefresh(() => _timeBucket = b.$1),
+                        FilterChip(
+                          label: const Text('Favoris'),
+                          selected: _favOnly,
+                          onSelected: (v) => applyAndRefresh(() => _favOnly = v),
+                          selectedColor: AppColors.accent,
+                          labelStyle: TextStyle(color: _favOnly ? Colors.white : AppColors.ink),
                         ),
-                    ],
-                  ),
-                ],
+                        ActionChip(
+                          label: const Text('🎲 Surprends-moi'),
+                          onPressed: () {
+                            Navigator.pop(sheetContext);
+                            _surprise();
+                          },
+                          backgroundColor: AppColors.gold,
+                          labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'CATÉGORIE',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.inkSoft),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('Toutes'),
+                          selected: _cat == 'all',
+                          onSelected: (_) => applyAndRefresh(() => _cat = 'all'),
+                        ),
+                        for (final c in kCategories)
+                          ChoiceChip(
+                            label: Text(c.label),
+                            selected: _cat == c.key,
+                            selectedColor: c.color,
+                            labelStyle: TextStyle(color: _cat == c.key ? Colors.white : AppColors.ink, fontSize: 12.5),
+                            onSelected: (_) => applyAndRefresh(() => _cat = c.key),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'TEMPS',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.inkSoft),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final b in _timeBuckets)
+                          ChoiceChip(
+                            label: Text(b.$2),
+                            selected: _timeBucket == b.$1,
+                            onSelected: (_) => applyAndRefresh(() => _timeBucket = b.$1),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
-        });
+            );
+          },
+        );
       },
     );
   }
@@ -275,7 +307,14 @@ class _FilterButton extends StatelessWidget {
             const Icon(Icons.tune, size: 16, color: Colors.white),
             if (activeCount > 0) ...[
               const SizedBox(width: 4),
-              CircleAvatar(radius: 8, backgroundColor: Colors.white, child: Text('$activeCount', style: const TextStyle(fontSize: 10, color: AppColors.accent2, fontWeight: FontWeight.bold))),
+              CircleAvatar(
+                radius: 8,
+                backgroundColor: Colors.white,
+                child: Text(
+                  '$activeCount',
+                  style: const TextStyle(fontSize: 10, color: AppColors.accent2, fontWeight: FontWeight.bold),
+                ),
+              ),
             ],
           ],
         ),

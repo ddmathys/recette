@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /// Mirrors the web app's palette (../../src/app/globals.css) so the two
 /// clients feel like the same product.
 class AppColors {
-  static const bg = Color(0xFFFAF7F0);
+  static const bg = Color(0xFFEBE4D3);
   static const surface = Color(0xFFFFFFFF);
   static const surface2 = Color(0xFFF2EFE4);
   static const ink = Color(0xFF2B2A26);

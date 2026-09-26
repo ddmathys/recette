@@ -16,8 +16,11 @@ class RecipeDetailScreen extends StatefulWidget {
   final String ownerUid;
   final String ownerName;
   final String householdId;
+  /// Jour affiché au dashboard : "Manger ce repas" le note ce jour-là.
+  final DateTime day;
 
   const RecipeDetailScreen({
+    required this.day,
     super.key,
     required this.recipe,
     required this.isFav,
@@ -231,6 +234,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                         ownerUid: widget.ownerUid,
                         ownerName: widget.ownerName,
                         householdId: widget.householdId,
+                        day: widget.day,
                       ),
                     ));
                   },

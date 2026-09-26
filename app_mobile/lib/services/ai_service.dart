@@ -45,6 +45,27 @@ class AiService {
     );
   }
 
+  /// Estime ce qu'on a mangé à partir d'une description libre ("crêpes et
+  /// poulet sauce soja", "une pomme") : 1 personne, pas d'étapes.
+  Future<RecipeDraft> describeMeal(String text) async {
+    final res = await http
+        .post(
+          Uri.parse('$_baseUrl/api/parse-recipe'),
+          headers: await _authHeaders(),
+          body: jsonEncode({'text': text, 'kind': 'meal'}),
+        )
+        .timeout(const Duration(seconds: 40));
+    final body = jsonDecode(res.body) as Map<String, dynamic>;
+    if (res.statusCode != 200) {
+      throw Exception(body['error']?.toString() ?? "L'estimation a échoué.");
+    }
+    final d = _draftFromJson(Map<String, dynamic>.from(body['draft'] as Map), fallbackName: text);
+    return d
+      ..servings = 1
+      ..steps = []
+      ..ingr = d.ingr.where((i) => i.name.trim().isNotEmpty).toList();
+  }
+
   /// AI-assisted edit of an existing recipe: `instruction` is a free-text
   /// change request ("remplace le poulet par du tofu"). Mirrors
   /// EditRecipeDialog.tsx on the web.

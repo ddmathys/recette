@@ -150,6 +150,9 @@ export async function POST(req: NextRequest) {
   // clients ne l'envoient pas), borné pour éviter des quantités absurdes.
   const rawServings = Math.round(Number(body.servings));
   const servings = Number.isFinite(rawServings) && rawServings > 0 ? Math.min(rawServings, 20) : null;
+  // "meal" = description de ce qu'on a mangé ("crêpes et poulet sauce
+  // soja", "une pomme") : on estime l'assiette, pas une recette à cuisiner.
+  const isMeal = body.kind === "meal";
 
   if (!text && !name && !link) {
     return NextResponse.json({ error: "Donne au moins un nom de plat, un texte ou un lien." }, { status: 400 });
@@ -164,7 +167,15 @@ export async function POST(req: NextRequest) {
   }
 
   const catList = CATEGORIES.map((c) => c.key).join(", ");
-  const prompt = `Tu es un assistant culinaire pour une appli de recettes familiales.
+  const mealPrompt = `Tu es un assistant nutrition pour une appli de recettes familiales.
+L'utilisateur décrit ce qu'il a mangé (un repas, un en-cas, éventuellement plusieurs aliments ou plats à la fois). Estime la portion d'UNE personne.
+Réponds UNIQUEMENT avec un objet JSON valide (aucun texte autour, pas de balises markdown), au format exact :
+{"name": string (nom court qui résume, ex. "Crêpes et poulet sauce soja"), "cat": une valeur parmi [${catList}], "time": 0, "diff": "Facile", "servings": 1, "veg": true si ni viande ni poisson sinon false, "ingr": tableau de paires {"name": string, "qty": string} (chaque aliment ou plat mangé avec sa quantité estimée, ex. {"name": "Crêpe au sucre", "qty": "2 pièces (120 g)"}), "steps": [], "nutrition": {"kcal": nombre, "proteinG": nombre, "carbsG": nombre, "fatG": nombre, "gramsPerServing": nombre entier (poids total mangé)}}
+Si une quantité est précisée ("2 crêpes", "un grand bol"), respecte-la ; sinon prends une portion normale pour un adulte. "nutrition" = le total de tout ce qui a été mangé. Reste réaliste, une estimation approchée suffit — ce n'est pas une donnée médicale.
+
+Ce que l'utilisateur a mangé :
+${text || name || "(rien)"}`;
+  const prompt = isMeal ? mealPrompt : `Tu es un assistant culinaire pour une appli de recettes familiales.
 On te donne des informations sur un plat : un nom, un texte libre (ingrédients/étapes dans le désordre, ou juste des notes), et éventuellement le contenu extrait d'une page web source. Structure tout ça.
 Réponds UNIQUEMENT avec un objet JSON valide (aucun texte autour, pas de balises markdown), au format exact :
 {"name": string, "cat": une valeur parmi [${catList}], "time": nombre entier de minutes de préparation active, "diff": "Facile" ou "Moyen" ou "Avancé", "servings": nombre entier de personnes, "veg": true si la recette ne contient ni viande ni poisson sinon false, "ingr": tableau de paires {"name": string, "qty": string}, "steps": tableau de 3 à 6 étapes concises en français, "nutrition": {"kcal": nombre, "proteinG": nombre, "carbsG": nombre, "fatG": nombre, "gramsPerServing": nombre entier}}

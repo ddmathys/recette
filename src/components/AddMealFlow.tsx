@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { CATEGORIES } from "@/lib/categories";
 import { compressImageIfNeeded } from "@/lib/compressImage";
 import { auth } from "@/lib/firebase";
-import { MEAL_TYPES, guessMealType } from "@/lib/mealTypes";
+import { MEAL_TYPES, dayLabel, eatenAtFor, guessMealType } from "@/lib/mealTypes";
 import { sanitizeNutrition } from "@/lib/nutrition";
 import { addRecipe, uploadRecipePhoto } from "@/lib/useRecipes";
 import { addMealLog, uploadMealPhoto } from "@/lib/useMealLogs";
@@ -17,9 +17,10 @@ const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
  * recette écrite ou existante (N personnes, étapes). Les deux arrivent sur
  * le même écran de résultat. */
 type Kind = "meal" | "recipe";
-type Stage = "choose" | "text" | "loading" | "result";
+type Stage = "choose" | "describe" | "text" | "loading" | "result";
 
 const TEXT_SUGGESTIONS = ["Version plus légère", "Sans gluten", "Végétarien", "Plus rapide"];
+const SNACK_IDEAS = ["Une pomme", "Un yaourt nature", "Un carré de chocolat", "Une poignée d'amandes", "Une banane", "Un café au lait", "Un biscuit", "Une barre de céréales"];
 const MEAL_SUGGESTIONS = ["Portion plus petite", "Sans la sauce", "J'en ai mangé 2", "Il y avait aussi du pain"];
 
 /**
@@ -28,25 +29,33 @@ const MEAL_SUGGESTIONS = ["Portion plus petite", "Sans la sauce", "J'en ai mang�
  * si écrite) qu'on peut itérer par IA avant de le noter comme mangé et/ou
  * de le garder dans la bibliothèque. Remplace CaptureDialog.
  * `initialRecipe` saute directement au résultat ("Manger ce repas").
+ * `day` = jour affiché au dashboard : le repas est noté ce jour-là.
+ * `snack` ouvre directement "Décrire" avec le type Collation.
  */
 export function AddMealFlow({
   recipes,
   owner,
   initialRecipe,
+  day,
+  snack = false,
   onClose,
 }: {
   recipes: Recipe[];
   owner: { uid: string; name: string; householdId: string };
   initialRecipe?: Recipe | null;
+  day: Date;
+  snack?: boolean;
   onClose: () => void;
 }) {
-  const [stage, setStage] = useState<Stage>(initialRecipe ? "result" : "choose");
+  const [stage, setStage] = useState<Stage>(initialRecipe ? "result" : snack ? "describe" : "choose");
+  const isToday = day.toDateString() === new Date().toDateString();
   const [kind, setKind] = useState<Kind>("recipe");
   const [error, setError] = useState<string | null>(null);
   const [loadingLabel, setLoadingLabel] = useState("");
 
   // Saisie texte
   const [query, setQuery] = useState("");
+  const [description, setDescription] = useState("");
   const [persons, setPersons] = useState(2);
 
   // Photo
@@ -65,7 +74,7 @@ export function AddMealFlow({
   const [iterating, setIterating] = useState(false);
   const [lastChange, setLastChange] = useState<string | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
-  const [mealType, setMealType] = useState<MealType>(guessMealType());
+  const [mealType, setMealType] = useState<MealType>(snack ? "collation" : guessMealType());
   const [portions, setPortions] = useState(1);
   const [logged, setLogged] = useState(false);
   const [busyAction, setBusyAction] = useState<"log" | "save" | null>(null);
@@ -157,6 +166,35 @@ export function AddMealFlow({
     }
   }
 
+  async function describeMeal() {
+    const q = description.trim();
+    if (!q) {
+      setError(snack ? "Écris ce que tu as pris, par exemple « une pomme »." : "Écris ce que tu as mangé, par exemple « crêpes et poulet sauce soja ».");
+      return;
+    }
+    setError(null);
+    setKind("meal");
+    setStage("loading");
+    setLoadingLabel("J'estime ce que tu as mangé…");
+    try {
+      const res = await fetch("/api/parse-recipe", {
+        method: "POST",
+        headers: await authHeaders(),
+        body: JSON.stringify({ text: q, kind: "meal" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "L'estimation a échoué.");
+      const next = normalizeDraft(data.draft, q);
+      setDraft({ ...next, servings: 1, steps: [] });
+      setMatchedRecipeId(null);
+      setSavedRecipeId(null);
+      setStage("result");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "L'estimation a échoué.");
+      setStage("describe");
+    }
+  }
+
   async function iterate(text: string) {
     const instr = text.trim();
     if (!instr || !draft) return;
@@ -197,7 +235,7 @@ export function AddMealFlow({
           recipeId: savedRecipeId,
           label: draft.name,
           mealType,
-          eatenAt: new Date().toISOString(),
+          eatenAt: eatenAtFor(day, mealType).toISOString(),
           portionGrams: Math.round((n?.gramsPerServing ?? 0) * portions),
           kcal: Math.round((n?.kcal ?? 0) * portions),
           proteinG: Math.round((n?.proteinG ?? 0) * portions),
@@ -241,7 +279,17 @@ export function AddMealFlow({
   }
 
   const title =
-    stage === "choose" ? "Ajouter un repas" : stage === "text" ? "Écrire le repas" : stage === "loading" ? "Un instant…" : draft?.name || "Résultat";
+    stage === "choose"
+      ? "Ajouter un repas"
+      : stage === "describe"
+        ? snack
+          ? "Ajouter un en-cas"
+          : "Ce que j'ai mangé"
+        : stage === "text"
+          ? "Trouver une recette"
+          : stage === "loading"
+            ? "Un instant…"
+            : draft?.name || "Résultat";
 
   return (
     <div ref={scroller} className="fixed inset-0 z-50 overflow-y-auto bg-bg">
@@ -252,7 +300,7 @@ export function AddMealFlow({
         <div className="mx-auto flex max-w-[640px] items-center gap-3 px-4 py-3">
           <button
             onClick={() => {
-              if (stage === "text") setStage("choose");
+              if ((stage === "text" || stage === "describe") && !snack) setStage("choose");
               else onClose();
             }}
             aria-label="Retour"
@@ -263,6 +311,9 @@ export function AddMealFlow({
             </svg>
           </button>
           <h2 className="min-w-0 truncate text-[1.1rem] font-extrabold tracking-tight text-ink">{title}</h2>
+          {!isToday && (
+            <span className="ml-auto shrink-0 rounded-full bg-gold/15 px-3 py-1 text-[0.78rem] font-bold text-gold">📅 {dayLabel(day)}</span>
+          )}
         </div>
       </header>
 
@@ -292,14 +343,68 @@ export function AddMealFlow({
             />
             <BigChoice
               emoji="✍️"
-              title="Écrire le repas"
-              subtitle="Un plat, pour le nombre de personnes choisi → recette et ingrédients"
+              title="Décrire ce que j'ai mangé"
+              subtitle="Un ou plusieurs plats, ex. « crêpes et poulet sauce soja » → calories et ingrédients"
+              onClick={() => {
+                setError(null);
+                setStage("describe");
+              }}
+            />
+            <BigChoice
+              emoji="📖"
+              title="Trouver une recette"
+              subtitle="Un plat, pour le nombre de personnes choisi → recette complète et ingrédients"
               onClick={() => {
                 setError(null);
                 setStage("text");
               }}
             />
           </>
+        )}
+
+        {stage === "describe" && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              describeMeal();
+            }}
+            className="flex flex-col gap-5"
+          >
+            <label className="flex flex-col gap-2">
+              <span className="text-[0.9rem] font-bold text-ink">{snack ? "Qu'as-tu pris ?" : "Qu'as-tu mangé ?"}</span>
+              <textarea
+                autoFocus
+                rows={3}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={snack ? "ex : une pomme et 3 carrés de chocolat" : "ex : 2 crêpes et du poulet sauce soja avec du riz"}
+                className="w-full resize-none rounded-2xl border-2 border-line bg-surface px-4 py-3.5 text-[1.05rem] text-ink outline-none focus:border-accent"
+              />
+            </label>
+            {snack && (
+              <div className="flex flex-col gap-2">
+                <span className="text-[0.8rem] font-semibold text-ink-soft">Idées — touche pour ajouter</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {SNACK_IDEAS.map((idea) => (
+                    <button
+                      key={idea}
+                      type="button"
+                      onClick={() => setDescription((d) => (d.trim() ? `${d.trim()}, ${idea.toLowerCase()}` : idea))}
+                      className="rounded-full border-2 border-line bg-surface px-3 py-1.5 text-[0.8rem] font-semibold text-ink-soft hover:border-accent hover:text-accent"
+                    >
+                      + {idea}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <button
+              type="submit"
+              className="rounded-2xl bg-accent px-4 py-4 text-[1rem] font-bold text-accent-ink shadow-[0_2px_10px_-2px_rgba(255,90,54,.65)] active:scale-[.98]"
+            >
+              Estimer les calories
+            </button>
+          </form>
         )}
 
         {stage === "text" && (
@@ -352,7 +457,7 @@ export function AddMealFlow({
             )}
 
             <p className="-mb-1 text-[0.8rem] font-semibold uppercase tracking-wider text-ink-soft">
-              {kind === "meal" ? "Ton assiette · 1 personne" : `Recette pour ${draft.servings} personne${draft.servings > 1 ? "s" : ""}`}
+              {kind === "meal" ? "Ce que tu as mangé · 1 personne" : `Recette pour ${draft.servings} personne${draft.servings > 1 ? "s" : ""}`}
             </p>
 
             {lastChange && (
@@ -367,7 +472,7 @@ export function AddMealFlow({
 
             <NutritionCard draft={draft} perLabel={kind === "meal" ? "dans ton assiette" : "par personne"} />
 
-            <Section title={kind === "meal" ? "Ce qu'il y a dans l'assiette" : "Ingrédients"}>
+            <Section title={kind === "meal" ? "Ce que tu as mangé" : "Ingrédients"}>
               {draft.ingr.length ? (
                 <ul className="flex flex-col divide-y divide-line">
                   {draft.ingr.map((i, idx) => (
@@ -462,7 +567,13 @@ export function AddMealFlow({
                     logged ? "bg-herb text-white" : "bg-accent text-accent-ink shadow-[0_2px_10px_-2px_rgba(255,90,54,.65)]"
                   } disabled:cursor-default`}
                 >
-                  {logged ? "✓ Ajouté à ta journée" : busyAction === "log" ? "Enregistrement…" : "J'ai mangé ça"}
+                  {logged
+                    ? `✓ Ajouté à ${isToday ? "ta journée" : dayLabel(day).toLowerCase()}`
+                    : busyAction === "log"
+                      ? "Enregistrement…"
+                      : isToday
+                        ? "J'ai mangé ça"
+                        : `J'ai mangé ça ${dayLabel(day).toLowerCase()}`}
                 </button>
                 <button
                   onClick={saveRecipe}

@@ -1,16 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { mealTypeLabel } from "@/lib/mealTypes";
-import { deleteMealLog } from "@/lib/useMealLogs";
+import { dayLabel, localDayKey, mealTypeLabel } from "@/lib/mealTypes";
 import type { MealLog } from "@/lib/types";
 
 const DEFAULT_GOAL = 2000;
-
-function localDayKey(d: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("fr-CH", { hour: "2-digit", minute: "2-digit" });
@@ -25,26 +19,31 @@ function moodFor(pct: number): { emoji: string; caption: string; color: string }
 
 /** Indicateur du jour : anneau de calories + petit personnage qui réagit à
  * la progression, macros vs objectif, liste des repas du jour, navigation
- * jour précédent/suivant. Les actions (ajouter un repas, recettes) sont
- * passées en `children` et s'affichent entre l'anneau et la liste. */
+ * jour précédent/suivant (piloté par la page : les ajouts vont sur le jour
+ * affiché). Chaque repas est cliquable pour le modifier. Les actions
+ * (ajouter un repas, en-cas, recettes) sont passées en `children`. */
 export function Dashboard({
   logs,
   dailyKcalGoal,
   onSetGoal,
+  dayOffset,
+  onDayOffset,
+  onEditLog,
   readOnly,
   children,
 }: {
   logs: MealLog[];
   dailyKcalGoal: number | undefined;
   onSetGoal: (goal: number) => void;
+  dayOffset: number;
+  onDayOffset: (offset: number) => void;
+  onEditLog: (log: MealLog) => void;
   readOnly: boolean;
   children?: React.ReactNode;
 }) {
   const goal = dailyKcalGoal && dailyKcalGoal > 0 ? dailyKcalGoal : DEFAULT_GOAL;
-  const [dayOffset, setDayOffset] = useState(0);
   const [editingGoal, setEditingGoal] = useState(false);
   const [goalInput, setGoalInput] = useState(String(goal));
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const day = useMemo(() => {
     const d = new Date();
@@ -72,21 +71,10 @@ export function Dashboard({
   const mood = moodFor(pct);
   const ringPct = Math.max(0, Math.min(100, pct));
   const circumference = 2 * Math.PI * 54;
-  const dayLabel =
-    dayOffset === 0 ? "Aujourd'hui" : dayOffset === -1 ? "Hier" : day.toLocaleDateString("fr-CH", { weekday: "short", day: "numeric", month: "short" });
 
   const proteinTarget = Math.round((goal * 0.25) / 4);
   const carbsTarget = Math.round((goal * 0.45) / 4);
   const fatTarget = Math.round((goal * 0.3) / 9);
-
-  async function handleDelete(l: MealLog) {
-    setDeletingId(l.id);
-    try {
-      await deleteMealLog(l.id, l.photoUrl);
-    } finally {
-      setDeletingId(null);
-    }
-  }
 
   function commitGoal() {
     const v = Number(goalInput);
@@ -98,15 +86,15 @@ export function Dashboard({
     <div className="rounded-3xl bg-surface p-4 shadow-[0_1px_3px_rgba(43,42,38,.08)] sm:p-5">
       <div className="mb-3 flex items-center justify-between gap-2">
         <button
-          onClick={() => setDayOffset((o) => o - 1)}
+          onClick={() => onDayOffset(dayOffset - 1)}
           aria-label="Jour précédent"
           className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink-soft hover:border-accent hover:text-accent"
         >
           ‹
         </button>
-        <span className="text-[0.95rem] font-bold text-ink">{dayLabel}</span>
+        <span className="text-[0.95rem] font-bold text-ink">{dayLabel(day)}</span>
         <button
-          onClick={() => setDayOffset((o) => Math.min(0, o + 1))}
+          onClick={() => onDayOffset(Math.min(0, dayOffset + 1))}
           disabled={dayOffset === 0}
           aria-label="Jour suivant"
           className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink-soft hover:border-accent hover:text-accent disabled:opacity-40"
@@ -181,26 +169,27 @@ export function Dashboard({
         ) : (
           <ul className="flex flex-col gap-1.5">
             {dayLogs.map((l) => (
-              <li key={l.id} className="flex items-center justify-between gap-2.5 rounded-xl bg-surface-2 px-3.5 py-2.5">
-                <div className="min-w-0">
-                  <p className="truncate text-[0.85rem] font-semibold text-ink">{l.label}</p>
-                  <p className="text-[0.72rem] text-ink-soft">
-                    {mealTypeLabel(l.mealType)} · {formatTime(l.eatenAt)} · {l.portionGrams} g
-                  </p>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <span className="whitespace-nowrap font-mono text-[0.8rem] text-ink">{l.kcal} kcal</span>
-                  {!readOnly && (
-                    <button
-                      onClick={() => handleDelete(l)}
-                      disabled={deletingId === l.id}
-                      aria-label={`Supprimer ${l.label}`}
-                      className="text-ink-soft hover:text-accent disabled:opacity-50"
-                    >
-                      &times;
-                    </button>
-                  )}
-                </div>
+              <li key={l.id}>
+                <button
+                  onClick={() => onEditLog(l)}
+                  disabled={readOnly}
+                  className="flex w-full items-center justify-between gap-2.5 rounded-xl bg-surface-2 px-3.5 py-2.5 text-left transition hover:brightness-[.97] active:scale-[.99]"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-[0.85rem] font-semibold text-ink">{l.label}</p>
+                    <p className="text-[0.72rem] text-ink-soft">
+                      {mealTypeLabel(l.mealType)} · {formatTime(l.eatenAt)} · {l.portionGrams} g
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className="whitespace-nowrap font-mono text-[0.8rem] text-ink">{l.kcal} kcal</span>
+                    {!readOnly && (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-ink-soft" aria-hidden>
+                        <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                      </svg>
+                    )}
+                  </div>
+                </button>
               </li>
             ))}
           </ul>

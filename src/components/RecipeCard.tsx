@@ -9,11 +9,17 @@ export function RecipeCard({
   isFav,
   onOpen,
   onToggleFav,
+  added = false,
+  onQuickAdd,
 }: {
   recipe: Recipe;
   isFav: boolean;
   onOpen: () => void;
   onToggleFav: () => void;
+  /** Déjà noté comme mangé le jour affiché au dashboard. */
+  added?: boolean;
+  /** Noter 1 portion comme mangée en un tap (sur le jour affiché). */
+  onQuickAdd?: () => void;
 }) {
   const cat = getCategoryMeta(recipe.cat);
 
@@ -63,9 +69,9 @@ export function RecipeCard({
           </svg>
         </span>
       </div>
-      <div className="flex flex-1 flex-col gap-1 px-2.5 pb-2.5 pt-2">
-        <h3 className="text-[0.88rem] font-bold leading-tight text-ink">{recipe.name}</h3>
-        <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-1 text-[0.7rem] font-semibold text-ink-soft">
+      <div className="flex flex-col gap-1 px-2.5 pb-2.5 pt-2">
+        <h3 className="line-clamp-2 text-[0.88rem] font-bold leading-tight text-ink">{recipe.name}</h3>
+        <div className="flex flex-wrap items-center gap-1.5 text-[0.7rem] font-semibold text-ink-soft">
           <span className="inline-flex items-center gap-0.5">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} className="h-2.5 w-2.5">
               <circle cx="12" cy="12" r="9" />
@@ -85,6 +91,37 @@ export function RecipeCard({
             </span>
           )}
         </div>
+        {recipe.nutrition && (
+          <div className="flex flex-wrap items-center gap-x-1.5 font-mono text-[0.66rem] text-ink-soft">
+            <span className="font-bold text-ink">{Math.round(recipe.nutrition.kcal)} kcal</span>
+            <span title="Protéines">P {Math.round(recipe.nutrition.proteinG)}</span>
+            <span title="Glucides">G {Math.round(recipe.nutrition.carbsG)}</span>
+            <span title="Lipides">L {Math.round(recipe.nutrition.fatG)}</span>
+          </div>
+        )}
+        {onQuickAdd &&
+          (added ? (
+            <span className="mt-0.5 inline-flex items-center justify-center rounded-lg bg-herb/12 py-1 text-[0.72rem] font-bold text-herb">✓ Ajouté</span>
+          ) : (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                onQuickAdd();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onQuickAdd();
+                }
+              }}
+              className="mt-0.5 inline-flex items-center justify-center rounded-lg border-2 border-line py-0.5 text-[0.72rem] font-bold text-ink-soft transition hover:border-accent hover:text-accent"
+            >
+              + J&apos;ai mangé ça
+            </span>
+          ))}
       </div>
     </button>
   );

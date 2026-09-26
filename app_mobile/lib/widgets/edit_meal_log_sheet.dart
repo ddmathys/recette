@@ -36,6 +36,8 @@ class _EditMealLogSheetState extends State<_EditMealLogSheet> {
   late final _carbs = TextEditingController(text: '${widget.log.carbsG.round()}');
   late final _fat = TextEditingController(text: '${widget.log.fatG.round()}');
   late String _mealType = widget.log.mealType;
+  late final num _originalCount = (widget.log.count != null && widget.log.count! > 0) ? widget.log.count! : 1;
+  late num _count = _originalCount;
   late DateTime _eatenAt = DateTime.tryParse(widget.log.eatenAt)?.toLocal() ?? DateTime.now();
   String? _busy;
   String? _error;
@@ -46,6 +48,18 @@ class _EditMealLogSheetState extends State<_EditMealLogSheet> {
       c.dispose();
     }
     super.dispose();
+  }
+
+  /// Passe à `n` unités (×1 à ×4), à partir de la valeur d'une unité.
+  void _setUnits(int n) {
+    final l = widget.log;
+    final f = n / _originalCount;
+    setState(() => _count = n);
+    _grams.text = '${(l.portionGrams * f).round()}';
+    _kcal.text = '${(l.kcal * f).round()}';
+    _protein.text = '${(l.proteinG * f).round()}';
+    _carbs.text = '${(l.carbsG * f).round()}';
+    _fat.text = '${(l.fatG * f).round()}';
   }
 
   void _scaleTo(num grams) {
@@ -94,6 +108,7 @@ class _EditMealLogSheetState extends State<_EditMealLogSheet> {
           proteinG: _n(_protein),
           carbsG: _n(_carbs),
           fatG: _n(_fat),
+          count: _count,
         ),
       );
       if (mounted) Navigator.pop(context);
@@ -123,11 +138,11 @@ class _EditMealLogSheetState extends State<_EditMealLogSheet> {
   }
 
   Widget _numField(String label, TextEditingController c, {ValueChanged<String>? onChanged}) => TextField(
-        controller: c,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        onChanged: onChanged,
-        decoration: InputDecoration(labelText: label, isDense: true),
-      );
+    controller: c,
+    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+    onChanged: onChanged,
+    decoration: InputDecoration(labelText: label, isDense: true),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -142,19 +157,28 @@ class _EditMealLogSheetState extends State<_EditMealLogSheet> {
           children: [
             Row(
               children: [
-                const Expanded(child: Text('Modifier le repas', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800))),
+                const Expanded(
+                  child: Text('Modifier le repas', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                ),
                 IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
               ],
             ),
             if (widget.log.photoUrl != null) ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: Image.network(widget.log.photoUrl!, height: 120, fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => const SizedBox.shrink()),
+                child: Image.network(
+                  widget.log.photoUrl!,
+                  height: 120,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
               ),
               const SizedBox(height: 12),
             ],
-            TextField(controller: _label, decoration: const InputDecoration(labelText: 'Nom')),
+            TextField(
+              controller: _label,
+              decoration: const InputDecoration(labelText: 'Nom'),
+            ),
             const SizedBox(height: 12),
             Wrap(
               spacing: 6,
@@ -182,19 +206,28 @@ class _EditMealLogSheetState extends State<_EditMealLogSheet> {
               children: [
                 SizedBox(
                   width: 110,
-                  child: _numField('Quantité (g)', _grams, onChanged: (v) => _scaleTo(num.tryParse(v) ?? 0)),
+                  child: _numField(
+                    'Quantité (g)',
+                    _grams,
+                    onChanged: (v) {
+                      // Quantité libre en grammes : on considère que c'est 1 unité.
+                      setState(() => _count = 1);
+                      _scaleTo(num.tryParse(v) ?? 0);
+                    },
+                  ),
                 ),
                 const SizedBox(width: 8),
-                for (final f in [0.5, 1.5, 2.0])
+                for (final n in [1, 2, 3, 4])
                   Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: ActionChip(
-                      label: Text('× ${f.toString().replaceAll('.0', '').replaceAll('.', ',')}'),
-                      onPressed: () {
-                        final g = (widget.log.portionGrams * f).round();
-                        _grams.text = '$g';
-                        setState(() => _scaleTo(g));
-                      },
+                    padding: const EdgeInsets.only(right: 4),
+                    child: ChoiceChip(
+                      label: Text('×$n'),
+                      selected: _count == n,
+                      selectedColor: AppColors.accent,
+                      labelStyle: TextStyle(color: _count == n ? Colors.white : AppColors.ink, fontWeight: FontWeight.w800),
+                      showCheckmark: false,
+                      visualDensity: VisualDensity.compact,
+                      onSelected: (_) => _setUnits(n),
                     ),
                   ),
               ],
@@ -213,7 +246,10 @@ class _EditMealLogSheetState extends State<_EditMealLogSheet> {
             ),
             if (_error != null) ...[
               const SizedBox(height: 10),
-              Text(_error!, style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.w600)),
+              Text(
+                _error!,
+                style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.w600),
+              ),
             ],
             const SizedBox(height: 16),
             SizedBox(

@@ -29,6 +29,7 @@ export function Dashboard({
   dayOffset,
   onDayOffset,
   onEditLog,
+  onEstimateDay,
   readOnly,
   children,
 }: {
@@ -38,6 +39,8 @@ export function Dashboard({
   dayOffset: number;
   onDayOffset: (offset: number) => void;
   onEditLog: (log: MealLog) => void;
+  /** Ouvre "je ne sais plus → estimer la journée" pour le jour affiché. */
+  onEstimateDay: () => void;
   readOnly: boolean;
   children?: React.ReactNode;
 }) {
@@ -176,9 +179,14 @@ export function Dashboard({
                   className="flex w-full items-center justify-between gap-2.5 rounded-xl bg-surface-2 px-3.5 py-2.5 text-left transition hover:brightness-[.97] active:scale-[.99]"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-[0.85rem] font-semibold text-ink">{l.label}</p>
+                    <p className="truncate text-[0.85rem] font-semibold text-ink">
+                      {l.label}
+                      {l.count && l.count > 1 ? <span className="text-ink-soft"> ×{l.count}</span> : null}
+                    </p>
                     <p className="text-[0.72rem] text-ink-soft">
-                      {mealTypeLabel(l.mealType)} · {formatTime(l.eatenAt)} · {l.portionGrams} g
+                      {l.source === "estimate"
+                        ? "Estimation · valeurs approximatives"
+                        : `${mealTypeLabel(l.mealType)} · ${formatTime(l.eatenAt)} · ${l.portionGrams} g`}
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
@@ -193,6 +201,14 @@ export function Dashboard({
               </li>
             ))}
           </ul>
+        )}
+        {!readOnly && (
+          <button
+            onClick={onEstimateDay}
+            className="mt-2.5 text-[0.78rem] font-semibold text-ink-soft underline decoration-dotted underline-offset-4 hover:text-accent"
+          >
+            Je ne sais plus ce que j&apos;ai mangé → estimer la journée
+          </button>
         )}
       </div>
     </div>

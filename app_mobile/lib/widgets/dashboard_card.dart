@@ -36,6 +36,9 @@ class DashboardCard extends StatefulWidget {
   final ValueChanged<int> onDayOffset;
   final ValueChanged<MealLog> onEditLog;
 
+  /// "Je ne sais plus" → estimer la journée affichée.
+  final VoidCallback onEstimateDay;
+
   /// Actions affichées entre l'anneau et la liste des repas (accueil).
   final Widget? actions;
 
@@ -48,6 +51,7 @@ class DashboardCard extends StatefulWidget {
     required this.dayOffset,
     required this.onDayOffset,
     required this.onEditLog,
+    required this.onEstimateDay,
     this.actions,
   });
 
@@ -233,12 +237,14 @@ class _DashboardCardState extends State<DashboardCard> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  l.label,
+                                  (l.count != null && l.count! > 1) ? '${l.label} ×${l.count}' : l.label,
                                   style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 Text(
-                                  '${mealTypeLabel(l.mealType)} · ${_formatTime(l.eatenAt)} · ${l.portionGrams} g',
+                                  l.source == 'estimate'
+                                      ? 'Estimation · valeurs approximatives'
+                                      : '${mealTypeLabel(l.mealType)} · ${_formatTime(l.eatenAt)} · ${l.portionGrams} g',
                                   style: const TextStyle(fontSize: 11, color: AppColors.inkSoft),
                                 ),
                               ],
@@ -255,6 +261,18 @@ class _DashboardCardState extends State<DashboardCard> {
                   ),
                 ),
               ),
+          if (!widget.readOnly)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: widget.onEstimateDay,
+                style: TextButton.styleFrom(foregroundColor: AppColors.inkSoft, padding: EdgeInsets.zero),
+                child: const Text(
+                  "Je ne sais plus ce que j'ai mangé → estimer la journée",
+                  style: TextStyle(fontSize: 12, decoration: TextDecoration.underline),
+                ),
+              ),
+            ),
         ],
       ),
     );

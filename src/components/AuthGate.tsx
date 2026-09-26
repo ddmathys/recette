@@ -55,12 +55,8 @@ export function AuthLanding() {
     <div className="flex min-h-full flex-1 items-center justify-center px-4 py-10">
       <div className="w-full max-w-[380px] rounded-2xl bg-surface p-6 shadow-[0_1px_3px_rgba(43,42,38,.08)]">
         <div className="mb-5 flex items-center gap-2">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4.5 w-4.5">
-              <path d="M18 8h1a4 4 0 0 1 0 8h-1M6 8h12v9a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V8Z" />
-              <path d="M6 1v3M10 1v3M14 1v3" />
-            </svg>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="" className="h-9 w-9 shrink-0 drop-shadow-sm" />
           <h1 className="text-[1.1rem] font-extrabold tracking-tight text-ink">Recettes du Tiroir</h1>
         </div>
 

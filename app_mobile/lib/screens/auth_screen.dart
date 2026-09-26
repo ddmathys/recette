@@ -83,11 +83,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     children: [
                       Row(
                         children: [
-                          const CircleAvatar(
-                            backgroundColor: AppColors.accent,
-                            radius: 16,
-                            child: Icon(Icons.kitchen, color: Colors.white, size: 18),
-                          ),
+                          Image.asset('assets/logo.png', width: 36, height: 36),
                           const SizedBox(width: 10),
                           const Text('Recettes du Tiroir',
                               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppColors.ink)),

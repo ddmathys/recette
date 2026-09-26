@@ -20,6 +20,9 @@ import {
 import { addMealLog, useMealLogs } from "@/lib/useMealLogs";
 import { dayLabel, eatenAtFor, guessMealType, localDayKey } from "@/lib/mealTypes";
 import { EditMealLogDialog } from "@/components/EditMealLogDialog";
+import { EstimateDayDialog } from "@/components/EstimateDayDialog";
+import { Evolution } from "@/components/Evolution";
+import { dailyTotals } from "@/lib/habits";
 import { useFavorites } from "@/lib/useFavorites";
 import { firebaseEnabled } from "@/lib/firebase";
 import { useAuth, signOut } from "@/lib/useAuth";
@@ -49,7 +52,10 @@ export default function Home() {
 function RecipeLibrary({ uid }: { uid: string | null }) {
   const { profile, household, loading: householdLoading } = useHousehold(uid);
   const { recipes, readOnly } = useRecipes(profile?.householdId ?? null);
-  const { logs: mealLogs } = useMealLogs(profile?.householdId ?? null);
+  const { logs: householdLogs } = useMealLogs(profile?.householdId ?? null);
+  // Le journal est personnel : dans un foyer partagé, on ne compte que ses
+  // propres repas (les recettes, elles, restent partagées).
+  const mealLogs = useMemo(() => householdLogs.filter((l) => l.ownerId === uid), [householdLogs, uid]);
   const { favs, toggle: toggleFav } = useFavorites();
 
   const [search, setSearch] = useState("");
@@ -65,7 +71,8 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
   // Accueil (état du jour + 2 actions) ou écran bibliothèque. Le parcours
   // "Ajouter un repas" s'ouvre par-dessus en plein écran.
   const [view, setView] = useState<"home" | "recipes">("home");
-  const [addFlow, setAddFlow] = useState<"none" | "new" | "snack" | "recipe">("none");
+  const [addFlow, setAddFlow] = useState<"none" | "new" | "snack" | "breakfast" | "recipe">("none");
+  const [estimateOpen, setEstimateOpen] = useState(false);
   // Jour affiché au dashboard — tous les ajouts (repas, en-cas, recette
   // mangée) sont notés sur ce jour-là.
   const [dayOffset, setDayOffset] = useState(0);
@@ -118,6 +125,27 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
   }, [recipes, search, cat, time, vegOnly, favOnly, favs, ingredients]);
 
   const openRecipe = recipes.find((r) => r.id === openId) || null;
+
+  // Proposition pour "estimer la journée" : moyenne des 30 derniers jours
+  // notés (hors jour affiché), sinon l'objectif ; macros selon ta
+  // répartition moyenne.
+  const estimate = useMemo(() => {
+    const goal = profile?.dailyKcalGoal && profile.dailyKcalGoal > 0 ? profile.dailyKcalGoal : 2000;
+    const totals = dailyTotals(mealLogs, localDayKey);
+    const selKey = localDayKey(selectedDay);
+    const since = new Date();
+    since.setDate(since.getDate() - 30);
+    const others = [...totals.entries()].filter(([k]) => k !== selKey && k >= localDayKey(since)).map(([, t]) => t);
+    const already = totals.get(selKey)?.kcal ?? 0;
+    const sum = others.reduce((a, t) => ({ kcal: a.kcal + t.kcal, p: a.p + t.proteinG * 4, c: a.c + t.carbsG * 4, f: a.f + t.fatG * 9 }), { kcal: 0, p: 0, c: 0, f: 0 });
+    const macroKcal = sum.p + sum.c + sum.f;
+    return {
+      already,
+      suggested: others.length >= 2 ? sum.kcal / others.length : goal,
+      source: (others.length >= 2 ? "average" : "goal") as "average" | "goal",
+      split: macroKcal > 0 ? { protein: sum.p / macroKcal, carbs: sum.c / macroKcal, fat: sum.f / macroKcal } : { protein: 0.25, carbs: 0.45, fat: 0.3 },
+    };
+  }, [mealLogs, selectedDay, profile]);
 
   async function quickLog(r: Recipe) {
     if (!uid || !profile) return;
@@ -180,12 +208,8 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
         <div className="mx-auto max-w-[1180px] px-4">
           {view === "home" ? (
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                  <path d="M18 8h1a4 4 0 0 1 0 8h-1M6 8h12v9a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V8Z" />
-                  <path d="M6 1v3M10 1v3M14 1v3" />
-                </svg>
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.svg" alt="" className="h-8 w-8 shrink-0 drop-shadow-sm" />
               <h1 className="text-[1.15rem] font-extrabold tracking-tight text-ink">Recettes du Tiroir</h1>
               {firebaseEnabled && (
                 <div className="ml-auto flex shrink-0 items-center gap-2">
@@ -275,6 +299,7 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
                 dayOffset={dayOffset}
                 onDayOffset={setDayOffset}
                 onEditLog={setEditingLog}
+                onEstimateDay={() => setEstimateOpen(true)}
                 readOnly={readOnly}
               >
                 <div className="mt-4 grid grid-cols-2 gap-2.5">
@@ -292,6 +317,16 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
                   )}
                   {canAdd && (
                     <button
+                      onClick={() => setAddFlow("breakfast")}
+                      className="flex flex-col items-start gap-1.5 rounded-2xl bg-accent-2/12 p-4 text-left text-ink transition active:scale-[.98]"
+                    >
+                      <span className="text-[1.6rem] leading-none">☕</span>
+                      <span className="text-[0.95rem] font-extrabold">Ajouter un petit-déj</span>
+                      <span className="text-[0.74rem] text-ink-soft">Tes habituels en 1 tap</span>
+                    </button>
+                  )}
+                  {canAdd && (
+                    <button
                       onClick={() => setAddFlow("snack")}
                       className="flex flex-col items-start gap-1.5 rounded-2xl bg-gold/15 p-4 text-left text-ink transition active:scale-[.98]"
                     >
@@ -302,17 +337,21 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
                   )}
                   <button
                     onClick={() => setView("recipes")}
-                    className={`flex flex-col items-start gap-1.5 rounded-2xl bg-surface-2 p-4 text-left text-ink transition active:scale-[.98] ${canAdd ? "" : "col-span-2"}`}
+                    className="col-span-2 flex items-center gap-3 rounded-2xl bg-surface-2 px-4 py-3 text-left text-ink transition active:scale-[.98]"
                   >
-                    <span className="text-[1.6rem] leading-none">📖</span>
+                    <span className="text-[1.5rem] leading-none">📖</span>
                     <span className="text-[0.95rem] font-extrabold">Mes recettes</span>
-                    <span className="text-[0.74rem] text-ink-soft">
-                      {recipes.length} recette{recipes.length > 1 ? "s" : ""}
+                    <span className="ml-auto text-[0.78rem] text-ink-soft">
+                      {recipes.length} recette{recipes.length > 1 ? "s" : ""} ›
                     </span>
                   </button>
                 </div>
               </Dashboard>
-            ) : (
+            ) : null}
+            {firebaseEnabled && profile && mealLogs.length > 0 && (
+              <Evolution logs={mealLogs} goal={profile.dailyKcalGoal && profile.dailyKcalGoal > 0 ? profile.dailyKcalGoal : 2000} />
+            )}
+            {firebaseEnabled && profile ? null : (
               <button
                 onClick={() => setView("recipes")}
                 className="rounded-2xl bg-surface p-5 text-left text-[1rem] font-extrabold text-ink shadow-[0_1px_3px_rgba(43,42,38,.08)]"
@@ -414,11 +453,24 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
           owner={{ uid, name: profile.displayName, householdId: profile.householdId }}
           initialRecipe={addFlow === "recipe" ? openRecipe : null}
           day={selectedDay}
-          snack={addFlow === "snack"}
+          preset={addFlow === "snack" ? "snack" : addFlow === "breakfast" ? "breakfast" : undefined}
+          logs={mealLogs}
           onClose={() => {
             setAddFlow("none");
-            if (addFlow === "new" || addFlow === "snack") setView("home");
+            if (addFlow !== "recipe") setView("home");
           }}
+        />
+      )}
+
+      {estimateOpen && uid && profile && (
+        <EstimateDayDialog
+          day={selectedDay}
+          alreadyKcal={estimate.already}
+          suggestedKcal={estimate.suggested}
+          suggestionSource={estimate.source}
+          split={estimate.split}
+          owner={{ uid, name: profile.displayName, householdId: profile.householdId }}
+          onClose={() => setEstimateOpen(false)}
         />
       )}
 

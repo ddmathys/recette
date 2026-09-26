@@ -94,7 +94,9 @@ export interface RecipeDraft {
  * recette, sans quantité ni valeurs nutritionnelles). Collection Firestore
  * top-level `mealLogs`, scopée par householdId comme `recipes`. */
 export type MealType = "petit-dej" | "dejeuner" | "diner" | "collation";
-export type MealSource = "manual" | "recipe" | "photo";
+/** "estimate" = total de journée estimé quand on ne sait plus ce qu'on a
+ * mangé (voir EstimateDayDialog). */
+export type MealSource = "manual" | "recipe" | "photo" | "estimate";
 
 export interface MealLog {
   id: string;
@@ -113,6 +115,9 @@ export interface MealLog {
   photoUrl?: string | null;
   source: MealSource;
   createdAt: string;
+  /** Nombre d'unités (ex. 3 biscuits) — les valeurs nutritionnelles sont
+   * déjà multipliées. Absent = 1. Sert à reproposer l'habituel à l'unité. */
+  count?: number;
 }
 
 export interface MealLogDraft {
@@ -125,4 +130,5 @@ export interface MealLogDraft {
   proteinG: number;
   carbsG: number;
   fatG: number;
+  count?: number;
 }

@@ -8,7 +8,9 @@ import { MEAL_TYPES, dayLabel, eatenAtFor, guessMealType } from "@/lib/mealTypes
 import { sanitizeNutrition } from "@/lib/nutrition";
 import { addRecipe, uploadRecipePhoto } from "@/lib/useRecipes";
 import { addMealLog, uploadMealPhoto } from "@/lib/useMealLogs";
-import type { CategoryKey, Difficulty, Ingredient, MealType, Recipe, RecipeDraft } from "@/lib/types";
+import { computeHabits, habitToDraft, type Habit } from "@/lib/habits";
+import { HabitsList } from "./HabitsList";
+import type { CategoryKey, Difficulty, Ingredient, MealLog, MealType, Recipe, RecipeDraft } from "@/lib/types";
 
 const DIFFICULTIES: Difficulty[] = ["Facile", "Moyen", "Avancé"];
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -30,24 +32,31 @@ const MEAL_SUGGESTIONS = ["Portion plus petite", "Sans la sauce", "J'en ai mang�
  * de le garder dans la bibliothèque. Remplace CaptureDialog.
  * `initialRecipe` saute directement au résultat ("Manger ce repas").
  * `day` = jour affiché au dashboard : le repas est noté ce jour-là.
- * `snack` ouvre directement "Décrire" avec le type Collation.
+ * `preset` ("snack" / "breakfast") ouvre directement "Décrire" avec le
+ * type Collation / Petit-déjeuner et les habituels de ce type en premier.
  */
 export function AddMealFlow({
   recipes,
   owner,
   initialRecipe,
   day,
-  snack = false,
+  preset,
+  logs,
   onClose,
 }: {
   recipes: Recipe[];
   owner: { uid: string; name: string; householdId: string };
   initialRecipe?: Recipe | null;
   day: Date;
-  snack?: boolean;
+  preset?: "snack" | "breakfast";
+  /** Journal de l'utilisateur, pour proposer ses habituels. */
+  logs: MealLog[];
   onClose: () => void;
 }) {
-  const [stage, setStage] = useState<Stage>(initialRecipe ? "result" : snack ? "describe" : "choose");
+  const snack = preset === "snack";
+  const presetType: MealType | undefined = preset === "snack" ? "collation" : preset === "breakfast" ? "petit-dej" : undefined;
+  const habits = computeHabits(logs, owner.uid, presetType, presetType ? 8 : 5);
+  const [stage, setStage] = useState<Stage>(initialRecipe ? "result" : preset ? "describe" : "choose");
   const isToday = day.toDateString() === new Date().toDateString();
   const [kind, setKind] = useState<Kind>("recipe");
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +83,7 @@ export function AddMealFlow({
   const [iterating, setIterating] = useState(false);
   const [lastChange, setLastChange] = useState<string | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
-  const [mealType, setMealType] = useState<MealType>(snack ? "collation" : guessMealType());
+  const [mealType, setMealType] = useState<MealType>(presetType ?? guessMealType());
   const [portions, setPortions] = useState(1);
   const [logged, setLogged] = useState(false);
   const [busyAction, setBusyAction] = useState<"log" | "save" | null>(null);
@@ -166,6 +175,11 @@ export function AddMealFlow({
     }
   }
 
+  async function logHabit(h: Habit, count: number) {
+    const type = presetType ?? h.mealType;
+    await addMealLog(habitToDraft(h, count, type, eatenAtFor(day, type)), null, h.recipeId ? "recipe" : "manual", owner);
+  }
+
   async function describeMeal() {
     const q = description.trim();
     if (!q) {
@@ -241,6 +255,7 @@ export function AddMealFlow({
           proteinG: Math.round((n?.proteinG ?? 0) * portions),
           carbsG: Math.round((n?.carbsG ?? 0) * portions),
           fatG: Math.round((n?.fatG ?? 0) * portions),
+          ...(portions !== 1 ? { count: portions } : {}),
         },
         photoUrl,
         photoUrl ? "photo" : savedRecipeId ? "recipe" : "manual",
@@ -284,7 +299,9 @@ export function AddMealFlow({
       : stage === "describe"
         ? snack
           ? "Ajouter un en-cas"
-          : "Ce que j'ai mangé"
+          : preset === "breakfast"
+            ? "Ajouter un petit-déj"
+            : "Ce que j'ai mangé"
         : stage === "text"
           ? "Trouver une recette"
           : stage === "loading"
@@ -300,7 +317,7 @@ export function AddMealFlow({
         <div className="mx-auto flex max-w-[640px] items-center gap-3 px-4 py-3">
           <button
             onClick={() => {
-              if ((stage === "text" || stage === "describe") && !snack) setStage("choose");
+              if ((stage === "text" || stage === "describe") && !preset) setStage("choose");
               else onClose();
             }}
             aria-label="Retour"
@@ -350,6 +367,7 @@ export function AddMealFlow({
                 setStage("describe");
               }}
             />
+            <HabitsList habits={habits} onLog={logHabit} showType />
             <BigChoice
               emoji="📖"
               title="Trouver une recette"
@@ -362,6 +380,8 @@ export function AddMealFlow({
           </>
         )}
 
+        {stage === "describe" && preset && <HabitsList habits={habits} onLog={logHabit} />}
+
         {stage === "describe" && (
           <form
             onSubmit={(e) => {
@@ -371,13 +391,22 @@ export function AddMealFlow({
             className="flex flex-col gap-5"
           >
             <label className="flex flex-col gap-2">
-              <span className="text-[0.9rem] font-bold text-ink">{snack ? "Qu'as-tu pris ?" : "Qu'as-tu mangé ?"}</span>
+              <span className="text-[0.9rem] font-bold text-ink">
+                {preset && habits.length ? "Autre chose ? " : ""}
+                {snack ? "Qu'as-tu pris ?" : "Qu'as-tu mangé ?"}
+              </span>
               <textarea
-                autoFocus
+                autoFocus={!habits.length || !preset}
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder={snack ? "ex : une pomme et 3 carrés de chocolat" : "ex : 2 crêpes et du poulet sauce soja avec du riz"}
+                placeholder={
+                  snack
+                    ? "ex : une pomme et 3 carrés de chocolat"
+                    : preset === "breakfast"
+                      ? "ex : café au lait, 2 tartines beurre-confiture"
+                      : "ex : 2 crêpes et du poulet sauce soja avec du riz"
+                }
                 className="w-full resize-none rounded-2xl border-2 border-line bg-surface px-4 py-3.5 text-[1.05rem] text-ink outline-none focus:border-accent"
               />
             </label>

@@ -19,14 +19,29 @@ export function EditMealLogDialog({ log, onClose }: { log: MealLog; onClose: () 
   const [proteinG, setProteinG] = useState(log.proteinG);
   const [carbsG, setCarbsG] = useState(log.carbsG);
   const [fatG, setFatG] = useState(log.fatG);
+  const originalCount = log.count && log.count > 0 ? log.count : 1;
+  const [count, setCount] = useState(originalCount);
   const [busy, setBusy] = useState<"save" | "delete" | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  /** Passe à `n` unités (×1 à ×4), à partir de la valeur d'une unité. */
+  function setUnits(n: number) {
+    const f = n / originalCount;
+    setCount(n);
+    setGrams(Math.round(log.portionGrams * f));
+    setKcal(Math.round(log.kcal * f));
+    setProteinG(Math.round(log.proteinG * f));
+    setCarbsG(Math.round(log.carbsG * f));
+    setFatG(Math.round(log.fatG * f));
+  }
 
   function scaleTo(nextGrams: number) {
     // Proportionnel aux valeurs d'origine du repas, pour ne pas accumuler
     // d'arrondis quand on tape plusieurs valeurs de suite.
     const ratio = log.portionGrams > 0 ? nextGrams / log.portionGrams : 1;
     setGrams(nextGrams);
+    // Quantité libre en grammes : on considère que c'est 1 unité.
+    setCount(1);
     setKcal(Math.round(log.kcal * ratio));
     setProteinG(Math.round(log.proteinG * ratio));
     setCarbsG(Math.round(log.carbsG * ratio));
@@ -52,6 +67,7 @@ export function EditMealLogDialog({ log, onClose }: { log: MealLog; onClose: () 
         proteinG,
         carbsG,
         fatG,
+        count,
       });
       onClose();
     } catch {
@@ -125,13 +141,15 @@ export function EditMealLogDialog({ log, onClose }: { log: MealLog; onClose: () 
                 className={`${input} w-28`}
               />
               <span className="text-[0.85rem] text-ink-soft">g</span>
-              {[0.5, 1.5, 2].map((f) => (
+              {[1, 2, 3, 4].map((n) => (
                 <button
-                  key={f}
-                  onClick={() => scaleTo(Math.round(log.portionGrams * f))}
-                  className="rounded-full border-2 border-line px-3 py-1.5 text-[0.8rem] font-semibold text-ink-soft hover:border-accent hover:text-accent"
+                  key={n}
+                  onClick={() => setUnits(n)}
+                  className={`h-9 min-w-9 rounded-full border-2 px-2 text-[0.82rem] font-bold ${
+                    count === n ? "border-accent bg-accent text-accent-ink" : "border-line text-ink-soft hover:border-accent hover:text-accent"
+                  }`}
                 >
-                  × {String(f).replace(".", ",")}
+                  ×{n}
                 </button>
               ))}
             </div>

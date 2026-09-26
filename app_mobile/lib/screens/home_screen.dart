@@ -12,6 +12,8 @@ import '../theme.dart';
 import '../meal_types.dart';
 import '../widgets/dashboard_card.dart';
 import '../widgets/edit_meal_log_sheet.dart';
+import '../widgets/estimate_day_sheet.dart';
+import '../widgets/evolution_card.dart';
 import 'add_meal_screen.dart';
 import 'recipe_detail_screen.dart';
 import 'recipes_screen.dart';
@@ -74,7 +76,8 @@ class _HomeScreenState extends State<HomeScreen> {
       _householdSub = _householdService.streamHousehold(householdId).listen((h) => setState(() => _household = h));
       _recipesSub = _recipeService.streamRecipes(householdId).listen((r) => _recipes.value = r);
       _mealLogsSub = _mealLogService.streamMealLogs(householdId).listen((l) {
-        setState(() => _mealLogs = l);
+        // Journal personnel : dans un foyer partagé, seulement ses repas.
+        setState(() => _mealLogs = l.where((m) => m.ownerId == _uid).toList());
         _refreshAdded();
       });
     });
@@ -91,7 +94,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  void _openAddMeal({bool snack = false}) {
+  num get _goal => (_profile?.dailyKcalGoal != null && _profile!.dailyKcalGoal! > 0) ? _profile!.dailyKcalGoal! : 2000;
+
+  void _openAddMeal({String? preset}) {
     final profile = _profile;
     if (profile == null) return;
     Navigator.of(context).push(
@@ -102,7 +107,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ownerName: profile.displayName,
           householdId: profile.householdId,
           day: _selectedDay,
-          snack: snack,
+          preset: preset,
+          logs: _mealLogs,
         ),
       ),
     );
@@ -200,11 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Row(
               children: [
-                const CircleAvatar(
-                  backgroundColor: AppColors.accent,
-                  radius: 14,
-                  child: Icon(Icons.kitchen, color: Colors.white, size: 15),
-                ),
+                Image.asset('assets/logo.png', width: 32, height: 32),
                 const SizedBox(width: 8),
                 const Expanded(
                   child: Text(
@@ -247,6 +249,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   _refreshAdded();
                 },
                 onEditLog: (l) => showEditMealLogSheet(context, l),
+                onEstimateDay: () => showEstimateDaySheet(
+                  context,
+                  day: _selectedDay,
+                  logs: _mealLogs,
+                  goal: _goal,
+                  ownerUid: _uid,
+                  ownerName: profile.displayName,
+                  householdId: profile.householdId,
+                ),
                 actions: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -262,30 +273,39 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Expanded(
                           child: _ActionTile(
-                            emoji: '🍎',
-                            title: 'Ajouter un en-cas',
-                            subtitle: 'Goûter, grignotage',
-                            color: AppColors.gold.withValues(alpha: 0.15),
-                            onTap: () => _openAddMeal(snack: true),
+                            emoji: '☕',
+                            title: 'Ajouter un petit-déj',
+                            subtitle: 'Tes habituels en 1 tap',
+                            color: AppColors.accent2.withValues(alpha: 0.12),
+                            onTap: () => _openAddMeal(preset: 'breakfast'),
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: ValueListenableBuilder(
-                            valueListenable: _recipes,
-                            builder: (_, recipes, _) => _ActionTile(
-                              emoji: '📖',
-                              title: 'Mes recettes',
-                              subtitle: '${recipes.length} recette${recipes.length > 1 ? "s" : ""}',
-                              onTap: _openRecipes,
-                            ),
+                          child: _ActionTile(
+                            emoji: '🍎',
+                            title: 'Ajouter un en-cas',
+                            subtitle: 'Goûter, grignotage',
+                            color: AppColors.gold.withValues(alpha: 0.15),
+                            onTap: () => _openAddMeal(preset: 'snack'),
                           ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 10),
+                    ValueListenableBuilder(
+                      valueListenable: _recipes,
+                      builder: (_, recipes, _) => _ActionTile(
+                        emoji: '📖',
+                        title: 'Mes recettes',
+                        subtitle: '${recipes.length} recette${recipes.length > 1 ? "s" : ""}',
+                        onTap: _openRecipes,
+                      ),
+                    ),
                   ],
                 ),
               ),
+            if (profile != null && _mealLogs.isNotEmpty) EvolutionCard(logs: _mealLogs, goal: _goal),
           ],
         ),
       ),

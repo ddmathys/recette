@@ -7,8 +7,7 @@ class Ingredient {
   final String qty;
   const Ingredient({required this.name, required this.qty});
 
-  factory Ingredient.fromMap(Map<String, dynamic> m) =>
-      Ingredient(name: (m['name'] ?? '').toString(), qty: (m['qty'] ?? '').toString());
+  factory Ingredient.fromMap(Map<String, dynamic> m) => Ingredient(name: (m['name'] ?? '').toString(), qty: (m['qty'] ?? '').toString());
 
   Map<String, dynamic> toMap() => {'name': name, 'qty': qty};
 }
@@ -34,13 +33,13 @@ class NutritionEstimate {
   });
 
   Map<String, dynamic> toMap() => {
-        'kcal': kcal,
-        'proteinG': proteinG,
-        'carbsG': carbsG,
-        'fatG': fatG,
-        'gramsPerServing': gramsPerServing,
-        'estimatedBy': estimatedBy,
-      };
+    'kcal': kcal,
+    'proteinG': proteinG,
+    'carbsG': carbsG,
+    'fatG': fatG,
+    'gramsPerServing': gramsPerServing,
+    'estimatedBy': estimatedBy,
+  };
 
   /// Validates/coerces a loosely-typed map (AI response or Firestore data)
   /// into a NutritionEstimate, or null if the shape is unusable — mirrors
@@ -95,10 +94,12 @@ class Recipe {
   final String? createdAt;
   final List<String> eatenDates;
   final NutritionEstimate? nutrition;
+
   /// Shared-library scope — see services/household_service.dart. Recipes
   /// are only visible to members of this household.
   final String? householdId;
   final String? ownerId;
+
   /// Denormalized at write time so the "created by" badge doesn't need a
   /// lookup per recipe.
   final String? ownerName;
@@ -130,72 +131,70 @@ class Recipe {
   /// used to refresh the detail screen immediately after a manual/AI edit
   /// without waiting for the next Firestore snapshot.
   Recipe copyWithDraft(RecipeDraft draft) => Recipe(
-        id: id,
-        name: draft.name,
-        cat: draft.cat,
-        time: draft.time,
-        diff: draft.diff,
-        servings: draft.servings,
-        veg: draft.veg,
-        ingr: draft.ingr,
-        steps: draft.steps,
-        note: note,
-        source: source,
-        photoUrl: photoUrl,
-        notes: notes,
-        createdAt: createdAt,
-        eatenDates: eatenDates,
-        householdId: householdId,
-        ownerId: ownerId,
-        ownerName: ownerName,
-        nutrition: draft.nutrition,
-      );
+    id: id,
+    name: draft.name,
+    cat: draft.cat,
+    time: draft.time,
+    diff: draft.diff,
+    servings: draft.servings,
+    veg: draft.veg,
+    ingr: draft.ingr,
+    steps: draft.steps,
+    note: note,
+    source: source,
+    photoUrl: photoUrl,
+    notes: notes,
+    createdAt: createdAt,
+    eatenDates: eatenDates,
+    householdId: householdId,
+    ownerId: ownerId,
+    ownerName: ownerName,
+    nutrition: draft.nutrition,
+  );
 
   Recipe copyWith({String? photoUrl, List<String>? eatenDates}) => Recipe(
-        id: id,
-        name: name,
-        cat: cat,
-        time: time,
-        diff: diff,
-        servings: servings,
-        veg: veg,
-        ingr: ingr,
-        steps: steps,
-        note: note,
-        source: source,
-        photoUrl: photoUrl ?? this.photoUrl,
-        notes: notes,
-        createdAt: createdAt,
-        eatenDates: eatenDates ?? this.eatenDates,
-        householdId: householdId,
-        ownerId: ownerId,
-        ownerName: ownerName,
-        nutrition: nutrition,
-      );
+    id: id,
+    name: name,
+    cat: cat,
+    time: time,
+    diff: diff,
+    servings: servings,
+    veg: veg,
+    ingr: ingr,
+    steps: steps,
+    note: note,
+    source: source,
+    photoUrl: photoUrl ?? this.photoUrl,
+    notes: notes,
+    createdAt: createdAt,
+    eatenDates: eatenDates ?? this.eatenDates,
+    householdId: householdId,
+    ownerId: ownerId,
+    ownerName: ownerName,
+    nutrition: nutrition,
+  );
 
   factory Recipe.fromMap(String id, Map<String, dynamic> m) => Recipe(
-        id: id,
-        name: (m['name'] ?? '').toString(),
-        cat: (m['cat'] ?? '').toString(),
-        time: (m['time'] is num) ? (m['time'] as num).toInt() : 0,
-        diff: (m['diff'] ?? 'Facile').toString(),
-        servings: (m['servings'] is num) ? (m['servings'] as num).toInt() : 1,
-        veg: m['veg'] == true,
-        ingr: ((m['ingr'] as List?) ?? [])
-            .map((e) => Ingredient.fromMap(Map<String, dynamic>.from(e as Map)))
-            .toList(),
-        steps: ((m['steps'] as List?) ?? []).map((e) => e.toString()).toList(),
-        note: m['note']?.toString(),
-        source: m['source']?.toString(),
-        photoUrl: m['photoUrl']?.toString(),
-        notes: (m['notes'] ?? '').toString(),
-        createdAt: m['createdAt']?.toString(),
-        eatenDates: ((m['eatenDates'] as List?) ?? []).map((e) => e.toString()).toList(),
-        householdId: m['householdId']?.toString(),
-        ownerId: m['ownerId']?.toString(),
-        ownerName: m['ownerName']?.toString(),
-        nutrition: NutritionEstimate.fromLoose(m['nutrition']),
-      );
+    id: id,
+    name: (m['name'] ?? '').toString(),
+    cat: (m['cat'] ?? '').toString(),
+    time: (m['time'] is num) ? (m['time'] as num).toInt() : 0,
+    diff: (m['diff'] ?? 'Facile').toString(),
+    servings: (m['servings'] is num) ? (m['servings'] as num).toInt() : 1,
+    veg: m['veg'] == true,
+    ingr: ((m['ingr'] as List?) ?? []).map((e) => Ingredient.fromMap(Map<String, dynamic>.from(e as Map))).toList(),
+    steps: ((m['steps'] as List?) ?? []).map((e) => e.toString()).toList(),
+    note: m['note']?.toString(),
+    source: m['source']?.toString(),
+    photoUrl: m['photoUrl']?.toString(),
+    notes: (m['notes'] ?? '').toString(),
+    createdAt: m['createdAt']?.toString(),
+    eatenDates: ((m['eatenDates'] as List?) ?? []).map((e) => e.toString()).toList(),
+    householdId: m['householdId']?.toString(),
+    ownerId: m['ownerId']?.toString(),
+    ownerName: m['ownerName']?.toString(),
+    nutrition: NutritionEstimate.fromLoose(m['nutrition']),
+  );
 }
 
 /// users/{uid} — one per account. householdId points at the shared pool
@@ -209,11 +208,11 @@ class UserProfile {
   const UserProfile({required this.email, required this.displayName, required this.householdId, this.dailyKcalGoal});
 
   factory UserProfile.fromMap(Map<String, dynamic> m) => UserProfile(
-        email: (m['email'] ?? '').toString(),
-        displayName: (m['displayName'] ?? '').toString(),
-        householdId: (m['householdId'] ?? '').toString(),
-        dailyKcalGoal: m['dailyKcalGoal'] as num?,
-      );
+    email: (m['email'] ?? '').toString(),
+    displayName: (m['displayName'] ?? '').toString(),
+    householdId: (m['householdId'] ?? '').toString(),
+    dailyKcalGoal: m['dailyKcalGoal'] as num?,
+  );
 }
 
 /// households/{ownerId} — one per household, keyed by its creator's uid.
@@ -224,10 +223,10 @@ class Household {
   const Household({required this.ownerId, required this.ownerEmail, required this.members});
 
   factory Household.fromMap(Map<String, dynamic> m) => Household(
-        ownerId: (m['ownerId'] ?? '').toString(),
-        ownerEmail: (m['ownerEmail'] ?? '').toString(),
-        members: ((m['members'] as List?) ?? []).map((e) => e.toString()).toList(),
-      );
+    ownerId: (m['ownerId'] ?? '').toString(),
+    ownerEmail: (m['ownerEmail'] ?? '').toString(),
+    members: ((m['members'] as List?) ?? []).map((e) => e.toString()).toList(),
+  );
 }
 
 /// A recipe not yet saved (draft form / AI generation result). Mirrors
@@ -253,20 +252,20 @@ class RecipeDraft {
     List<Ingredient>? ingr,
     List<String>? steps,
     this.nutrition,
-  })  : ingr = ingr ?? [const Ingredient(name: '', qty: '')],
-        steps = steps ?? [''];
+  }) : ingr = ingr ?? [const Ingredient(name: '', qty: '')],
+       steps = steps ?? [''];
 
   Map<String, dynamic> toMap() => {
-        'name': name,
-        'cat': cat,
-        'time': time,
-        'diff': diff,
-        'servings': servings,
-        'veg': veg,
-        'ingr': ingr.map((e) => e.toMap()).toList(),
-        'steps': steps,
-        if (nutrition != null) 'nutrition': nutrition!.toMap(),
-      };
+    'name': name,
+    'cat': cat,
+    'time': time,
+    'diff': diff,
+    'servings': servings,
+    'veg': veg,
+    'ingr': ingr.map((e) => e.toMap()).toList(),
+    'steps': steps,
+    if (nutrition != null) 'nutrition': nutrition!.toMap(),
+  };
 }
 
 /// mealLogs/{id} — a logged meal, independent of Recipe.eatenDates (which
@@ -287,8 +286,11 @@ class MealLog {
   final num carbsG;
   final num fatG;
   final String? photoUrl;
-  final String source; // "photo" | "recipe" | "manual"
+  final String source; // "photo" | "recipe" | "manual" | "estimate"
   final String createdAt;
+
+  /// Nombre d'unités (ex. 3 biscuits), valeurs déjà multipliées. null = 1.
+  final num? count;
 
   const MealLog({
     required this.id,
@@ -307,26 +309,28 @@ class MealLog {
     this.photoUrl,
     required this.source,
     required this.createdAt,
+    this.count,
   });
 
   factory MealLog.fromMap(String id, Map<String, dynamic> m) => MealLog(
-        id: id,
-        householdId: (m['householdId'] ?? '').toString(),
-        ownerId: (m['ownerId'] ?? '').toString(),
-        ownerName: (m['ownerName'] ?? '').toString(),
-        recipeId: m['recipeId']?.toString(),
-        label: (m['label'] ?? '').toString(),
-        mealType: (m['mealType'] ?? 'dejeuner').toString(),
-        eatenAt: (m['eatenAt'] ?? '').toString(),
-        portionGrams: (m['portionGrams'] as num?) ?? 0,
-        kcal: (m['kcal'] as num?) ?? 0,
-        proteinG: (m['proteinG'] as num?) ?? 0,
-        carbsG: (m['carbsG'] as num?) ?? 0,
-        fatG: (m['fatG'] as num?) ?? 0,
-        photoUrl: m['photoUrl']?.toString(),
-        source: (m['source'] ?? 'manual').toString(),
-        createdAt: (m['createdAt'] ?? '').toString(),
-      );
+    id: id,
+    householdId: (m['householdId'] ?? '').toString(),
+    ownerId: (m['ownerId'] ?? '').toString(),
+    ownerName: (m['ownerName'] ?? '').toString(),
+    recipeId: m['recipeId']?.toString(),
+    label: (m['label'] ?? '').toString(),
+    mealType: (m['mealType'] ?? 'dejeuner').toString(),
+    eatenAt: (m['eatenAt'] ?? '').toString(),
+    portionGrams: (m['portionGrams'] as num?) ?? 0,
+    kcal: (m['kcal'] as num?) ?? 0,
+    proteinG: (m['proteinG'] as num?) ?? 0,
+    carbsG: (m['carbsG'] as num?) ?? 0,
+    fatG: (m['fatG'] as num?) ?? 0,
+    photoUrl: m['photoUrl']?.toString(),
+    source: (m['source'] ?? 'manual').toString(),
+    createdAt: (m['createdAt'] ?? '').toString(),
+    count: m['count'] as num?,
+  );
 }
 
 class MealLogDraft {
@@ -339,8 +343,10 @@ class MealLogDraft {
   num proteinG;
   num carbsG;
   num fatG;
+  num? count;
 
   MealLogDraft({
+    this.count,
     this.recipeId,
     this.label = '',
     required this.mealType,
@@ -353,16 +359,17 @@ class MealLogDraft {
   });
 
   Map<String, dynamic> toMap() => {
-        'recipeId': recipeId,
-        'label': label,
-        'mealType': mealType,
-        'eatenAt': eatenAt.toUtc().toIso8601String(),
-        'portionGrams': portionGrams,
-        'kcal': kcal,
-        'proteinG': proteinG,
-        'carbsG': carbsG,
-        'fatG': fatG,
-      };
+    'recipeId': recipeId,
+    'label': label,
+    'mealType': mealType,
+    'eatenAt': eatenAt.toUtc().toIso8601String(),
+    'portionGrams': portionGrams,
+    'kcal': kcal,
+    'proteinG': proteinG,
+    'carbsG': carbsG,
+    'fatG': fatG,
+    'count': ?count,
+  };
 }
 
 class CategoryMeta {
@@ -388,10 +395,8 @@ const List<CategoryMeta> kCategories = [
   CategoryMeta(key: 'sandwich', label: 'Sandwich & wrap', color: Color(0xFFF5A623), icon: Icons.lunch_dining),
 ];
 
-const CategoryMeta kDefaultCategory =
-    CategoryMeta(key: 'viande', label: 'Autre', color: AppColors.inkSoft, icon: Icons.restaurant);
+const CategoryMeta kDefaultCategory = CategoryMeta(key: 'viande', label: 'Autre', color: AppColors.inkSoft, icon: Icons.restaurant);
 
-CategoryMeta categoryFor(String key) =>
-    kCategories.firstWhere((c) => c.key == key, orElse: () => kDefaultCategory);
+CategoryMeta categoryFor(String key) => kCategories.firstWhere((c) => c.key == key, orElse: () => kDefaultCategory);
 
 const List<String> kDifficulties = ['Facile', 'Moyen', 'Avancé'];

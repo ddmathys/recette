@@ -113,6 +113,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
   late String _mealType = widget.presetType ?? guessMealType();
   double _portions = 1;
   bool _logged = false;
+  int _habitsLogged = 0;
   String? _busy; // 'log' | 'save'
 
   @override
@@ -258,6 +259,11 @@ class _AddMealScreenState extends State<AddMealScreen> {
 
   Future<void> _describeMeal() async {
     final q = _describeCtrl.text.trim();
+    // Un habituel (ex. biscuits ×2) est déjà noté au tap : champ vide = "c'est tout".
+    if (q.isEmpty && _habitsLogged > 0) {
+      Navigator.of(context).pop();
+      return;
+    }
     if (q.isEmpty) {
       setState(
         () => _error = widget.snack
@@ -493,6 +499,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
       ownerName: widget.ownerName,
       householdId: widget.householdId,
     );
+    if (mounted) setState(() => _habitsLogged++);
   }
 
   List<Widget> _buildDescribe() => [
@@ -548,7 +555,13 @@ class _AddMealScreenState extends State<AddMealScreen> {
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
-        child: const Text('Estimer les calories', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+        child: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _describeCtrl,
+          builder: (context, v, _) => Text(
+            v.text.trim().isEmpty && _habitsLogged > 0 ? '✓ Terminé' : 'Estimer les calories',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+          ),
+        ),
       ),
     ),
   ];

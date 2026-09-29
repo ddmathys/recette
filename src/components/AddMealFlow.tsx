@@ -86,6 +86,7 @@ export function AddMealFlow({
   const [mealType, setMealType] = useState<MealType>(presetType ?? guessMealType());
   const [portions, setPortions] = useState(1);
   const [logged, setLogged] = useState(false);
+  const [habitsLogged, setHabitsLogged] = useState(0);
   const [busyAction, setBusyAction] = useState<"log" | "save" | null>(null);
 
   const matchedRecipe = matchedRecipeId ? recipes.find((r) => r.id === matchedRecipeId) ?? null : null;
@@ -178,10 +179,16 @@ export function AddMealFlow({
   async function logHabit(h: Habit, count: number) {
     const type = presetType ?? h.mealType;
     await addMealLog(habitToDraft(h, count, type, eatenAtFor(day, type)), null, h.recipeId ? "recipe" : "manual", owner);
+    setHabitsLogged((n) => n + 1);
   }
 
   async function describeMeal() {
     const q = description.trim();
+    // Un habituel (ex. biscuits ×2) est déjà noté au tap : champ vide = "c'est tout".
+    if (!q && habitsLogged > 0) {
+      onClose();
+      return;
+    }
     if (!q) {
       setError(snack ? "Écris ce que tu as pris, par exemple « une pomme »." : "Écris ce que tu as mangé, par exemple « crêpes et poulet sauce soja ».");
       return;
@@ -431,7 +438,7 @@ export function AddMealFlow({
               type="submit"
               className="rounded-2xl bg-accent px-4 py-4 text-[1rem] font-bold text-accent-ink shadow-[0_2px_10px_-2px_rgba(255,90,54,.65)] active:scale-[.98]"
             >
-              Estimer les calories
+              {!description.trim() && habitsLogged > 0 ? "✓ Terminé" : "Estimer les calories"}
             </button>
           </form>
         )}

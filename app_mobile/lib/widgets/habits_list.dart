@@ -47,7 +47,7 @@ class _HabitsListState extends State<HabitsList> {
           ),
           const SizedBox(height: 4),
           const Text(
-            'Touche la quantité pour le noter tout de suite, avec les mêmes calories.',
+            "Touche la quantité : c'est noté tout de suite, pas besoin d'estimer.",
             style: TextStyle(fontSize: 12, color: AppColors.inkSoft),
           ),
           const SizedBox(height: 6),

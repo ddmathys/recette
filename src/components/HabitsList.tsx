@@ -34,7 +34,7 @@ export function HabitsList({
   return (
     <section className="rounded-3xl bg-surface p-4.5 shadow-[0_1px_3px_rgba(43,42,38,.08)]">
       <h3 className="mb-1 text-[0.78rem] font-bold uppercase tracking-wider text-ink-soft">Tes habituels</h3>
-      <p className="mb-3 text-[0.78rem] text-ink-soft">Touche la quantité pour le noter tout de suite, avec les mêmes calories.</p>
+      <p className="mb-3 text-[0.78rem] text-ink-soft">Touche la quantité : c&apos;est noté tout de suite, pas besoin d&apos;estimer.</p>
       <ul className="flex flex-col divide-y divide-line">
         {habits.map((h) => {
           const key = h.label.toLowerCase();

@@ -12,7 +12,20 @@
           "package_name": "com.davidmathys.recettes_du_tiroir"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "744435253449-oqerge3rsgof89vl4ar34m33nnpm8r90.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.davidmathys.recettes_du_tiroir",
+            "certificate_hash": "0aca194b78b518b2208c98e6b12c8308f131f323"
+          }
+        },
+        {
+          "client_id": "744435253449-on7l2im0c3va6sf9ivf537ej4pg98uce.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBKNhCJ3oKov79GQlv4tJ9PIl5NWMWe3wY"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "744435253449-on7l2im0c3va6sf9ivf537ej4pg98uce.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "744435253449-srhsmcmhma1ns2cfgbbu7kanv8340vne.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.davidmathys.recettesDuTiroir"
+              }
+            }
+          ]
         }
       }
     }

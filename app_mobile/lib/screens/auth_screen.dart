@@ -46,6 +46,21 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
+  Future<void> _google() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+      _resetMessage = null;
+    });
+    try {
+      await _auth.signInWithGoogle();
+    } catch (e) {
+      if (mounted) setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _resetPassword() async {
     if (_emailCtrl.text.trim().isEmpty) {
       setState(() => _error = "Indique ton e-mail pour recevoir le lien de réinitialisation.");
@@ -57,7 +72,10 @@ class _AuthScreenState extends State<AuthScreen> {
     });
     try {
       await _auth.resetPassword(_emailCtrl.text);
-      setState(() => _resetMessage = "E-mail de réinitialisation envoyé, vérifie ta boîte de réception.");
+      setState(() => _resetMessage =
+          "Si un compte existe pour cette adresse, un e-mail de réinitialisation vient de partir "
+          "(expéditeur noreply@recette-37d50.firebaseapp.com) — pense à regarder dans les spams. "
+          "Tu peux aussi utiliser « Continuer avec Google » avec la même adresse.");
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
@@ -104,6 +122,35 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                       ),
                       const SizedBox(height: 18),
+                      OutlinedButton(
+                        onPressed: _busy ? null : _google,
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          foregroundColor: AppColors.ink,
+                          side: const BorderSide(color: AppColors.line),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('G', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: Color(0xFF4285F4))),
+                            SizedBox(width: 10),
+                            Text('Continuer avec Google', style: TextStyle(fontWeight: FontWeight.w700)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Row(
+                        children: [
+                          Expanded(child: Divider(color: AppColors.line)),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 10),
+                            child: Text('OU', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.inkSoft)),
+                          ),
+                          Expanded(child: Divider(color: AppColors.line)),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
                       if (_signUpMode) ...[
                         const Text('PRÉNOM', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.inkSoft, letterSpacing: .5)),
                         const SizedBox(height: 6),

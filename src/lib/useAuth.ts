@@ -3,9 +3,12 @@
 import { useEffect, useState } from "react";
 import {
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
   onAuthStateChanged,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  signInWithRedirect,
   signOut as firebaseSignOut,
   type User,
 } from "firebase/auth";
@@ -25,7 +28,8 @@ export function useAuth() {
       setChecking(false);
       // Defensive: covers accounts created before profiles/households
       // existed. ensureUserProfile no-ops if both already exist.
-      if (u) void ensureUserProfile(u);
+      // Google fournit un nom : on en garde le prénom pour un nouveau profil.
+      if (u) void ensureUserProfile(u, u.displayName?.split(" ")[0]);
     });
   }, []);
 
@@ -47,8 +51,14 @@ function authErrorMessage(e: unknown): string {
       return "E-mail ou mot de passe incorrect.";
     case "auth/too-many-requests":
       return "Trop de tentatives, réessaie dans un instant.";
+    case "auth/missing-email":
+      return "Indique ton e-mail.";
+    case "auth/network-request-failed":
+      return "Pas de connexion internet, réessaie.";
+    case "auth/unauthorized-domain":
+      return "Ce site n'est pas autorisé pour la connexion Google.";
     default:
-      return "Une erreur est survenue, réessaie.";
+      return `Une erreur est survenue, réessaie.${code ? ` (${code})` : ""}`;
   }
 }
 
@@ -71,9 +81,32 @@ export async function signUp(email: string, password: string, displayName: strin
   }
 }
 
+/**
+ * Connexion Google. Un compte e-mail/mot de passe existant avec la même
+ * adresse garde son uid (Firebase fusionne sur l'e-mail), donc ses recettes.
+ * Popup d'abord ; si le navigateur la bloque, on bascule en redirection.
+ */
+export async function signInWithGoogle() {
+  if (!auth) throw new Error("Firebase n'est pas configuré.");
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (e) {
+    const code = e && typeof e === "object" && "code" in e ? String((e as { code: unknown }).code) : "";
+    if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") return;
+    if (code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment") {
+      await signInWithRedirect(auth, provider);
+      return;
+    }
+    throw new Error(authErrorMessage(e));
+  }
+}
+
 export async function resetPassword(email: string) {
   if (!auth) throw new Error("Firebase n'est pas configuré.");
   try {
+    auth.languageCode = "fr";
     await sendPasswordResetEmail(auth, email);
   } catch (e) {
     throw new Error(authErrorMessage(e));

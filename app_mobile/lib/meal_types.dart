@@ -1,3 +1,28 @@
+import 'package:flutter/material.dart';
+
+/// Un moment de la journée au dashboard : son libellé, son emoji, sa
+/// couleur dans l'anneau et les catégories de recettes à proposer en
+/// premier quand on remplit ce créneau. Mirrors MEAL_TYPES in
+/// ../../src/lib/mealTypes.ts.
+class MealSlot {
+  final String key;
+  final String label;
+  final String short;
+  final String emoji;
+  final Color color;
+  final List<String> cats;
+  const MealSlot(this.key, this.label, this.short, this.emoji, this.color, this.cats);
+}
+
+const List<MealSlot> kMealSlots = [
+  MealSlot('petit-dej', 'Petit-déjeuner', 'Petit-déj', '☕', Color(0xFFF2A600), ['petit-dejeuner']),
+  MealSlot('dejeuner', 'Déjeuner', 'Déjeuner', '🍽️', Color(0xFFFF5A36), ['salade', 'sandwich', 'pates-riz', 'soupe']),
+  MealSlot('diner', 'Dîner', 'Dîner', '🌙', Color(0xFF17A2B8), ['viande', 'poisson', 'vegetarien', 'pates-riz', 'soupe']),
+  MealSlot('collation', 'Collation', 'En-cas', '🍎', Color(0xFF1FA876), ['apero', 'dessert']),
+];
+
+MealSlot mealSlot(String key) => kMealSlots.firstWhere((s) => s.key == key, orElse: () => kMealSlots[1]);
+
 /// Mirrors ../../src/lib/mealTypes.ts.
 const List<(String, String)> kMealTypes = [
   ('petit-dej', 'Petit-déjeuner'),

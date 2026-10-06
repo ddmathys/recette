@@ -32,9 +32,15 @@ class RecipesScreen extends StatefulWidget {
   /// "Hier", etc. quand le dashboard n'est pas sur aujourd'hui (sinon null).
   final String? dayNote;
 
+  /// Ajouter une recette à la bibliothèque : par description ou par photo.
+  final VoidCallback onAddByText;
+  final VoidCallback onAddByPhoto;
+
   const RecipesScreen({
     required this.addedIds,
     required this.onQuickAdd,
+    required this.onAddByText,
+    required this.onAddByPhoto,
     this.dayNote,
     super.key,
     required this.recipes,
@@ -88,6 +94,22 @@ class _RecipesScreenState extends State<RecipesScreen> {
           valueListenable: widget.recipes,
           builder: (_, recipes, _) => Text('Mes recettes (${recipes.length})'),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: ElevatedButton.icon(
+              onPressed: widget.onAddByText,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Ajouter', style: TextStyle(fontWeight: FontWeight.w800)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+              ),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(
@@ -114,6 +136,50 @@ class _RecipesScreenState extends State<RecipesScreen> {
                 ],
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(22)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text('Ajouter une recette', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                    const SizedBox(height: 2),
+                    const Text(
+                      "L'IA écrit la recette, les ingrédients et les calories par personne — à toi de l'ajuster.",
+                      style: TextStyle(fontSize: 12.5, color: AppColors.inkSoft),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _AddTile(
+                            emoji: '✍️',
+                            title: 'Par description',
+                            subtitle: 'un plat, une idée, un lien',
+                            color: AppColors.accent,
+                            textColor: Colors.white,
+                            onTap: widget.onAddByText,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _AddTile(
+                            emoji: '📸',
+                            title: 'Par photo',
+                            subtitle: 'le plat devant toi',
+                            color: AppColors.accent2.withValues(alpha: 0.12),
+                            textColor: AppColors.ink,
+                            onTap: widget.onAddByPhoto,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
             if (widget.dayNote != null)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -137,7 +203,7 @@ class _RecipesScreenState extends State<RecipesScreen> {
                             padding: const EdgeInsets.all(32),
                             child: Text(
                               recipes.isEmpty
-                                  ? "Aucune recette pour l'instant — ajoute un repas depuis l'accueil et garde-le !"
+                                  ? "Aucune recette pour l'instant — ajoute la première avec « Par description » ou « Par photo » !"
                                   : 'Aucune recette ne correspond à ces filtres.',
                               textAlign: TextAlign.center,
                               style: const TextStyle(color: AppColors.inkSoft),
@@ -317,6 +383,51 @@ class _FilterButton extends StatelessWidget {
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AddTile extends StatelessWidget {
+  final String emoji;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final Color textColor;
+  final VoidCallback onTap;
+
+  const _AddTile({
+    required this.emoji,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.textColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: color,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 24)),
+              const SizedBox(height: 6),
+              Text(title, style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800, color: textColor)),
+              Text(
+                subtitle,
+                style: TextStyle(fontSize: 11.5, color: textColor == Colors.white ? Colors.white70 : AppColors.inkSoft),
+              ),
+            ],
+          ),
         ),
       ),
     );

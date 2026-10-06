@@ -15,13 +15,15 @@ import '../widgets/edit_meal_log_sheet.dart';
 import '../widgets/estimate_day_sheet.dart';
 import '../widgets/evolution_card.dart';
 import 'add_meal_screen.dart';
+import 'add_to_slot_screen.dart';
 import 'recipe_detail_screen.dart';
 import 'recipes_screen.dart';
 import 'share_screen.dart';
 
-/// Accueil : état du jour (anneau kcal + macros + repas) et deux grosses
-/// actions — "Ajouter un repas" et "Mes recettes". Mirrors la vue "home" de
-/// page.tsx. Possède les streams Firestore et les expose aux écrans enfants.
+/// Accueil « ma journée » : anneau kcal segmenté, macros, les 4 créneaux
+/// avec leur bouton « + », puis les tuiles de navigation. Mirrors la vue
+/// "home" de page.tsx. Possède les streams Firestore et les expose aux
+/// écrans enfants.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
   @override
@@ -96,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   num get _goal => (_profile?.dailyKcalGoal != null && _profile!.dailyKcalGoal! > 0) ? _profile!.dailyKcalGoal! : 2000;
 
-  void _openAddMeal({String? preset}) {
+  void _openAddMeal({String? mealType, String intent = 'meal', String? start}) {
     final profile = _profile;
     if (profile == null) return;
     Navigator.of(context).push(
@@ -107,8 +109,46 @@ class _HomeScreenState extends State<HomeScreen> {
           ownerName: profile.displayName,
           householdId: profile.householdId,
           day: _selectedDay,
-          preset: preset,
+          mealType: mealType,
+          intent: intent,
+          start: start,
           logs: _mealLogs,
+        ),
+      ),
+    );
+  }
+
+  /// Le "+" d'un créneau : habituels, recettes, photo ou description —
+  /// tout atterrit dans ce créneau, sur le jour affiché.
+  void _openSlot(String slot) {
+    final profile = _profile;
+    if (profile == null) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AddToSlotScreen(
+          slot: slot,
+          day: _selectedDay,
+          recipes: _recipes.value,
+          logs: _mealLogs,
+          ownerUid: _uid,
+          ownerName: profile.displayName,
+          householdId: profile.householdId,
+          onPhoto: () {
+            Navigator.of(context).pop();
+            _openAddMeal(mealType: slot, start: 'photo');
+          },
+          onDescribe: () {
+            Navigator.of(context).pop();
+            _openAddMeal(mealType: slot, start: 'describe');
+          },
+          onOpenRecipe: (r) {
+            Navigator.of(context).pop();
+            _openRecipe(r);
+          },
+          onOpenLibrary: () {
+            Navigator.of(context).pop();
+            _openRecipes();
+          },
         ),
       ),
     );
@@ -165,6 +205,8 @@ class _HomeScreenState extends State<HomeScreen> {
           onOpenRecipe: _openRecipe,
           addedIds: _addedIds,
           onQuickAdd: _quickLog,
+          onAddByText: () => _openAddMeal(intent: 'recipe', start: 'text'),
+          onAddByPhoto: () => _openAddMeal(intent: 'recipe', start: 'photo'),
           dayNote: _dayOffset == 0 ? null : dayLabel(_selectedDay),
         ),
       ),
@@ -249,6 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   _refreshAdded();
                 },
                 onEditLog: (l) => showEditMealLogSheet(context, l),
+                onAddToSlot: _openSlot,
                 onEstimateDay: () => showEstimateDaySheet(
                   context,
                   day: _selectedDay,
@@ -261,46 +304,40 @@ class _HomeScreenState extends State<HomeScreen> {
                 actions: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _ActionTile(
-                      emoji: '🍽️',
-                      title: _dayOffset == 0 ? 'Ajouter un repas' : 'Ajouter un repas · ${dayLabel(_selectedDay).toLowerCase()}',
-                      subtitle: 'Photo, description ou recette',
-                      primary: true,
-                      onTap: _openAddMeal,
+                    ValueListenableBuilder(
+                      valueListenable: _recipes,
+                      builder: (_, recipes, _) => _ActionTile(
+                        emoji: '📖',
+                        title: 'Mes recettes',
+                        subtitle: 'Consulter, en ajouter, les noter comme repas',
+                        trailing: '${recipes.length}',
+                        dark: true,
+                        onTap: _openRecipes,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     Row(
                       children: [
                         Expanded(
                           child: _ActionTile(
-                            emoji: '☕',
-                            title: 'Ajouter un petit-déj',
-                            subtitle: 'Tes habituels en 1 tap',
-                            color: AppColors.accent2.withValues(alpha: 0.12),
-                            onTap: () => _openAddMeal(preset: 'breakfast'),
+                            emoji: '📸',
+                            title: "Photo d'une assiette",
+                            subtitle: 'calories en 1 photo',
+                            primary: true,
+                            onTap: () => _openAddMeal(mealType: guessMealType(), start: 'photo'),
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: _ActionTile(
-                            emoji: '🍎',
-                            title: 'Ajouter un en-cas',
-                            subtitle: 'Goûter, grignotage',
-                            color: AppColors.gold.withValues(alpha: 0.15),
-                            onTap: () => _openAddMeal(preset: 'snack'),
+                            emoji: '✍️',
+                            title: 'Décrire un repas',
+                            subtitle: '« 2 crêpes, un café »',
+                            color: AppColors.surface,
+                            onTap: () => _openAddMeal(mealType: guessMealType(), start: 'describe'),
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 10),
-                    ValueListenableBuilder(
-                      valueListenable: _recipes,
-                      builder: (_, recipes, _) => _ActionTile(
-                        emoji: '📖',
-                        title: 'Mes recettes',
-                        subtitle: '${recipes.length} recette${recipes.length > 1 ? "s" : ""}',
-                        onTap: _openRecipes,
-                      ),
                     ),
                   ],
                 ),
@@ -313,11 +350,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+/// Tuile de navigation de l'accueil : en colonne (emoji au-dessus) par
+/// défaut, en ligne avec un compteur quand `dark` (la tuile "Mes recettes").
 class _ActionTile extends StatelessWidget {
   final String emoji;
   final String title;
   final String subtitle;
   final bool primary;
+  final bool dark;
+  final String? trailing;
   final Color? color;
   final VoidCallback onTap;
   const _ActionTile({
@@ -326,34 +367,60 @@ class _ActionTile extends StatelessWidget {
     required this.subtitle,
     required this.onTap,
     this.primary = false,
+    this.dark = false,
+    this.trailing,
     this.color,
   });
 
   @override
   Widget build(BuildContext context) {
+    final fg = dark ? AppColors.bg : (primary ? Colors.white : AppColors.ink);
+    final fgSoft = dark ? AppColors.bg.withValues(alpha: 0.75) : (primary ? Colors.white70 : AppColors.inkSoft);
     return Material(
-      color: color ?? (primary ? AppColors.accent : AppColors.surface2),
-      borderRadius: BorderRadius.circular(18),
-      elevation: primary ? 3 : 0,
-      shadowColor: AppColors.accent.withValues(alpha: 0.5),
+      color: color ?? (dark ? AppColors.ink : (primary ? AppColors.accent : AppColors.surface2)),
+      borderRadius: BorderRadius.circular(22),
+      elevation: primary || dark ? 3 : 0,
+      shadowColor: (dark ? AppColors.ink : AppColors.accent).withValues(alpha: 0.5),
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(22),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(emoji, style: const TextStyle(fontSize: 28)),
-              const SizedBox(height: 6),
-              Text(
-                title,
-                style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, color: primary ? Colors.white : AppColors.ink),
-              ),
-              const SizedBox(height: 2),
-              Text(subtitle, style: TextStyle(fontSize: 12, color: primary ? Colors.white70 : AppColors.inkSoft)),
-            ],
-          ),
+          child: dark
+              ? Row(
+                  children: [
+                    Text(emoji, style: const TextStyle(fontSize: 26)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(title, style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800, color: fg)),
+                          Text(subtitle, style: TextStyle(fontSize: 11.5, color: fgSoft)),
+                        ],
+                      ),
+                    ),
+                    if (trailing != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.bg.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(trailing!, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: fg)),
+                      ),
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(emoji, style: const TextStyle(fontSize: 26)),
+                    const SizedBox(height: 6),
+                    Text(title, style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800, color: fg)),
+                    const SizedBox(height: 2),
+                    Text(subtitle, style: TextStyle(fontSize: 11.5, color: fgSoft)),
+                  ],
+                ),
         ),
       ),
     );

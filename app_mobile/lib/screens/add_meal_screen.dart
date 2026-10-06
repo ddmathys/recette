@@ -43,7 +43,9 @@ Recipe? _recipeById(List<Recipe> recipes, String? id) {
 /// le garder dans la bibliothèque. Mirrors AddMealFlow.tsx on the web —
 /// remplace CaptureScreen. `initialRecipe` saute direct au résultat.
 /// `day` = jour affiché au dashboard (le repas est noté ce jour-là) ;
-/// `snack` ouvre directement "Décrire" avec le type Collation.
+/// `mealType` = créneau dans lequel noter ; `start` saute l'écran de choix ;
+/// `intent` décide de l'ordre des actions du résultat ('meal' = noter ce
+/// qu'on a mangé, 'recipe' = enrichir la bibliothèque).
 class AddMealScreen extends StatefulWidget {
   final List<Recipe> recipes;
   final Recipe? initialRecipe;
@@ -52,19 +54,26 @@ class AddMealScreen extends StatefulWidget {
   final String householdId;
   final DateTime day;
 
-  /// 'snack' / 'breakfast' : ouvre direct "Décrire" avec ce type et les
-  /// habituels de ce type en premier.
-  final String? preset;
+  /// Créneau dans lequel noter le repas (celui du "+" du dashboard).
+  final String? mealType;
+
+  /// 'meal' (dashboard) ou 'recipe' (écran Mes recettes).
+  final String intent;
+
+  /// 'photo' / 'describe' / 'text' : saute l'écran de choix.
+  final String? start;
 
   /// Journal de l'utilisateur, pour proposer ses habituels.
   final List<MealLog> logs;
 
-  bool get snack => preset == 'snack';
-  String? get presetType => preset == 'snack' ? 'collation' : (preset == 'breakfast' ? 'petit-dej' : null);
+  bool get snack => mealType == 'collation';
+  String? get presetType => mealType;
 
   const AddMealScreen({
     required this.day,
-    this.preset,
+    this.mealType,
+    this.intent = 'meal',
+    this.start,
     this.logs = const [],
     super.key,
     required this.recipes,
@@ -87,7 +96,9 @@ class _AddMealScreenState extends State<AddMealScreen> {
   final _instrCtrl = TextEditingController();
   final _scroll = ScrollController();
 
-  late _Stage _stage = widget.initialRecipe != null ? _Stage.result : (widget.preset != null ? _Stage.describe : _Stage.choose);
+  late _Stage _stage = widget.initialRecipe != null
+      ? _Stage.result
+      : (widget.start == 'describe' ? _Stage.describe : (widget.start == 'text' ? _Stage.text : _Stage.choose));
   late final List<Habit> _habits = computeHabits(
     widget.logs,
     widget.ownerUid,
@@ -134,6 +145,14 @@ class _AddMealScreenState extends State<AddMealScreen> {
       );
       _matchedRecipeId = r.id;
       _savedRecipeId = r.id;
+    }
+    // "Photo" choisi avant d'arriver ici : on ouvre directement
+    // l'appareil / la galerie. Si l'utilisateur annule, il retombe sur
+    // l'écran de choix.
+    if (r == null && widget.start == 'photo') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _takePhoto();
+      });
     }
   }
 
@@ -401,13 +420,13 @@ class _AddMealScreenState extends State<AddMealScreen> {
   @override
   Widget build(BuildContext context) {
     final title = switch (_stage) {
-      _Stage.choose => 'Ajouter un repas',
-      _Stage.describe => widget.snack ? 'Ajouter un en-cas' : (widget.preset == 'breakfast' ? 'Ajouter un petit-déj' : "Ce que j'ai mangé"),
-      _Stage.text => 'Trouver une recette',
+      _Stage.choose => widget.intent == 'recipe' ? 'Ajouter une recette' : 'Ajouter un repas',
+      _Stage.describe => widget.presetType != null ? 'Mon ${mealTypeLabel(widget.presetType!).toLowerCase()}' : "Ce que j'ai mangé",
+      _Stage.text => widget.intent == 'recipe' ? 'Décrire la recette' : 'Trouver une recette',
       _Stage.loading => 'Un instant…',
       _Stage.result => _draft?.name ?? 'Résultat',
     };
-    final backToChoose = widget.preset == null && (_stage == _Stage.text || _stage == _Stage.describe);
+    final backToChoose = widget.start == null && (_stage == _Stage.text || _stage == _Stage.describe);
     return PopScope(
       canPop: !backToChoose,
       onPopInvokedWithResult: (didPop, _) {
@@ -459,36 +478,52 @@ class _AddMealScreenState extends State<AddMealScreen> {
     );
   }
 
-  List<Widget> _buildChoose() => [
-    _BigChoice(
-      emoji: '📸',
-      title: 'Prendre une photo',
-      subtitle: 'Ton assiette (1 personne) → calories détaillées et ingrédients',
-      primary: true,
-      onTap: _takePhoto,
-    ),
-    const SizedBox(height: 12),
-    _BigChoice(
-      emoji: '✍️',
-      title: "Décrire ce que j'ai mangé",
-      subtitle: 'Un ou plusieurs plats, ex. « crêpes et poulet sauce soja » → calories et ingrédients',
-      onTap: () => setState(() {
-        _error = null;
-        _stage = _Stage.describe;
-      }),
-    ),
-    const SizedBox(height: 12),
-    HabitsList(habits: _habits, onLog: _logHabit, showType: true),
-    _BigChoice(
-      emoji: '📖',
-      title: 'Trouver une recette',
-      subtitle: 'Un plat, pour le nombre de personnes choisi → recette complète et ingrédients',
-      onTap: () => setState(() {
-        _error = null;
-        _stage = _Stage.text;
-      }),
-    ),
-  ];
+  List<Widget> _buildChoose() => widget.intent == 'recipe'
+      ? [
+          const Text(
+            "Les deux façons donnent une recette complète : ingrédients, préparation et calories par personne. Tu pourras l'ajuster par IA avant de l'enregistrer.",
+            style: TextStyle(fontSize: 13.5, color: AppColors.inkSoft),
+          ),
+          const SizedBox(height: 14),
+          _BigChoice(
+            emoji: '✍️',
+            title: 'Décrire la recette',
+            subtitle: 'Un nom de plat, une description ou un lien — pour le nombre de personnes que tu choisis',
+            primary: true,
+            onTap: () => setState(() {
+              _error = null;
+              _stage = _Stage.text;
+            }),
+          ),
+          const SizedBox(height: 12),
+          _BigChoice(
+            emoji: '📸',
+            title: "À partir d'une photo",
+            subtitle: "Photographie le plat : l'IA reconnaît les ingrédients et estime les calories",
+            onTap: _takePhoto,
+          ),
+        ]
+      : [
+          _BigChoice(
+            emoji: '📸',
+            title: 'Prendre une photo',
+            subtitle: 'Ton assiette (1 personne) → calories détaillées et ingrédients',
+            primary: true,
+            onTap: _takePhoto,
+          ),
+          const SizedBox(height: 12),
+          _BigChoice(
+            emoji: '✍️',
+            title: "Décrire ce que j'ai mangé",
+            subtitle: 'Un ou plusieurs plats, ex. « crêpes et poulet sauce soja » → calories et ingrédients',
+            onTap: () => setState(() {
+              _error = null;
+              _stage = _Stage.describe;
+            }),
+          ),
+          const SizedBox(height: 12),
+          HabitsList(habits: _habits, onLog: _logHabit, showType: true),
+        ];
 
   Future<void> _logHabit(Habit h, int count) async {
     final type = widget.presetType ?? h.mealType;
@@ -503,22 +538,22 @@ class _AddMealScreenState extends State<AddMealScreen> {
   }
 
   List<Widget> _buildDescribe() => [
-    if (widget.preset != null) HabitsList(habits: _habits, onLog: _logHabit),
+    if (widget.presetType != null) HabitsList(habits: _habits, onLog: _logHabit),
     Text(
-      (widget.preset != null && _habits.isNotEmpty ? 'Autre chose ? ' : '') + (widget.snack ? "Qu'as-tu pris ?" : "Qu'as-tu mangé ?"),
+      (widget.presetType != null && _habits.isNotEmpty ? 'Autre chose ? ' : '') + (widget.snack ? "Qu'as-tu pris ?" : "Qu'as-tu mangé ?"),
       style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
     ),
     const SizedBox(height: 8),
     TextField(
       controller: _describeCtrl,
-      autofocus: _habits.isEmpty || widget.preset == null,
+      autofocus: _habits.isEmpty || widget.presetType == null,
       minLines: 2,
       maxLines: 4,
       style: const TextStyle(fontSize: 17),
       decoration: InputDecoration(
         hintText: widget.snack
             ? 'ex : une pomme et 3 carrés de chocolat'
-            : (widget.preset == 'breakfast'
+            : (widget.presetType == 'petit-dej'
                   ? 'ex : café au lait, 2 tartines beurre-confiture'
                   : 'ex : 2 crêpes et du poulet sauce soja avec du riz'),
       ),
@@ -567,7 +602,10 @@ class _AddMealScreenState extends State<AddMealScreen> {
   ];
 
   List<Widget> _buildText() => [
-    const Text('Quel repas ?', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+    Text(
+      widget.intent == 'recipe' ? 'Quelle recette ?' : 'Quel repas ?',
+      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+    ),
     const SizedBox(height: 8),
     TextField(
       controller: _queryCtrl,
@@ -575,7 +613,9 @@ class _AddMealScreenState extends State<AddMealScreen> {
       textInputAction: TextInputAction.search,
       onSubmitted: (_) => _searchRecipe(),
       style: const TextStyle(fontSize: 17),
-      decoration: const InputDecoration(hintText: 'ex : crêpes, lasagnes, un lien de recette…'),
+      decoration: InputDecoration(
+        hintText: widget.intent == 'recipe' ? 'ex : lasagnes maison, ou un lien Marmiton…' : 'ex : crêpes, lasagnes, un lien de recette…',
+      ),
     ),
     const SizedBox(height: 20),
     const Text('Pour combien de personnes ?', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
@@ -598,7 +638,10 @@ class _AddMealScreenState extends State<AddMealScreen> {
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
-        child: const Text('Trouver la recette', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+        child: Text(
+          widget.intent == 'recipe' ? 'Créer la recette' : 'Trouver la recette',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+        ),
       ),
     ),
   ];
@@ -798,50 +841,95 @@ class _AddMealScreenState extends State<AddMealScreen> {
               ],
             ),
             const SizedBox(height: 14),
-            SizedBox(
-              height: 52,
-              child: ElevatedButton(
-                onPressed: _logged || _busy != null ? null : _logMeal,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accent,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: _logged ? AppColors.herb : null,
-                  disabledForegroundColor: _logged ? Colors.white : null,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: Text(
-                  _logged
-                      ? '✓ Ajouté à ${_isToday ? 'ta journée' : dayLabel(widget.day).toLowerCase()}'
-                      : (_busy == 'log'
-                            ? 'Enregistrement…'
-                            : (_isToday ? "J'ai mangé ça" : "J'ai mangé ça ${dayLabel(widget.day).toLowerCase()}")),
-                  style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800),
-                ),
+            // L'ordre suit l'intention : depuis le dashboard on note
+            // d'abord ce qu'on a mangé, depuis "Mes recettes" on
+            // enregistre d'abord la recette. Les deux restent possibles.
+            if (widget.intent == 'recipe') ...[
+              _saveRecipeButton(primary: true),
+              const SizedBox(height: 10),
+              Text(
+                "Tu l'as aussi mangée ${_isToday ? "aujourd'hui" : dayLabel(widget.day).toLowerCase()} ?",
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
               ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 52,
-              child: OutlinedButton(
-                onPressed: _savedRecipeId != null || _busy != null ? null : _saveRecipe,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.ink,
-                  disabledForegroundColor: _savedRecipeId != null ? AppColors.herb : null,
-                  side: BorderSide(color: _savedRecipeId != null ? AppColors.herb : AppColors.line, width: 2),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: Text(
-                  _savedRecipeId != null ? '✓ Dans mes recettes' : (_busy == 'save' ? 'Enregistrement…' : 'Garder dans mes recettes'),
-                  style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800),
-                ),
-              ),
-            ),
+              const SizedBox(height: 8),
+              _logMealButton(primary: false),
+            ] else ...[
+              _logMealButton(primary: true),
+              const SizedBox(height: 10),
+              _saveRecipeButton(primary: false),
+            ],
             const SizedBox(height: 6),
             TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Terminé')),
           ],
         ),
       ),
     ];
+  }
+
+  /// "J'ai mangé ça" — rempli (dashboard) ou en contour (Mes recettes).
+  Widget _logMealButton({required bool primary}) => SizedBox(
+    height: 52,
+    child: primary
+        ? ElevatedButton(
+            onPressed: _logged || _busy != null ? null : _logMeal,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accent,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: _logged ? AppColors.herb : null,
+              disabledForegroundColor: _logged ? Colors.white : null,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            child: Text(_logMealLabel(), style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800)),
+          )
+        : OutlinedButton(
+            onPressed: _logged || _busy != null ? null : _logMeal,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.ink,
+              disabledForegroundColor: _logged ? AppColors.herb : null,
+              side: BorderSide(color: _logged ? AppColors.herb : AppColors.line, width: 2),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            child: Text(_logMealLabel(), style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800)),
+          ),
+  );
+
+  String _logMealLabel() => _logged
+      ? '✓ Ajouté à ${_isToday ? 'ta journée' : dayLabel(widget.day).toLowerCase()}'
+      : (_busy == 'log'
+            ? 'Enregistrement…'
+            : (_isToday ? "🍽️ J'ai mangé ça" : "🍽️ J'ai mangé ça ${dayLabel(widget.day).toLowerCase()}"));
+
+  /// "Garder dans mes recettes" — rempli (Mes recettes) ou en contour.
+  Widget _saveRecipeButton({required bool primary}) {
+    final label = _savedRecipeId != null
+        ? '✓ Dans mes recettes'
+        : (_busy == 'save' ? 'Enregistrement…' : '📖 Garder dans mes recettes');
+    final onPressed = _savedRecipeId != null || _busy != null ? null : _saveRecipe;
+    return SizedBox(
+      height: 52,
+      child: primary
+          ? ElevatedButton(
+              onPressed: onPressed,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: _savedRecipeId != null ? AppColors.herb : null,
+                disabledForegroundColor: _savedRecipeId != null ? Colors.white : null,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: Text(label, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800)),
+            )
+          : OutlinedButton(
+              onPressed: onPressed,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.ink,
+                disabledForegroundColor: _savedRecipeId != null ? AppColors.herb : null,
+                side: BorderSide(color: _savedRecipeId != null ? AppColors.herb : AppColors.line, width: 2),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: Text(label, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w800)),
+            ),
+    );
   }
 }
 

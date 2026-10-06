@@ -205,13 +205,45 @@ class UserProfile {
   final String displayName;
   final String householdId;
   final num? dailyKcalGoal;
-  const UserProfile({required this.email, required this.displayName, required this.householdId, this.dailyKcalGoal});
+
+  /// 'computed' = proposition du profil acceptée, 'manual' = chiffre tapé.
+  final String? goalSource;
+
+  /// Mesures servant à proposer un objectif (voir energy.dart). Toutes
+  /// optionnelles : un profil incomplet n'affiche pas de proposition.
+  final String? sex;
+  final int? birthYear;
+  final num? heightCm;
+  final num? weightKg;
+  final String? activity;
+  final String? aim;
+
+  const UserProfile({
+    required this.email,
+    required this.displayName,
+    required this.householdId,
+    this.dailyKcalGoal,
+    this.goalSource,
+    this.sex,
+    this.birthYear,
+    this.heightCm,
+    this.weightKg,
+    this.activity,
+    this.aim,
+  });
 
   factory UserProfile.fromMap(Map<String, dynamic> m) => UserProfile(
     email: (m['email'] ?? '').toString(),
     displayName: (m['displayName'] ?? '').toString(),
     householdId: (m['householdId'] ?? '').toString(),
     dailyKcalGoal: m['dailyKcalGoal'] as num?,
+    goalSource: m['goalSource'] as String?,
+    sex: m['sex'] as String?,
+    birthYear: (m['birthYear'] as num?)?.toInt(),
+    heightCm: m['heightCm'] as num?,
+    weightKg: m['weightKg'] as num?,
+    activity: m['activity'] as String?,
+    aim: m['aim'] as String?,
   );
 }
 

@@ -103,11 +103,39 @@ export async function signInWithGoogle() {
   }
 }
 
+/**
+ * Mot de passe oublié. On passe par /api/send-password-reset, qui envoie le
+ * lien depuis dmathys.dev via Resend : les e-mails du domaine Firebase par
+ * défaut ne sont jamais délivrés (voir la route pour le détail). Si la
+ * route n'est pas configurée ou tombe, on retombe sur l'envoi Firebase —
+ * ça ne coûte rien et ça reste la voie officielle.
+ */
+/** Refus explicite du serveur (adresse invalide, plafond atteint) : à
+ * montrer tel quel, sans retomber sur l'envoi Firebase. */
+class ResetRefused extends Error {}
+
 export async function resetPassword(email: string) {
   if (!auth) throw new Error("Firebase n'est pas configuré.");
+  const clean = email.trim();
+  try {
+    const res = await fetch("/api/send-password-reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: clean }),
+    });
+    if (res.ok) return;
+    if (res.status === 400 || res.status === 429) {
+      const data = await res.json().catch(() => ({}));
+      throw new ResetRefused(typeof data.error === "string" ? data.error : "Demande refusée.");
+    }
+    // 503 (pas configuré) ou 502 (envoi en panne) → repli ci-dessous.
+  } catch (e) {
+    if (e instanceof ResetRefused) throw new Error(e.message);
+    // Réseau coupé, route absente : on tente quand même la voie Firebase.
+  }
   try {
     auth.languageCode = "fr";
-    await sendPasswordResetEmail(auth, email);
+    await sendPasswordResetEmail(auth, clean);
   } catch (e) {
     throw new Error(authErrorMessage(e));
   }

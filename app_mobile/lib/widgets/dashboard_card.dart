@@ -61,6 +61,12 @@ class DashboardCard extends StatefulWidget {
   /// "Je ne sais plus" → estimer la journée affichée.
   final VoidCallback onEstimateDay;
 
+  /// Ouvre le profil (mesures → objectif calculé).
+  final VoidCallback? onOpenProfile;
+
+  /// true si les mesures du profil permettent déjà un calcul.
+  final bool goalComputed;
+
   /// Tuiles de navigation affichées sous les créneaux (accueil).
   final Widget? actions;
 
@@ -75,6 +81,8 @@ class DashboardCard extends StatefulWidget {
     required this.onEditLog,
     required this.onAddToSlot,
     required this.onEstimateDay,
+    this.onOpenProfile,
+    this.goalComputed = false,
     this.actions,
   });
 
@@ -278,6 +286,21 @@ class _DashboardCardState extends State<DashboardCard> {
                                       ),
                                     ),
                                   ),
+                            if (widget.onOpenProfile != null) ...[
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: widget.onOpenProfile,
+                                child: Text(
+                                  widget.goalComputed ? 'mon profil' : 'le calculer',
+                                  style: const TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.accent,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                         const SizedBox(height: 8),

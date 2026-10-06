@@ -50,6 +50,25 @@ const adminApp = getAdminApp();
 
 export const adminDb = adminApp ? getFirestore(adminApp) : null;
 
+/** Jeton d'accès OAuth du compte de service, pour appeler une API Google
+ * REST que le SDK Admin n'expose pas (ici Identity Toolkit, qui génère un
+ * lien de réinitialisation sans envoyer d'e-mail — voir
+ * /api/send-password-reset). Les identifiants `cert()` demandent déjà le
+ * scope identitytoolkit, donc rien à signer nous-mêmes. On n'utilise pas
+ * firebase-admin/auth pour ça : ce module casse le bundling Turbopack en
+ * prod (voir la note sur jwks-rsa plus bas). */
+export async function adminAccessToken(): Promise<string | null> {
+  const credential = adminApp?.options.credential;
+  if (!credential) return null;
+  try {
+    const token = await credential.getAccessToken();
+    return token?.access_token ?? null;
+  } catch (e) {
+    console.error("[firebaseAdmin] access token failed:", e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
 // ID token verification deliberately does NOT use firebase-admin/auth's
 // verifyIdToken: that module pulls in jwks-rsa, which depends on an
 // ESM-only build of `jose`. Under Next's Turbopack production bundler that

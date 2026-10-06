@@ -52,8 +52,24 @@ class HouseholdService {
         );
   }
 
-  Future<void> setDailyKcalGoal(String uid, num goal) =>
-      _db.collection('users').doc(uid).update({'dailyKcalGoal': goal});
+  /// Objectif utilisé par le dashboard. `source` dit d'où il vient : l'édition
+  /// inline du dashboard reste toujours possible et bascule en 'manual'.
+  Future<void> setDailyKcalGoal(String uid, num goal, {String source = 'manual'}) =>
+      _db.collection('users').doc(uid).update({'dailyKcalGoal': goal, 'goalSource': source});
+
+  /// Mesures du profil. N'écrit pas `dailyKcalGoal` : la proposition calculée
+  /// ne devient l'objectif que si l'utilisateur la valide.
+  Future<void> saveBodyMetrics(String uid, Map<String, dynamic> metrics) =>
+      _db.collection('users').doc(uid).update({
+        ...metrics,
+        'metricsUpdatedAt': DateTime.now().toIso8601String(),
+      });
+
+  Future<void> setDisplayName(String uid, String name) {
+    final clean = name.trim();
+    if (clean.isEmpty) return Future.value();
+    return _db.collection('users').doc(uid).update({'displayName': clean});
+  }
 
   Future<void> joinHousehold(String myUid, String targetEmail) async {
     final q = await _db

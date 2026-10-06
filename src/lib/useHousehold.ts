@@ -17,6 +17,7 @@ import {
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
 import { db } from "./firebase";
+import type { BodyMetrics } from "./energy";
 import type { Household, UserProfile } from "./types";
 
 /** Fallback display name from the local part of an email (`marie.d@…` → "Marie.d")
@@ -101,9 +102,32 @@ export async function joinHousehold(myUid: string, targetEmail: string): Promise
   await updateDoc(doc(db, "users", myUid), { householdId: target.uid });
 }
 
-export async function setDailyKcalGoal(uid: string, goal: number): Promise<void> {
+/** Objectif réellement utilisé par le dashboard. `source` dit s'il vient
+ * de la proposition du profil ou d'un chiffre tapé à la main — l'édition
+ * inline du dashboard reste toujours possible et bascule en "manual". */
+export async function setDailyKcalGoal(
+  uid: string,
+  goal: number,
+  source: "computed" | "manual" = "manual",
+): Promise<void> {
   if (!db) throw new Error("Firebase n'est pas configuré.");
-  await updateDoc(doc(db, "users", uid), { dailyKcalGoal: goal });
+  await updateDoc(doc(db, "users", uid), { dailyKcalGoal: goal, goalSource: source });
+}
+
+/** Mesures du profil (sexe, année de naissance, taille, poids, activité,
+ * objectif de poids). N'écrit pas `dailyKcalGoal` : la proposition calculée
+ * ne devient l'objectif que si l'utilisateur la valide. */
+export async function saveBodyMetrics(uid: string, metrics: Partial<BodyMetrics>): Promise<void> {
+  if (!db) throw new Error("Firebase n'est pas configuré.");
+  await updateDoc(doc(db, "users", uid), { ...metrics, metricsUpdatedAt: new Date().toISOString() });
+}
+
+/** Prénom affiché sur les recettes créées et dans le partage. */
+export async function setDisplayName(uid: string, name: string): Promise<void> {
+  if (!db) throw new Error("Firebase n'est pas configuré.");
+  const clean = name.trim();
+  if (!clean) return;
+  await updateDoc(doc(db, "users", uid), { displayName: clean });
 }
 
 export async function leaveHousehold(myUid: string, currentHouseholdId: string): Promise<void> {

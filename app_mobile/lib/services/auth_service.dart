@@ -1,8 +1,14 @@
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'household_service.dart';
 
 /// Thin wrapper around FirebaseAuth — mirrors ../../src/lib/useAuth.ts.
+/// Même déploiement que ai_service.dart (web et mobile partagent l'API).
+const _apiBaseUrl = 'https://recette-olive.vercel.app';
+
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final HouseholdService _household = HouseholdService();
@@ -58,10 +64,35 @@ class AuthService {
     }
   }
 
+  /// Mot de passe oublié. On passe d'abord par /api/send-password-reset, qui
+  /// envoie le lien depuis dmathys.dev via Resend : les e-mails du domaine
+  /// Firebase par défaut ne sont jamais délivrés. Repli sur l'envoi Firebase
+  /// si la route n'est pas configurée ou injoignable. Mirrors resetPassword()
+  /// dans ../../src/lib/useAuth.ts.
   Future<void> resetPassword(String email) async {
+    final clean = email.trim();
+    try {
+      final res = await http
+          .post(
+            Uri.parse('$_apiBaseUrl/api/send-password-reset'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': clean}),
+          )
+          .timeout(const Duration(seconds: 20));
+      if (res.statusCode == 200) return;
+      if (res.statusCode == 400 || res.statusCode == 429) {
+        final body = jsonDecode(res.body) as Map<String, dynamic>;
+        throw AuthFailure((body['error'] ?? 'Demande refusée.').toString());
+      }
+      // 502 / 503 : envoi non configuré ou en panne → repli ci-dessous.
+    } on AuthFailure {
+      rethrow;
+    } catch (_) {
+      // Réseau coupé, route absente : on tente quand même la voie Firebase.
+    }
     try {
       await _auth.setLanguageCode('fr');
-      await _auth.sendPasswordResetEmail(email: email.trim());
+      await _auth.sendPasswordResetEmail(email: clean);
     } on FirebaseAuthException catch (e) {
       throw AuthFailure(_message(e.code));
     }

@@ -9,6 +9,7 @@ import '../services/household_service.dart';
 import '../services/meal_log_service.dart';
 import '../services/recipe_service.dart';
 import '../theme.dart';
+import '../energy.dart';
 import '../meal_types.dart';
 import '../widgets/dashboard_card.dart';
 import '../widgets/edit_meal_log_sheet.dart';
@@ -16,6 +17,7 @@ import '../widgets/estimate_day_sheet.dart';
 import '../widgets/evolution_card.dart';
 import 'add_meal_screen.dart';
 import 'add_to_slot_screen.dart';
+import 'profile_screen.dart';
 import 'recipe_detail_screen.dart';
 import 'recipes_screen.dart';
 import 'share_screen.dart';
@@ -258,6 +260,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 if (profile != null)
                   IconButton(
+                    tooltip: 'Mon profil',
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => ProfileScreen(uid: _uid, profile: profile)),
+                    ),
+                    icon: const Icon(Icons.person_outline, size: 20, color: AppColors.inkSoft),
+                  ),
+                if (profile != null)
+                  IconButton(
                     tooltip: 'Partage',
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(
@@ -292,6 +302,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 onEditLog: (l) => showEditMealLogSheet(context, l),
                 onAddToSlot: _openSlot,
+                onOpenProfile: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => ProfileScreen(uid: _uid, profile: profile)),
+                ),
+                goalComputed: metricsComplete(
+                  sex: profile.sex,
+                  birthYear: profile.birthYear,
+                  heightCm: profile.heightCm,
+                  weightKg: profile.weightKg,
+                  activity: profile.activity,
+                  aim: profile.aim,
+                ),
                 onEstimateDay: () => showEstimateDaySheet(
                   context,
                   day: _selectedDay,

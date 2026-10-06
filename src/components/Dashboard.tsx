@@ -37,6 +37,8 @@ export function Dashboard({
   onEditLog,
   onAddToSlot,
   onEstimateDay,
+  onOpenProfile,
+  goalComputed,
   readOnly,
   children,
 }: {
@@ -50,6 +52,10 @@ export function Dashboard({
   onAddToSlot: (slot: MealType) => void;
   /** Ouvre "je ne sais plus → estimer la journée" pour le jour affiché. */
   onEstimateDay: () => void;
+  /** Ouvre le profil (mesures → objectif calculé). */
+  onOpenProfile?: () => void;
+  /** true si les mesures du profil permettent déjà un calcul. */
+  goalComputed?: boolean;
   readOnly: boolean;
   children?: React.ReactNode;
 }) {
@@ -211,6 +217,14 @@ export function Dashboard({
                     </button>
                   )}
                 </p>
+                {onOpenProfile && (
+                  <button
+                    onClick={onOpenProfile}
+                    className="text-[0.76rem] font-bold text-accent underline decoration-dotted underline-offset-2"
+                  >
+                    {goalComputed ? "mon profil" : "le calculer"}
+                  </button>
+                )}
               </div>
               <div className="flex flex-col gap-2">
                 <MacroBar label="Protéines" value={totals.proteinG} target={proteinTarget} color="#E5484D" />

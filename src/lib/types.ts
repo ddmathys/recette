@@ -10,6 +10,8 @@ export type CategoryKey =
   | "dessert"
   | "sandwich";
 
+import type { ActivityKey, AimKey, Sex } from "./energy";
+
 export type Difficulty = "Facile" | "Moyen" | "Avancé";
 
 export interface Ingredient {
@@ -68,6 +70,21 @@ export interface UserProfile {
    * pour les profils créés avant cette feature — 2000 est utilisé comme
    * valeur par défaut côté client dans ce cas (voir Dashboard.tsx). */
   dailyKcalGoal?: number;
+  /** Comment l'objectif ci-dessus a été posé : "computed" = proposition du
+   * profil acceptée, "manual" = chiffre choisi à la main. L'utilisateur
+   * peut passer de l'un à l'autre à tout moment (voir ProfileDialog). */
+  goalSource?: "computed" | "manual";
+  /** Mesures du profil, qui servent à proposer un objectif (Mifflin-St
+   * Jeor — voir src/lib/energy.ts). Toutes optionnelles : un profil
+   * incomplet n'affiche simplement pas de proposition. */
+  sex?: Sex;
+  birthYear?: number;
+  heightCm?: number;
+  weightKg?: number;
+  activity?: ActivityKey;
+  aim?: AimKey;
+  /** Dernière mise à jour des mesures, pour dater le poids affiché. */
+  metricsUpdatedAt?: string;
 }
 
 /** households/{ownerId} — one per household, keyed by its creator's uid. */

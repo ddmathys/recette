@@ -29,6 +29,8 @@ import { firebaseEnabled } from "@/lib/firebase";
 import { useAuth, signOut } from "@/lib/useAuth";
 import { useHousehold, setDailyKcalGoal } from "@/lib/useHousehold";
 import { AuthLanding } from "@/components/AuthGate";
+import { ProfileDialog } from "@/components/ProfileDialog";
+import { metricsComplete } from "@/lib/energy";
 import type { CategoryKey, MealLog, MealType, Recipe } from "@/lib/types";
 
 export default function Home() {
@@ -78,6 +80,7 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   // Accueil (ma journée) ou écran bibliothèque. Les parcours d'ajout
   // s'ouvrent par-dessus en plein écran.
@@ -229,6 +232,19 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
                 <div className="ml-auto flex shrink-0 items-center gap-2">
                   {profile && (
                     <button
+                      onClick={() => setProfileOpen(true)}
+                      aria-label="Mon profil"
+                      title="Mon profil et mon objectif"
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-ink-soft shadow-[0_1px_3px_rgba(43,42,38,.08)] hover:text-accent"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4.5 w-4.5">
+                        <circle cx="12" cy="8.5" r="3.6" />
+                        <path d="M4.5 20c.8-3.6 3.8-5.6 7.5-5.6s6.7 2 7.5 5.6" />
+                      </svg>
+                    </button>
+                  )}
+                  {profile && (
+                    <button
                       onClick={() => setShareOpen(true)}
                       aria-label="Partage de la bibliothèque"
                       title={profile.householdId === uid ? "Partage" : "Bibliothèque partagée"}
@@ -336,6 +352,8 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
                 onEditLog={setEditingLog}
                 onAddToSlot={(slot) => setSlotSheet(slot)}
                 onEstimateDay={() => setEstimateOpen(true)}
+                onOpenProfile={() => setProfileOpen(true)}
+                goalComputed={metricsComplete(profile)}
                 readOnly={readOnly}
               >
                 <div className="grid grid-cols-2 gap-2.5">
@@ -494,6 +512,10 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
       )}
 
       {editOpen && openRecipe && <EditRecipeDialog recipe={openRecipe} onClose={() => setEditOpen(false)} />}
+
+      {profileOpen && uid && profile && (
+        <ProfileDialog uid={uid} profile={profile} onClose={() => setProfileOpen(false)} />
+      )}
 
       {shareOpen && uid && profile && (
         <ShareSettings uid={uid} profile={profile} household={household} onClose={() => setShareOpen(false)} />

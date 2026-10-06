@@ -1,14 +1,28 @@
-import type { MealType } from "./types";
+import type { CategoryKey, MealType } from "./types";
 
-export const MEAL_TYPES: { key: MealType; label: string }[] = [
-  { key: "petit-dej", label: "Petit-déjeuner" },
-  { key: "dejeuner", label: "Déjeuner" },
-  { key: "diner", label: "Dîner" },
-  { key: "collation", label: "Collation" },
+/** Les 4 moments de la journée, dans l'ordre d'affichage du dashboard.
+ * `emoji`/`color` servent à l'anneau segmenté et aux cartes de créneau,
+ * `cats` aux recettes mises en avant quand on remplit ce créneau. */
+export const MEAL_TYPES: {
+  key: MealType;
+  label: string;
+  short: string;
+  emoji: string;
+  color: string;
+  cats: CategoryKey[];
+}[] = [
+  { key: "petit-dej", label: "Petit-déjeuner", short: "Petit-déj", emoji: "☕", color: "#F2A600", cats: ["petit-dejeuner"] },
+  { key: "dejeuner", label: "Déjeuner", short: "Déjeuner", emoji: "🍽️", color: "#FF5A36", cats: ["salade", "sandwich", "pates-riz", "soupe"] },
+  { key: "diner", label: "Dîner", short: "Dîner", emoji: "🌙", color: "#17A2B8", cats: ["viande", "poisson", "vegetarien", "pates-riz", "soupe"] },
+  { key: "collation", label: "Collation", short: "En-cas", emoji: "🍎", color: "#1FA876", cats: ["apero", "dessert"] },
 ];
 
 export function mealTypeLabel(key: string): string {
   return MEAL_TYPES.find((m) => m.key === key)?.label ?? "Repas";
+}
+
+export function mealTypeMeta(key: MealType) {
+  return MEAL_TYPES.find((m) => m.key === key) ?? MEAL_TYPES[1];
 }
 
 /** Devine un type de repas plausible à partir de l'heure actuelle, pour

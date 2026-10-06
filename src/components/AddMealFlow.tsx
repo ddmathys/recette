@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { CATEGORIES } from "@/lib/categories";
 import { compressImageIfNeeded } from "@/lib/compressImage";
 import { auth } from "@/lib/firebase";
-import { MEAL_TYPES, dayLabel, eatenAtFor, guessMealType } from "@/lib/mealTypes";
+import { MEAL_TYPES, dayLabel, eatenAtFor, guessMealType, mealTypeLabel } from "@/lib/mealTypes";
 import { sanitizeNutrition } from "@/lib/nutrition";
 import { addRecipe, uploadRecipePhoto } from "@/lib/useRecipes";
 import { addMealLog, uploadMealPhoto } from "@/lib/useMealLogs";
@@ -19,7 +19,11 @@ const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
  * recette écrite ou existante (N personnes, étapes). Les deux arrivent sur
  * le même écran de résultat. */
 type Kind = "meal" | "recipe";
-type Stage = "choose" | "describe" | "text" | "loading" | "result";
+type Stage = "choose" | "photo" | "describe" | "text" | "loading" | "result";
+/** "meal" = je note ce que j'ai mangé (dashboard) ; "recipe" = j'enrichis ma
+ * bibliothèque (écran Mes recettes). Change l'écran d'entrée et l'ordre des
+ * boutons du résultat, mais les deux fins restent possibles. */
+type Intent = "meal" | "recipe";
 
 const TEXT_SUGGESTIONS = ["Version plus légère", "Sans gluten", "Végétarien", "Plus rapide"];
 const SNACK_IDEAS = ["Une pomme", "Un yaourt nature", "Un carré de chocolat", "Une poignée d'amandes", "Une banane", "Un café au lait", "Un biscuit", "Une barre de céréales"];
@@ -32,15 +36,17 @@ const MEAL_SUGGESTIONS = ["Portion plus petite", "Sans la sauce", "J'en ai mang�
  * de le garder dans la bibliothèque. Remplace CaptureDialog.
  * `initialRecipe` saute directement au résultat ("Manger ce repas").
  * `day` = jour affiché au dashboard : le repas est noté ce jour-là.
- * `preset` ("snack" / "breakfast") ouvre directement "Décrire" avec le
- * type Collation / Petit-déjeuner et les habituels de ce type en premier.
+ * `mealType` = créneau dans lequel noter (celui du "+" du dashboard).
+ * `start` saute l'écran de choix ("photo" / "describe" / "text").
  */
 export function AddMealFlow({
   recipes,
   owner,
   initialRecipe,
   day,
-  preset,
+  mealType: mealTypePreset,
+  intent = "meal",
+  start,
   logs,
   onClose,
 }: {
@@ -48,15 +54,17 @@ export function AddMealFlow({
   owner: { uid: string; name: string; householdId: string };
   initialRecipe?: Recipe | null;
   day: Date;
-  preset?: "snack" | "breakfast";
+  mealType?: MealType;
+  intent?: Intent;
+  start?: "photo" | "describe" | "text";
   /** Journal de l'utilisateur, pour proposer ses habituels. */
   logs: MealLog[];
   onClose: () => void;
 }) {
-  const snack = preset === "snack";
-  const presetType: MealType | undefined = preset === "snack" ? "collation" : preset === "breakfast" ? "petit-dej" : undefined;
+  const snack = mealTypePreset === "collation";
+  const presetType = mealTypePreset;
   const habits = computeHabits(logs, owner.uid, presetType, presetType ? 8 : 5);
-  const [stage, setStage] = useState<Stage>(initialRecipe ? "result" : preset ? "describe" : "choose");
+  const [stage, setStage] = useState<Stage>(initialRecipe ? "result" : (start ?? "choose"));
   const isToday = day.toDateString() === new Date().toDateString();
   const [kind, setKind] = useState<Kind>("recipe");
   const [error, setError] = useState<string | null>(null);
@@ -69,6 +77,7 @@ export function AddMealFlow({
 
   // Photo
   const photoInput = useRef<HTMLInputElement>(null);
+  const galleryInput = useRef<HTMLInputElement>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -141,7 +150,7 @@ export function AddMealFlow({
       setStage("result");
     } catch (e) {
       setError(e instanceof Error ? e.message : "La reconnaissance photo a échoué.");
-      setStage("choose");
+      setStage("photo");
     }
   }
 
@@ -300,20 +309,27 @@ export function AddMealFlow({
     }
   }
 
+  const slotLabel = presetType ? mealTypeLabel(presetType).toLowerCase() : null;
   const title =
     stage === "choose"
-      ? "Ajouter un repas"
-      : stage === "describe"
-        ? snack
-          ? "Ajouter un en-cas"
-          : preset === "breakfast"
-            ? "Ajouter un petit-déj"
+      ? intent === "recipe"
+        ? "Ajouter une recette"
+        : "Ajouter un repas"
+      : stage === "photo"
+        ? intent === "recipe"
+          ? "Photo du plat"
+          : "Photo de mon assiette"
+        : stage === "describe"
+          ? slotLabel
+            ? `Mon ${slotLabel}`
             : "Ce que j'ai mangé"
-        : stage === "text"
-          ? "Trouver une recette"
-          : stage === "loading"
-            ? "Un instant…"
-            : draft?.name || "Résultat";
+          : stage === "text"
+            ? intent === "recipe"
+              ? "Décrire la recette"
+              : "Trouver une recette"
+            : stage === "loading"
+              ? "Un instant…"
+              : draft?.name || "Résultat";
 
   return (
     <div ref={scroller} className="fixed inset-0 z-50 overflow-y-auto bg-bg">
@@ -324,7 +340,7 @@ export function AddMealFlow({
         <div className="mx-auto flex max-w-[640px] items-center gap-3 px-4 py-3">
           <button
             onClick={() => {
-              if ((stage === "text" || stage === "describe") && !preset) setStage("choose");
+              if ((stage === "text" || stage === "describe" || stage === "photo") && !start) setStage("choose");
               else onClose();
             }}
             aria-label="Retour"
@@ -344,25 +360,42 @@ export function AddMealFlow({
       <main className="mx-auto flex max-w-[640px] flex-col gap-4 px-4 pb-16 pt-5">
         {error && <p className="rounded-xl bg-accent/10 px-3.5 py-2.5 text-[0.85rem] font-medium text-accent">{error}</p>}
 
-        {stage === "choose" && (
+        {/* Deux entrées de fichier : l'appareil photo directement, ou la
+            galerie (une photo de plat déjà prise). */}
+        <input
+          ref={photoInput}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          capture="environment"
+          hidden
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handlePhoto(f);
+            e.target.value = "";
+          }}
+        />
+        <input
+          ref={galleryInput}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          hidden
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handlePhoto(f);
+            e.target.value = "";
+          }}
+        />
+
+        {stage === "choose" && intent === "meal" && (
           <>
-            <input
-              ref={photoInput}
-              type="file"
-              accept="image/png,image/jpeg,image/webp,image/gif"
-              capture="environment"
-              hidden
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) handlePhoto(f);
-                e.target.value = "";
-              }}
-            />
             <BigChoice
               emoji="📸"
               title="Prendre une photo"
               subtitle="Ton assiette (1 personne) → calories détaillées et ingrédients"
-              onClick={() => photoInput.current?.click()}
+              onClick={() => {
+                setError(null);
+                setStage("photo");
+              }}
               primary
             />
             <BigChoice
@@ -375,19 +408,62 @@ export function AddMealFlow({
               }}
             />
             <HabitsList habits={habits} onLog={logHabit} showType />
+          </>
+        )}
+
+        {stage === "choose" && intent === "recipe" && (
+          <>
+            <p className="-mb-1 text-[0.86rem] text-ink-soft">
+              Les deux façons donnent une recette complète : ingrédients, préparation et calories par personne. Tu pourras l&apos;ajuster par IA avant de
+              l&apos;enregistrer.
+            </p>
             <BigChoice
-              emoji="📖"
-              title="Trouver une recette"
-              subtitle="Un plat, pour le nombre de personnes choisi → recette complète et ingrédients"
+              emoji="✍️"
+              title="Décrire la recette"
+              subtitle="Un nom de plat, une description ou un lien — pour le nombre de personnes que tu choisis"
               onClick={() => {
                 setError(null);
                 setStage("text");
+              }}
+              primary
+            />
+            <BigChoice
+              emoji="📸"
+              title="À partir d'une photo"
+              subtitle="Photographie le plat : l'IA reconnaît les ingrédients et estime les calories"
+              onClick={() => {
+                setError(null);
+                setStage("photo");
               }}
             />
           </>
         )}
 
-        {stage === "describe" && preset && <HabitsList habits={habits} onLog={logHabit} />}
+        {stage === "photo" && (
+          <>
+            <p className="-mb-1 text-[0.86rem] text-ink-soft">
+              {intent === "recipe"
+                ? "Cadre le plat entier. L'IA en déduit les ingrédients et les calories — tu compléteras la recette ensuite."
+                : "Cadre ton assiette d'en haut. L'IA estime les calories, les protéines, les glucides et les lipides de ce que tu as devant toi."}
+            </p>
+            <button
+              onClick={() => photoInput.current?.click()}
+              className="flex flex-col items-center gap-2 rounded-3xl bg-accent px-5 py-9 text-accent-ink shadow-[0_8px_24px_-10px_rgba(255,90,54,.9)] transition active:scale-[.98]"
+            >
+              <span className="text-[2.8rem] leading-none">📸</span>
+              <span className="text-[1.1rem] font-extrabold">Prendre une photo</span>
+            </button>
+            <button
+              onClick={() => galleryInput.current?.click()}
+              className="flex items-center justify-center gap-2.5 rounded-3xl border-2 border-dashed border-line bg-surface px-5 py-5 text-ink transition hover:border-accent active:scale-[.98]"
+            >
+              <span className="text-[1.4rem] leading-none">🖼️</span>
+              <span className="text-[0.95rem] font-extrabold">Choisir une photo existante</span>
+            </button>
+          </>
+        )}
+
+        {stage === "describe" && presetType && <HabitsList habits={habits} onLog={logHabit} />}
 
         {stage === "describe" && (
           <form
@@ -399,18 +475,18 @@ export function AddMealFlow({
           >
             <label className="flex flex-col gap-2">
               <span className="text-[0.9rem] font-bold text-ink">
-                {preset && habits.length ? "Autre chose ? " : ""}
+                {presetType && habits.length ? "Autre chose ? " : ""}
                 {snack ? "Qu'as-tu pris ?" : "Qu'as-tu mangé ?"}
               </span>
               <textarea
-                autoFocus={!habits.length || !preset}
+                autoFocus={!habits.length || !presetType}
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={
                   snack
                     ? "ex : une pomme et 3 carrés de chocolat"
-                    : preset === "breakfast"
+                    : presetType === "petit-dej"
                       ? "ex : café au lait, 2 tartines beurre-confiture"
                       : "ex : 2 crêpes et du poulet sauce soja avec du riz"
                 }
@@ -452,12 +528,12 @@ export function AddMealFlow({
             className="flex flex-col gap-5"
           >
             <label className="flex flex-col gap-2">
-              <span className="text-[0.9rem] font-bold text-ink">Quel repas ?</span>
+              <span className="text-[0.9rem] font-bold text-ink">{intent === "recipe" ? "Quelle recette ?" : "Quel repas ?"}</span>
               <input
                 autoFocus
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="ex : crêpes, lasagnes, un lien de recette…"
+                placeholder={intent === "recipe" ? "ex : lasagnes maison, ou un lien Marmiton…" : "ex : crêpes, lasagnes, un lien de recette…"}
                 className="w-full rounded-2xl border-2 border-line bg-surface px-4 py-3.5 text-[1.05rem] text-ink outline-none focus:border-accent"
               />
             </label>
@@ -469,7 +545,7 @@ export function AddMealFlow({
               type="submit"
               className="rounded-2xl bg-accent px-4 py-4 text-[1rem] font-bold text-accent-ink shadow-[0_2px_10px_-2px_rgba(255,90,54,.65)] active:scale-[.98]"
             >
-              Trouver la recette
+              {intent === "recipe" ? "Créer la recette" : "Trouver la recette"}
             </button>
           </form>
         )}
@@ -493,7 +569,11 @@ export function AddMealFlow({
             )}
 
             <p className="-mb-1 text-[0.8rem] font-semibold uppercase tracking-wider text-ink-soft">
-              {kind === "meal" ? "Ce que tu as mangé · 1 personne" : `Recette pour ${draft.servings} personne${draft.servings > 1 ? "s" : ""}`}
+              {kind === "meal"
+                ? intent === "recipe"
+                  ? "D'après la photo · 1 personne"
+                  : "Ce que tu as mangé · 1 personne"
+                : `Recette pour ${draft.servings} personne${draft.servings > 1 ? "s" : ""}`}
             </p>
 
             {lastChange && (
@@ -577,49 +657,77 @@ export function AddMealFlow({
             </Section>
 
             <Section title="Et maintenant ?">
+              {/* L'ordre suit l'intention : depuis le dashboard on note
+                  d'abord ce qu'on a mangé, depuis "Mes recettes" on
+                  enregistre d'abord la recette. Les deux restent possibles. */}
               <div className="flex flex-col gap-3">
-                <div className="flex flex-wrap gap-1.5">
-                  {MEAL_TYPES.map((m) => (
-                    <button
-                      key={m.key}
-                      onClick={() => setMealType(m.key)}
-                      className={`rounded-full border-2 px-3 py-1.5 text-[0.8rem] font-semibold ${
-                        mealType === m.key ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface text-ink-soft"
-                      }`}
-                    >
-                      {m.label}
-                    </button>
-                  ))}
+                {intent === "recipe" && (
+                  <button
+                    onClick={saveRecipe}
+                    disabled={Boolean(savedRecipeId) || busyAction !== null}
+                    className={`rounded-2xl px-4 py-4 text-[1rem] font-bold ${
+                      savedRecipeId ? "bg-herb text-white" : "bg-accent text-accent-ink shadow-[0_2px_10px_-2px_rgba(255,90,54,.65)]"
+                    } disabled:cursor-default`}
+                  >
+                    {savedRecipeId ? "✓ Dans mes recettes" : busyAction === "save" ? "Enregistrement…" : "📖 Garder dans mes recettes"}
+                  </button>
+                )}
+
+                <div className={intent === "recipe" ? "flex flex-col gap-3 rounded-2xl bg-surface-2 p-3.5" : "flex flex-col gap-3"}>
+                  <p className="text-[0.84rem] font-bold text-ink">
+                    {intent === "recipe" ? `Tu l'as aussi mangée ${isToday ? "aujourd'hui" : dayLabel(day).toLowerCase()} ?` : "Dans quel repas ?"}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {MEAL_TYPES.map((m) => (
+                      <button
+                        key={m.key}
+                        onClick={() => setMealType(m.key)}
+                        className={`rounded-full border-2 px-3 py-1.5 text-[0.8rem] font-semibold ${
+                          mealType === m.key ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface text-ink-soft"
+                        }`}
+                      >
+                        {m.emoji} {m.short}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-[0.85rem] font-semibold text-ink-soft">{kind === "meal" ? "Assiettes mangées" : "Portions mangées"}</span>
+                    <Stepper value={portions} onChange={setPortions} min={0.5} max={10} step={0.5} />
+                    <span className="font-mono text-[0.85rem] text-ink">{Math.round((draft.nutrition?.kcal ?? 0) * portions)} kcal</span>
+                  </div>
+                  <button
+                    onClick={logMeal}
+                    disabled={logged || busyAction !== null}
+                    className={`rounded-2xl px-4 py-3.5 text-[0.95rem] font-bold ${
+                      logged
+                        ? "bg-herb text-white"
+                        : intent === "recipe"
+                          ? "border-2 border-line bg-surface text-ink hover:border-accent"
+                          : "bg-accent text-accent-ink shadow-[0_2px_10px_-2px_rgba(255,90,54,.65)]"
+                    } disabled:cursor-default`}
+                  >
+                    {logged
+                      ? `✓ Ajouté à ${isToday ? "ta journée" : dayLabel(day).toLowerCase()}`
+                      : busyAction === "log"
+                        ? "Enregistrement…"
+                        : isToday
+                          ? "🍽️ J'ai mangé ça"
+                          : `🍽️ J'ai mangé ça ${dayLabel(day).toLowerCase()}`}
+                  </button>
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="text-[0.85rem] font-semibold text-ink-soft">{kind === "meal" ? "Assiettes mangées" : "Portions mangées"}</span>
-                  <Stepper value={portions} onChange={setPortions} min={0.5} max={10} step={0.5} />
-                  <span className="font-mono text-[0.85rem] text-ink">{Math.round((draft.nutrition?.kcal ?? 0) * portions)} kcal</span>
-                </div>
-                <button
-                  onClick={logMeal}
-                  disabled={logged || busyAction !== null}
-                  className={`rounded-2xl px-4 py-3.5 text-[0.95rem] font-bold ${
-                    logged ? "bg-herb text-white" : "bg-accent text-accent-ink shadow-[0_2px_10px_-2px_rgba(255,90,54,.65)]"
-                  } disabled:cursor-default`}
-                >
-                  {logged
-                    ? `✓ Ajouté à ${isToday ? "ta journée" : dayLabel(day).toLowerCase()}`
-                    : busyAction === "log"
-                      ? "Enregistrement…"
-                      : isToday
-                        ? "J'ai mangé ça"
-                        : `J'ai mangé ça ${dayLabel(day).toLowerCase()}`}
-                </button>
-                <button
-                  onClick={saveRecipe}
-                  disabled={Boolean(savedRecipeId) || busyAction !== null}
-                  className={`rounded-2xl border-2 px-4 py-3.5 text-[0.95rem] font-bold ${
-                    savedRecipeId ? "border-herb text-herb" : "border-line bg-surface text-ink hover:border-accent"
-                  } disabled:cursor-default`}
-                >
-                  {savedRecipeId ? "✓ Dans mes recettes" : busyAction === "save" ? "Enregistrement…" : "Garder dans mes recettes"}
-                </button>
+
+                {intent === "meal" && (
+                  <button
+                    onClick={saveRecipe}
+                    disabled={Boolean(savedRecipeId) || busyAction !== null}
+                    className={`rounded-2xl border-2 px-4 py-3.5 text-[0.95rem] font-bold ${
+                      savedRecipeId ? "border-herb text-herb" : "border-line bg-surface text-ink hover:border-accent"
+                    } disabled:cursor-default`}
+                  >
+                    {savedRecipeId ? "✓ Dans mes recettes" : busyAction === "save" ? "Enregistrement…" : "📖 Garder dans mes recettes"}
+                  </button>
+                )}
+
                 <button onClick={onClose} className="py-2 text-[0.88rem] font-semibold text-ink-soft underline decoration-dotted underline-offset-4">
                   Terminé
                 </button>

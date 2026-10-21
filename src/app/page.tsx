@@ -491,6 +491,9 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
       </footer>
 
       {openRecipe && (
+        // Ouverte depuis l'écran d'un créneau (« 📖 Recette »), la fiche passe
+        // par-dessus lui, et on y revient en la fermant.
+        <div className={slotSheet ? "relative z-[60]" : undefined}>
         <RecipeDetail
           key={openRecipe.id}
           recipe={openRecipe}
@@ -505,10 +508,17 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
           }}
           onAddEatenDate={(date) => addEatenDate(openRecipe.id, date)}
           onRemoveEatenDate={(date) => removeEatenDate(openRecipe.id, date)}
-          onEdit={() => setEditOpen(true)}
-          onLogMeal={() => setFlow({ intent: "meal", recipe: openRecipe })}
+          onEdit={() => {
+            setSlotSheet(null);
+            setEditOpen(true);
+          }}
+          onLogMeal={() => {
+            setFlow({ intent: "meal", recipe: openRecipe, mealType: slotSheet ?? undefined });
+            setSlotSheet(null);
+          }}
           readOnly={readOnly}
         />
+        </div>
       )}
 
       {editOpen && openRecipe && <EditRecipeDialog recipe={openRecipe} onClose={() => setEditOpen(false)} />}
@@ -541,10 +551,7 @@ function RecipeLibrary({ uid }: { uid: string | null }) {
             setFlow({ intent: "meal", recipe: r, mealType: slotSheet });
             setSlotSheet(null);
           }}
-          onOpenLibrary={() => {
-            setSlotSheet(null);
-            setView("recipes");
-          }}
+          onViewRecipe={(r) => setOpenId(r.id)}
         />
       )}
 

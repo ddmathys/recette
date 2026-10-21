@@ -48,6 +48,21 @@ export function computeHabits(logs: MealLog[], ownerId: string, mealType?: MealT
   return [...byLabel.values()].sort((a, b) => b.times - a.times || b.lastAt.localeCompare(a.lastAt)).slice(0, limit);
 }
 
+/** Toutes les habitudes de l'utilisateur, quel que soit le créneau où elles
+ * ont été notées (un yaourt noté en collation reste proposé au petit-déj),
+ * celles déjà mangées dans `slot` d'abord. `inSlot` = fois dans ce créneau. */
+export function slotHabits(logs: MealLog[], ownerId: string, slot: MealType): (Habit & { inSlot: number })[] {
+  const inSlot = new Map<string, number>();
+  for (const l of logs) {
+    if (l.ownerId !== ownerId || l.source === "estimate" || l.mealType !== slot) continue;
+    const key = l.label.trim().toLowerCase();
+    inSlot.set(key, (inSlot.get(key) ?? 0) + 1);
+  }
+  return computeHabits(logs, ownerId, undefined, Infinity)
+    .map((h) => ({ ...h, inSlot: inSlot.get(h.label.toLowerCase()) ?? 0 }))
+    .sort((a, b) => b.inSlot - a.inSlot || b.times - a.times || b.lastAt.localeCompare(a.lastAt));
+}
+
 /** Brouillon de repas pour `count` unités d'un habituel. */
 export function habitToDraft(h: Habit, count: number, mealType: MealType, eatenAt: Date): MealLogDraft {
   return {

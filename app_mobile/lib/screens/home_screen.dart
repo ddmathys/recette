@@ -147,10 +147,8 @@ class _HomeScreenState extends State<HomeScreen> {
             Navigator.of(context).pop();
             _openRecipe(r);
           },
-          onOpenLibrary: () {
-            Navigator.of(context).pop();
-            _openRecipes();
-          },
+          // La fiche s'empile par-dessus : on revient au créneau en la fermant.
+          onViewRecipe: _openRecipe,
         ),
       ),
     );

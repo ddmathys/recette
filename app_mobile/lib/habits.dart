@@ -27,6 +27,20 @@ class Habit {
     required this.lastAt,
   });
 
+  /// Le même habituel avec des valeurs saisies à la main (par unité).
+  Habit withMacros({required num kcal, required num proteinG, required num carbsG, required num fatG}) => Habit(
+    label: label,
+    mealType: mealType,
+    recipeId: recipeId,
+    portionGrams: portionGrams,
+    kcal: kcal,
+    proteinG: proteinG,
+    carbsG: carbsG,
+    fatG: fatG,
+    times: times,
+    lastAt: lastAt,
+  );
+
   /// Brouillon de repas pour `count` unités de cet habituel.
   MealLogDraft toDraft(int count, String type, DateTime eatenAt) => MealLogDraft(
     recipeId: recipeId,
@@ -73,6 +87,25 @@ List<Habit> computeHabits(List<MealLog> logs, String ownerId, {String? mealType,
   }
   final list = byLabel.values.toList()..sort((a, b) => b.times != a.times ? b.times - a.times : b.lastAt.compareTo(a.lastAt));
   return list.take(limit).toList();
+}
+
+/// Toutes les habitudes, quel que soit le créneau où elles ont été notées
+/// (un yaourt noté en collation reste proposé au petit-déj), celles déjà
+/// mangées dans `slot` d'abord. Le int = fois dans ce créneau.
+List<(Habit, int)> slotHabits(List<MealLog> logs, String ownerId, String slot) {
+  final inSlot = <String, int>{};
+  for (final l in logs) {
+    if (l.ownerId != ownerId || l.source == 'estimate' || l.mealType != slot) continue;
+    final key = l.label.trim().toLowerCase();
+    inSlot[key] = (inSlot[key] ?? 0) + 1;
+  }
+  final list = computeHabits(logs, ownerId, limit: 1 << 30).map((h) => (h, inSlot[h.label.toLowerCase()] ?? 0)).toList();
+  list.sort((a, b) {
+    if (a.$2 != b.$2) return b.$2 - a.$2;
+    if (a.$1.times != b.$1.times) return b.$1.times - a.$1.times;
+    return b.$1.lastAt.compareTo(a.$1.lastAt);
+  });
+  return list;
 }
 
 class DayTotal {

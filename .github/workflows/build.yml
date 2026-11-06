@@ -1,0 +1,91 @@
+name: Assemblage (APK + site)
+
+# Lancé par le validateur après un merge (voyage Vessel), ou à la main.
+# 1. Compile l'app Flutter (app_mobile/) avec la MÊME clé que le PC : la
+#    nouvelle APK s'installe par-dessus l'ancienne. Publiée sur la release
+#    « app-latest » et envoyée par e-mail en pièce jointe.
+# 2. Met le site Next.js en ligne sur Vercel.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: build
+  cancel-in-progress: false
+
+env:
+  APK_URL: https://github.com/${{ github.repository }}/releases/download/app-latest/recettes-du-tiroir.apk
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Clé de signature (celle du PC)
+        run: |
+          mkdir -p ~/.android
+          echo "${{ secrets.DEBUG_KEYSTORE_BASE64 }}" | base64 -d > ~/.android/debug.keystore
+          if [ ! -s ~/.android/debug.keystore ]; then echo "::error::Secret DEBUG_KEYSTORE_BASE64 manquant (Vessel › Atelier)"; exit 1; fi
+      - name: Compiler l'APK
+        working-directory: app_mobile
+        run: |
+          flutter pub get
+          flutter build apk --release --target-platform android-arm64 --build-number=$((100 + ${{ github.run_number }}))
+          cp build/app/outputs/flutter-apk/app-release.apk ../recettes-du-tiroir.apk
+          ls -la ../recettes-du-tiroir.apk
+      - name: Publier (release « app-latest »)
+        run: |
+          gh release view app-latest >/dev/null 2>&1 || gh release create app-latest --title "Recettes du Tiroir — dernière version" --notes "APK Android, reconstruite automatiquement après chaque voyage Vessel." --latest
+          gh release upload app-latest recettes-du-tiroir.apk --clobber
+
+      - name: E-mail « nouvelle version »
+        if: always()
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+          STATUS: ${{ job.status }}
+        run: |
+          if [ -z "$RESEND_API_KEY" ] || [ -z "$NOTIFY_EMAIL" ]; then echo "Secrets e-mail absents."; exit 0; fi
+          esc() { printf '%s' "$1" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
+          LAST="$(git log -1 --format=%s)"
+          if [ "$STATUS" = success ]; then SUBJECT="📲 Recettes du Tiroir : nouvelle APK ($LAST)"; else SUBJECT="⛈️ Recettes du Tiroir : l'APK n'a pas pu être construite"; fi
+          if [ "$STATUS" = success ]; then HTML="<h2>📲 Nouvelle version de Recettes du Tiroir</h2><p><b>$(esc "$LAST")</b></p><p>L'APK est en pièce jointe : ouvre-la sur ton téléphone pour mettre l'app à jour (elle s'installe par-dessus, tes données restent).</p><p>Ou <a href=\"$APK_URL\">télécharge-la ici</a>.</p>"; else HTML="<h2>⛈️ L'APK n'a pas pu être construite</h2><p>$(esc "$LAST")</p><p>Ouvre le voyage dans Vessel : un bouton permet de relancer l'assemblage.</p>"; fi
+          if [ -f recettes-du-tiroir.apk ] && [ "$STATUS" = success ] && [ $(stat -c %s recettes-du-tiroir.apk) -lt 30000000 ]; then
+            b64=$(base64 -w0 recettes-du-tiroir.apk)
+            printf '%s' "$b64" > apk.b64
+            jq -n --arg to "$NOTIFY_EMAIL" --arg subject "$SUBJECT" --arg html "$HTML" --rawfile c apk.b64 '{from:"Vessel <noreply@dmathys.dev>", to:[$to], subject:$subject, html:$html, attachments:[{filename:"recettes-du-tiroir.apk", content:$c}]}' > mail.json
+          else
+            jq -n --arg to "$NOTIFY_EMAIL" --arg subject "$SUBJECT" --arg html "$HTML" '{from:"Vessel <noreply@dmathys.dev>", to:[$to], subject:$subject, html:$html}' > mail.json
+          fi
+          curl -sS -f -X POST https://api.resend.com/emails -H "Authorization: Bearer $RESEND_API_KEY" -H 'Content-Type: application/json' --data @mail.json > /dev/null || echo "Envoi de l'e-mail échoué (non bloquant)."
+
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: team_SVic2Bpw6buGsRHlAxvDVmwV
+      VERCEL_PROJECT_ID: prj_MEkALhUAkqUG0wAFYfiXrVOcbBnD
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Mise en ligne du site (Vercel)
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then echo "::error::Secret VERCEL_TOKEN manquant (Vessel › Atelier)"; exit 1; fi
+          npx -y vercel@latest pull --yes --environment=production --token "$VERCEL_TOKEN"
+          npx -y vercel@latest build --prod --token "$VERCEL_TOKEN"
+          npx -y vercel@latest deploy --prebuilt --prod --token "$VERCEL_TOKEN"

@@ -41,6 +41,8 @@ jobs:
       - name: Compiler l'APK
         working-directory: app_mobile
         run: |
+          # gradle.properties pointe vers le Java du PC : inutilisable ici
+          sed -i '/org.gradle.java.home/d' android/gradle.properties
           flutter pub get
           flutter build apk --release --target-platform android-arm64 --build-number=$((100 + ${{ github.run_number }}))
           cp build/app/outputs/flutter-apk/app-release.apk ../recettes-du-tiroir.apk
@@ -73,6 +75,8 @@ jobs:
 
   web:
     runs-on: ubuntu-latest
+    # le site ne doit jamais bloquer l'APK
+    continue-on-error: true
     timeout-minutes: 20
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}

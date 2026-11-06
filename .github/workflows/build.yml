@@ -3,7 +3,7 @@ name: Assemblage (APK + site)
 # Lancé par le validateur après un merge (voyage Vessel), ou à la main.
 # 1. Compile l'app Flutter (app_mobile/) avec la MÊME clé que le PC : la
 #    nouvelle APK s'installe par-dessus l'ancienne. Publiée sur la release
-#    « app-latest » et envoyée par e-mail en pièce jointe.
+#    « app-latest » et envoyée par e-mail (lien : Gmail refuse les .apk en pièce jointe).
 # 2. Met le site Next.js en ligne sur Vercel.
 on:
   workflow_dispatch:
@@ -63,14 +63,9 @@ jobs:
           esc() { printf '%s' "$1" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'; }
           LAST="$(git log -1 --format=%s)"
           if [ "$STATUS" = success ]; then SUBJECT="📲 Recettes du Tiroir : nouvelle APK ($LAST)"; else SUBJECT="⛈️ Recettes du Tiroir : l'APK n'a pas pu être construite"; fi
-          if [ "$STATUS" = success ]; then HTML="<h2>📲 Nouvelle version de Recettes du Tiroir</h2><p><b>$(esc "$LAST")</b></p><p>L'APK est en pièce jointe : ouvre-la sur ton téléphone pour mettre l'app à jour (elle s'installe par-dessus, tes données restent).</p><p>Ou <a href=\"$APK_URL\">télécharge-la ici</a>.</p>"; else HTML="<h2>⛈️ L'APK n'a pas pu être construite</h2><p>$(esc "$LAST")</p><p>Ouvre le voyage dans Vessel : un bouton permet de relancer l'assemblage.</p>"; fi
-          if [ -f recettes-du-tiroir.apk ] && [ "$STATUS" = success ] && [ $(stat -c %s recettes-du-tiroir.apk) -lt 30000000 ]; then
-            b64=$(base64 -w0 recettes-du-tiroir.apk)
-            printf '%s' "$b64" > apk.b64
-            jq -n --arg to "$NOTIFY_EMAIL" --arg subject "$SUBJECT" --arg html "$HTML" --rawfile c apk.b64 '{from:"Vessel <noreply@dmathys.dev>", to:[$to], subject:$subject, html:$html, attachments:[{filename:"recettes-du-tiroir.apk", content:$c}]}' > mail.json
-          else
-            jq -n --arg to "$NOTIFY_EMAIL" --arg subject "$SUBJECT" --arg html "$HTML" '{from:"Vessel <noreply@dmathys.dev>", to:[$to], subject:$subject, html:$html}' > mail.json
-          fi
+          if [ "$STATUS" = success ]; then HTML="<h2>📲 Nouvelle version de Recettes du Tiroir</h2><p><b>$(esc "$LAST")</b></p><p><a href=\"$APK_URL\"><b>📲 Télécharger la nouvelle APK</b></a></p><p>Ouvre le lien sur ton téléphone : elle s'installe par-dessus l'ancienne, tes données restent.</p>"; else HTML="<h2>⛈️ L'APK n'a pas pu être construite</h2><p>$(esc "$LAST")</p><p>Ouvre le voyage dans Vessel : un bouton permet de relancer l'assemblage.</p>"; fi
+          # Gmail refuse les pièces jointes .apk : on envoie un lien de téléchargement
+          jq -n --arg to "$NOTIFY_EMAIL" --arg subject "$SUBJECT" --arg html "$HTML" '{from:"Vessel <noreply@dmathys.dev>", to:[$to], subject:$subject, html:$html}' > mail.json
           curl -sS -f -X POST https://api.resend.com/emails -H "Authorization: Bearer $RESEND_API_KEY" -H 'Content-Type: application/json' --data @mail.json > /dev/null || echo "Envoi de l'e-mail échoué (non bloquant)."
 
   web:

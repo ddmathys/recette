@@ -83,6 +83,8 @@ export function AddMealFlow({
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [suggestedPhoto, setSuggestedPhoto] = useState<string | null>(null);
   const [source, setSource] = useState<string | null>(null);
+  /** Case de l'écran photo : demander aussi la recette du plat photographié. */
+  const [wantRecipe, setWantRecipe] = useState(false);
 
   // Résultat
   const [draft, setDraft] = useState<RecipeDraft | null>(() => (initialRecipe ? recipeToDraft(initialRecipe) : null));
@@ -135,7 +137,7 @@ export function AddMealFlow({
       const matched = typeof d.matchedRecipeId === "string" ? recipes.find((r) => r.id === d.matchedRecipeId) : null;
       setMatchedRecipeId(matched?.id ?? null);
       setSavedRecipeId(matched?.id ?? null);
-      setDraft({
+      const mealDraft: RecipeDraft = {
         name: typeof d.label === "string" && d.label.trim() ? d.label.trim() : "Mon repas",
         cat: validCat(d.cat),
         time: 0,
@@ -145,7 +147,31 @@ export function AddMealFlow({
         ingr: cleanIngredients(d.ingr),
         steps: [],
         nutrition,
-      });
+      };
+      let finalDraft = mealDraft;
+      if (wantRecipe) {
+        // Recette demandée : on complète l'assiette reconnue avec les étapes.
+        setLoadingLabel("J'écris la recette…");
+        try {
+          const rRes = await fetch("/api/edit-recipe", {
+            method: "POST",
+            headers: await authHeaders(),
+            body: JSON.stringify({
+              recipe: mealDraft,
+              instruction:
+                "Écris la recette complète de ce plat pour 1 personne : étapes de préparation et temps. Garde les mêmes ingrédients et les mêmes calories.",
+              kind: "recipe",
+            }),
+          });
+          const rData = await rRes.json();
+          if (!rRes.ok) throw new Error(rData.error || "La recette n'a pas pu être écrite.");
+          finalDraft = normalizeDraft(rData.draft, mealDraft.name);
+          setKind("recipe");
+        } catch {
+          setError("Je n'ai pas pu écrire la recette, voici seulement l'assiette.");
+        }
+      }
+      setDraft(finalDraft);
       if (MEAL_TYPES.some((m) => m.key === d.mealType)) setMealType(d.mealType as MealType);
       setStage("result");
     } catch (e) {
@@ -446,6 +472,15 @@ export function AddMealFlow({
                 ? "Cadre le plat entier. L'IA en déduit les ingrédients et les calories — tu compléteras la recette ensuite."
                 : "Cadre ton assiette d'en haut. L'IA estime les calories, les protéines, les glucides et les lipides de ce que tu as devant toi."}
             </p>
+            <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl bg-surface px-4 py-3 text-ink shadow-[0_1px_3px_rgba(43,42,38,.08)]">
+              <input
+                type="checkbox"
+                checked={wantRecipe}
+                onChange={(e) => setWantRecipe(e.target.checked)}
+                className="h-5 w-5 shrink-0 accent-accent"
+              />
+              <span className="text-[0.92rem] font-bold">Demander aussi la recette</span>
+            </label>
             <button
               onClick={() => photoInput.current?.click()}
               className="flex flex-col items-center gap-2 rounded-3xl bg-accent px-5 py-9 text-accent-ink shadow-[0_8px_24px_-10px_rgba(255,90,54,.9)] transition active:scale-[.98]"

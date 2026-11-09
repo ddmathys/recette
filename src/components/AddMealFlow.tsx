@@ -83,7 +83,7 @@ export function AddMealFlow({
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [suggestedPhoto, setSuggestedPhoto] = useState<string | null>(null);
   const [source, setSource] = useState<string | null>(null);
-  /** Case de l'écran photo : demander aussi la recette du plat photographié. */
+  /** Interrupteur de l'écran photo : avec ou sans la recette (sans par défaut). */
   const [wantRecipe, setWantRecipe] = useState(false);
 
   // Résultat
@@ -472,15 +472,28 @@ export function AddMealFlow({
                 ? "Cadre le plat entier. L'IA en déduit les ingrédients et les calories — tu compléteras la recette ensuite."
                 : "Cadre ton assiette d'en haut. L'IA estime les calories, les protéines, les glucides et les lipides de ce que tu as devant toi."}
             </p>
-            <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl bg-surface px-4 py-3 text-ink shadow-[0_1px_3px_rgba(43,42,38,.08)]">
-              <input
-                type="checkbox"
-                checked={wantRecipe}
-                onChange={(e) => setWantRecipe(e.target.checked)}
-                className="h-5 w-5 shrink-0 accent-accent"
-              />
-              <span className="text-[0.92rem] font-bold">Demander aussi la recette</span>
-            </label>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={wantRecipe}
+              onClick={() => setWantRecipe((v) => !v)}
+              className="flex min-h-11 items-center justify-between gap-3 rounded-2xl bg-surface px-4 py-3 text-left text-ink shadow-[0_1px_3px_rgba(43,42,38,.08)]"
+            >
+              <span className="flex flex-col">
+                <span className="text-[0.92rem] font-bold">{wantRecipe ? "Avec la recette" : "Sans la recette"}</span>
+                <span className="text-[0.8rem] text-ink-soft">
+                  {wantRecipe ? "Calories + étapes de la recette" : "Calories seulement (par défaut)"}
+                </span>
+              </span>
+              <span
+                aria-hidden="true"
+                className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${wantRecipe ? "bg-accent" : "bg-line"}`}
+              >
+                <span
+                  className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all ${wantRecipe ? "left-[22px]" : "left-0.5"}`}
+                />
+              </span>
+            </button>
             <button
               onClick={() => photoInput.current?.click()}
               className="flex flex-col items-center gap-2 rounded-3xl bg-accent px-5 py-9 text-accent-ink shadow-[0_8px_24px_-10px_rgba(255,90,54,.9)] transition active:scale-[.98]"
